@@ -24,6 +24,7 @@ class MY_Controller extends CI_Controller {
 	public $helpers = [];
 	public $models = [];
 	public $plugins = [];
+	public $catalogs = [];
 
 	/* to store the data sent to the view */
 	public $data = [];
@@ -40,20 +41,29 @@ class MY_Controller extends CI_Controller {
 		$this->load->library($this->libraries);
 		$this->load->model($this->models);
 		$this->load->helpers($this->helpers);
-		
+
+		/* load model catalogs into view */
+		foreach ((array)$this->catalogs as $c) {
+			$this->load->model($c.'_model');
+			
+			if (method_exists($this->{$c.'_model'},'catalog')) {
+				$this->load->vars($c.'_catalog',$this->{$c.'_model'}->catalog());
+			}
+		}
+
 		/* let the modules do there start up thing */
 		include APPPATH.'/config/modules.php';
 
-		foreach ($autoload[$this->onload_visibility.'_onload'] as $module_onload_file) {
+		foreach ((array)$autoload[$this->onload_visibility.'_onload'] as $module_onload_file) {
 			/* try to load it but, don't complain if it's not there */
 			include $module_onload_file.'/support/onload.php';
 		}
-		
+
 		/* while you could have done this in your onload file - this keeps it "clean" */
 		$this->event->trigger('ci.controller.startup',$this);
 
 		/*
-		cache driver is loaded in MY_Loader::setting 
+		cache driver is loaded in MY_Loader::setting
 		since it is needed so early on
 		*/
 
