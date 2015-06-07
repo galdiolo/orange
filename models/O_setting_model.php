@@ -25,15 +25,15 @@ class o_setting_model extends Database_model {
 		'enabled'        => ['field' => 'enabled','label' => 'Enabled','rules' => 'if_empty[1]|one_of[0,1]|filter_int[1]|max_length[1]|less_than[2]'],
 		'help'           => ['field' => 'help','label' => 'Help','rules' => 'max_length[255]|filter_input[255]'],
 		'internal'       => ['field' => 'internal','label' => 'Internal','rules' => 'max_length[64]|filter_input[64]'],
-		'managed'        => ['field' => 'managed','label' => 'Manged','rules' => 'if_empty[0]|one_of[0,1]|filter_int[1]|max_length[1]'],
+		'unmanaged'        => ['field' => 'unmanaged','label' => 'Unmanged','rules' => 'if_empty[0]|one_of[0,1]|filter_int[1]|max_length[1]'],
 		'show_as'				 => ['field' => 'show_as','label' => 'Show As', 'rules' => 'if_empty[0]|filter_int[1]'],
 		'options'        => ['field' => 'options','label' => 'Options','rules' => 'max_length[16384]|filter_textarea[16384]'],
 	];
 	protected $rule_sets = [
 		'insert' => 'created_on,created_by,updated_on,updated_by,is_editable,is_deletable,name,value,group',
 		'update' => 'id,updated_on,updated_by,name,value,group',
-		'insert_advanced' => 'created_on,created_by,updated_on,updated_by,is_editable,is_deletable,name,value,group,enabled,help,internal,managed,show_as,options',
-		'update_advanced' => 'id,updated_on,updated_by,is_deletable,name,value,group,enabled,help,internal,managed,show_as,options',
+		'insert_advanced' => 'created_on,created_by,updated_on,updated_by,is_editable,is_deletable,name,value,group,enabled,help,internal,unmanaged,show_as,options',
+		'update_advanced' => 'id,updated_on,updated_by,is_deletable,name,value,group,enabled,help,internal,unmanaged,show_as,options',
 	];
 
 	/* does this compound key exist? */

@@ -7,7 +7,7 @@ o::hr(0,12); /* 4px padding top and bottom */
 
 theme::start_form_section('Name',true,5);
 /* if it wasn't user entered (type 0) than it's not editable */
-if ($record->managed == 1 || $controller_action == 'new') {
+if ($record->unmanaged == 1 || $controller_action == 'new') {
 	o::text('name',$record->name);
 } else {
 	theme::static_text($record->name);
@@ -44,7 +44,7 @@ theme::end_form_section($record->help);
 
 
 theme::start_form_section('Group',true,5);
-if ($record->managed == 1 || $controller_action == 'new' || ($advanced == true && has_access('Orange::Advanced Settings'))) {
+if ($record->unmanaged == 1 || $controller_action == 'new' || ($advanced == true && has_access('Orange::Advanced Settings'))) {
 	$sorted = o::smart_model_list('o_setting_model','group','group');
 	asort($sorted);
 	plugin_combobox::show('group',$record->group,$sorted);
@@ -56,7 +56,7 @@ theme::end_form_section();
 
 if ($advanced == true && has_access('Orange::Advanced Settings')) {
 	$record->enabled = ($controller_action == 'new') ? 1 : $record->enabled;
-	$record->managed = ($controller_action == 'new') ? 1 : $record->managed;
+	$record->unmanaged = ($controller_action == 'new') ? 1 : $record->unmanaged;
 	$record->show_as = ($controller_action == 'new') ? 0 : $record->show_as;
 
 	theme::start_form_section('Enabled',true);
@@ -71,9 +71,9 @@ if ($advanced == true && has_access('Orange::Advanced Settings')) {
 	o::text('internal',$record->internal);
 	theme::end_form_section('Internal module "owner"');
 
-	theme::start_form_section('Managed',true);
-	theme::checker('managed',(int)$record->managed);
-	theme::end_form_section('If a setting is managed a user can not change it\'s group.');
+	theme::start_form_section('Unmanaged',true);
+	theme::checker('unmanaged',(int)$record->unmanaged);
+	theme::end_form_section('If a setting is managed a user can not change it\'s group or name.');
 
 	theme::start_form_section('Show As',true);
 	theme::radio('show_as',$record->show_as,[0=>'textarea',1=>'boolean',2=>'radios',3=>'input']);

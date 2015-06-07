@@ -171,7 +171,7 @@ class Module_install {
 	public function add_setting($name,$value,$group,$help='',$type=0,$options='',$module=null,$extra=[]) {
 		$module = ($module) ? $module : $this->name;
 
-		$defaults = ['is_editable'=>1,'is_deletable'=>0,'enabled'=>1,'managed'=>1];
+		$defaults = ['is_editable'=>1,'is_deletable'=>0,'enabled'=>1,'unmanaged'=>1];
 
 		$merged = array_merge($defaults,$extra);
 
@@ -186,7 +186,7 @@ class Module_install {
 			'enabled'=>$enabled, /* not used at this time */
 			'help'=>$help,
 			'internal'=>$module,
-			'managed'=>$managed, /* managed setting */
+			'unmanaged'=>$unmanaged, /* unmanaged setting */
 			'show_as'=>$type, /* 0 textarea, 1 True/False (radios), 2 Radios (json format), 3 text input (option is length) */
 			'options'=>$options,
 		];
