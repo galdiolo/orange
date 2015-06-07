@@ -225,6 +225,51 @@ deprecated this shouldn't even work it's missing Action and it's not called here
 		echo $stdout.$stderr;
 	}
 
+	public function cloneAction() {
+		$this->page->build();
+	}
+
+	public function clone_savePostAction() {
+		$tmpfname = tempnam(ROOTPATH.'/var/upload_temp','');
+
+		if (file_exists($tmpfname)) {
+			$temp = basename($tmpfname);
+			unlink($tmpfname);
+		}
+
+		$cli = 'cd '.ROOTPATH.'/var/upload_temp;'.$this->input->post('command').' "'.$temp.'"';
+
+		$proc = proc_open($cli,[1 => ['pipe','w'],2 => ['pipe','w']],$pipes);
+
+		$stdout = stream_get_contents($pipes[1]);
+		fclose($pipes[1]);
+
+		$stderr = stream_get_contents($pipes[2]);
+		fclose($pipes[2]);
+
+		$output = proc_close($proc);
+
+		/* does it have the install file? */
+		$file = glob(ROOTPATH.'/var/upload_temp/'.$temp.'/install_*.php');
+
+		if (count($file) == 1) {
+			$err = false;
+
+			$module_folder_name = substr(basename($file[0],'.php'),8);
+
+			$current = dirname($file[0]);
+			$new = dirname($current).'/'.$module_folder_name;
+
+			rename($current,$new);
+
+			$this->module_core->smart_move($new);
+		} else {
+			$err = true;
+		}
+
+		$this->output->json(['err'=>$err,'msg'=>$cli.chr(10).$stdout.$stderr.$output]);
+	}
+
 	public function onloadAction() {
 		$autoload = $this->module_core->get_modules_config();
 
@@ -251,7 +296,7 @@ deprecated this shouldn't even work it's missing Action and it's not called here
 
 		/* load the current */
 		include APPPATH.'/config/modules.php';
-		
+
 		/* clean out what's there */
 		$autoload['public_onload'] = [];
 		$autoload['admin_onload'] = [];
