@@ -1,4 +1,8 @@
 <div>
+	<strong>Start Id: </strong><?php o::e($record->id) ?>
+</div>
+<br>
+<div>
 	<strong>Text: </strong><?php o::e($record->text) ?>
 </div>
 <br>

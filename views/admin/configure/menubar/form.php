@@ -17,7 +17,7 @@ o::text('url',$record->url);
 theme::end_form_section('Entering /# will cause the menu item to not have a link');
 
 theme::start_form_section('Active');
-theme::checkbox('active',$record->active,1);
+theme::checkbox('active',1,($record->active == 1));
 theme::end_form_section();
 
 theme::start_form_section('Access',4);

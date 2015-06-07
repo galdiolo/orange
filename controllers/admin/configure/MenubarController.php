@@ -102,8 +102,7 @@ class menubarController extends APP_AdminController {
 		if (!empty($catalog[$record->parent_id]->text)) {
 			$title .= ' Menu Under &ldquo;'.$catalog[$record->parent_id]->text.'&rdquo;';		
 		}
-		
-		
+				
 		$data = [
 			'controller_title' => $title,
 			'record' => $record,
