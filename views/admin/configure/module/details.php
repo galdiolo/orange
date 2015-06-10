@@ -49,7 +49,7 @@ theme::header_end();
     <td>
       <? 
       foreach ($module['requires'] as $folder=>$record) {
-      	$r[] = $folder.' <small>v '.$record[0].'-'.$record[1].'</small>';
+      	$r[] = $folder.' <small>v '.$record.'</small>';
       }
       echo implode('<br>',$r);
       ?>

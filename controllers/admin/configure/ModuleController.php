@@ -161,7 +161,9 @@ class moduleController extends APP_AdminController {
 
 	/* handle dynamic module help loading */
 	public function detailsAction($module='') {
-		$this->page->data(['module'=>$this->module_core->get_by('classname',hex2bin($module))])->build('admin/configure/module/details');
+		$this->page
+			->data(['module'=>$this->module_core->get_by('classname',hex2bin($module))])
+			->build('admin/configure/module/details');
 	}
 
 /*
