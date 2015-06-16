@@ -69,9 +69,12 @@ class Auth {
 
 		/* load the user profile from the session do basic validation */
 		$session_data = $this->ci_session->userdata($this->session_key);
+		
+		/* default profile */
+		$default_profile = (object)setting('auth','Default Profile',[]);
 
 		/* set the user data */
-		ci()->user = ($this->validate_profile($session_data) === true) ? $session_data : (object)[];
+		ci()->user = ($this->validate_profile($session_data) === true) ? $session_data : $default_profile;
 	}
 
 	public function login($email,$password) {
