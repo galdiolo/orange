@@ -30,13 +30,13 @@ class o_access_model extends Database_model {
 	];
 
 	public function insert($data, $skip_validation = false) {
-		$data['key'] = $data['group'].'::'.$data['name'];
+		$data['key'] = strtolower($data['group'].'::'.$data['name']);
 
 		return parent::insert($data,$skip_validation);
 	}
 
 	public function update($primary_value, $data, $skip_validation = false) {
-		$data['key'] = $data['group'].'::'.$data['name'];
+		$data['key'] = strtolower($data['group'].'::'.$data['name']);
 
 		return parent::update($primary_value,$data,$skip_validation);
 	}
@@ -64,7 +64,7 @@ class o_access_model extends Database_model {
 	
 	/* upsert used by the module install/upgrade */
 	public function upsert($data) {
-		$key = $data['group'].'::'.$data['name'];
+		$key = strtolower($data['group'].'::'.$data['name']);
 	
 		if ($this->exists('key',$key)) {
 			/* update */
