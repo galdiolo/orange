@@ -38,6 +38,10 @@ class o_menubar_model extends Database_model {
 	public $sort = 10;
 
 	public function get_menus($access = null) {
+		if (!is_array($access)) {
+			$access[0] = 0; /* everyone */
+		}
+
 		$menus = [];
 
 		if ($access != NULL) {
