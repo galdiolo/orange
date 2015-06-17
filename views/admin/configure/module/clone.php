@@ -1,6 +1,7 @@
 <?php
 theme::form_start();
 theme::header_start('Clone Repro','clone a git repro directly into modules.');
+theme::header_button_back();
 theme::header_end();
 
 o::hr(0,12); /* 4px padding top and bottom */
@@ -14,12 +15,11 @@ theme::end_form_section('Complete git clone command. ie. git clone git@bitbucket
 o::hr(0,12); /* 4px padding top and bottom */
 ?>
 <p class="text-right">
-	<a class="btn btn-default" onclick="window.history.go(-1);">Cancel</a>&nbsp;&nbsp;&nbsp;
-	<a class="btn btn-primary js-submit">Submit</a>
+	<a class="btn btn-primary js-process">Process</a>
 </p>
 <script>
 document.addEventListener("DOMContentLoaded", function(event) {
-	$('.js-submit').click(function() {
+	$('.js-process').click(function() {
 		if (!submit()) {
 			window.history.go(-1);
 		}
