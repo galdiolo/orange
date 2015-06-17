@@ -11,7 +11,7 @@
 </div>
 <br>
 <div>
-	<strong>Access: </strong><?php o::smart_model('o_access',$record->access_id,'group') ?>::<?php o::smart_model('o_access',$record->access_id,'name') ?>
+	<strong>Access: </strong><?php o::smart_model('o_access',$record->access_id,'key') ?>
 </div>
 <br>
 <div>
