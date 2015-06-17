@@ -58,8 +58,8 @@ class Auth {
 		$this->o_role_access_model = &ci()->o_role_access_model;
 
 		/* a few variables must be setup test for them and store a copy as a object variable */
-		$configs = ['Admin Role Id','Nobody Role Id','Default Role Id','Default Menu Id','Superuser Id'];
-		
+		$configs = ['Admin Role Id','Nobody Role Id','Default Role Id','Default Menu Id','Superuser Id','Guest Id'];
+
 		foreach ($configs as $config) {
 			if (!is_integer(setting('auth',$config,null))) {
 				/* are some of the config preferences setup? */
@@ -69,12 +69,25 @@ class Auth {
 
 		/* load the user profile from the session do basic validation */
 		$session_data = $this->ci_session->userdata($this->session_key);
-		
-		/* default profile */
-		$default_profile = (object)setting('auth','Default Profile',[]);
 
-		/* set the user data */
-		ci()->user = ($this->validate_profile($session_data) === true) ? $session_data : $default_profile;
+		$profile = new stdClass;
+
+		/* Does the user have a "saved" user profile? */
+		if ($this->validate_profile($session_data) === true) {
+			/* yes */
+			$profile = $session_data;
+		} else {
+			/* no - user the guest profile */
+			if (!$guest_profile = ci()->cache->get('auth-default-profile')) {
+				$guest_profile = $this->build_profile(setting('auth','Guest Id'));
+
+				ci()->cache->save('auth-default-profile',$guest_profile,setting('config','cache_ttl'));
+			}
+
+			$profile = $guest_profile;
+		}
+
+		ci()->user = $profile;
 	}
 
 	public function login($email,$password) {
@@ -166,7 +179,7 @@ class Auth {
 		/* TEST -- Logged in but, has this user been activated? */
 		if ((int) $user->is_active !== 1) {
 			$this->error = 'You are not active';
-			
+
 			log_message('debug', 'auth->user '.$this->error);
 
 			return false;
@@ -177,7 +190,7 @@ class Auth {
 
 		if ($this->validate_profile($user) !== true) {
 			$this->error = 'User profile could not be built.';
-			
+
 			log_message('debug', 'auth->user '.$this->error);
 
 			return false;
