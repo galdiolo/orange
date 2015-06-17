@@ -25,6 +25,7 @@ class Module_install {
 	public $onload = false;
 	public $autoload = false;
 	public $required;
+	public $requires_composer;
 	public $table; /* used for remove_all() */
 
 	protected $root;

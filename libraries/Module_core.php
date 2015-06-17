@@ -468,6 +468,24 @@ class Module_core {
 		return new $class_name($name);
 	}
 
+	protected function check_install_method() {
+		/*
+		place holder for future feature
+		run a install method on the provided module and display a error
+		in the info icon [?] link if this method returns false
+		if module has install_check run it
+		*/
+	}
+	
+	protected function check_upgrade_method() {
+		/*
+		place holder for future feature
+		run a upgrade method on the provided module and display a error
+		in the info icon [?] link if this method returns false
+		if module has upgrade_check run it
+		*/
+	}
+
 	protected function check_required_module($requirements=[]) {
 		foreach ($requirements as $module_folder_name=>$range) {
 			/* if the module folder name is empty just return true */
