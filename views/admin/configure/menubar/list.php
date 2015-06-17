@@ -13,9 +13,7 @@ foreach ($records as $record) {
 	o::e($record->url);
 
 	theme::table_row();
-	o::smart_model('o_access',$record->access_id,'group');
-	echo '::';
-	o::smart_model('o_access',$record->access_id,'name');
+	o::smart_model('o_access',$record->access_id,'key');
 
 	theme::table_row();
 	o::smart_model('o_menubar',$record->parent_id,'text');

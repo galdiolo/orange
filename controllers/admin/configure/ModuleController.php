@@ -172,18 +172,15 @@ deprecated this shouldn't even work it's missing Action and it's not called here
 		return parent::unzip_n_move($upload);
 	}
 */
-
+	
+	/* composer actions */
 	public function composerAction() {
-		$this->page->build();
-	}
-
-	public function composer_editAction() {
 		$composer = file_get_contents(ROOTPATH.'/composer.json');
 
 		$this->page->data(['composer'=>$composer])->build();
 	}
 
-	public function composer_edit_savePostAction() {
+	public function composer_savePostAction() {
 		$composer = $this->input->post('composer');
 
 		$success = (bool)file_put_contents(ROOTPATH.'/composer.json',trim($composer));
@@ -201,11 +198,7 @@ deprecated this shouldn't even work it's missing Action and it's not called here
 		$this->output->json($json);
 	}
 
-	public function composer_updateAction() {
-		$this->page->build();
-	}
-
-	public function composer_update_ajaxAction() {
+	public function composer_ajaxAction() {
 		error_reporting(-1);
 		ini_set('display_errors', 1);
 
@@ -226,7 +219,8 @@ deprecated this shouldn't even work it's missing Action and it's not called here
 
 		echo $stdout.$stderr;
 	}
-
+	
+	/* git clone actions */
 	public function cloneAction() {
 		$this->page->build();
 	}
