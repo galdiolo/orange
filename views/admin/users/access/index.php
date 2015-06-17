@@ -27,9 +27,7 @@ foreach ($records['records'] as $tab=>$tab_records) {
 		o::e($record->description);
 
 		theme::table_row();
-		echo ' <small class="text-muted">';
 		o::e($record->key);
-		echo '</small>';
 			
 		theme::table_row('actions txt-ac');
 	
