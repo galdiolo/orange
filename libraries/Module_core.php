@@ -476,7 +476,7 @@ class Module_core {
 		if module has install_check run it
 		*/
 	}
-	
+
 	protected function check_upgrade_method() {
 		/*
 		place holder for future feature
@@ -597,7 +597,6 @@ class Module_core {
 		return false;
 	}
 
-
 	protected function _version_in_range($current_version,$range) {
 		$regex = str_replace(['.', '*'], ['\.', '(\d+)'], '/^'.$range.'/');
 
@@ -605,6 +604,7 @@ class Module_core {
 	}
 
 	public function update_config($ary_key,$name,$remove) {
+		/* $name = module folder name */
 		if (!file_exists($this->modules_file)) {
 			return 'The "application/config/modules.php" file is missing?';
 		}
@@ -627,6 +627,7 @@ class Module_core {
 	}
 
 	protected function _replace($modules_file,$key,$value,$remove) {
+		/* this loads the file */
 		include $modules_file;
 
 		/* add new value */
@@ -646,27 +647,30 @@ class Module_core {
 		return $this->write($modules_file,$autoload);
 	}
 
-	public function write($modules_file,$autoload) {
-		/* rewrite the file */
-		$new_file_content = '<?php'.chr(10);
-		$new_file_content .= '/*'.chr(10);
-		$new_file_content .= 'WARNING!'.chr(10);
-		$new_file_content .= 'This file is directly modified by the framework'.chr(10);
-		$new_file_content .= 'do not modify it unless you know what you are doing'.chr(10);
-		$new_file_content .= '*/'.chr(10).chr(10);
+	public function write($modules_file,$ary) {
+		$n = chr(10);
+	
+		$content = '<?php'.$n.'/*'.$n.'WARNING!'.$n.'This file is directly modified by the framework'.$n.'do not modify it unless you know what you are doing'.$n.'*/'.$n.$n;
 
-		foreach ($autoload as $idx=>$values) {
-			$new_file_content .= '$autoload[\''.$idx.'\'] = array('.chr(10);
+		foreach ($ary as $key=>$elements) {
+			$content .= '$autoload[\''.$key.'\'] = array('.$n;
+		
+			foreach ((array)$elements as $k=>$e) {
+				$k = str_replace("'","\'",$k);
+				$e = str_replace("'","\'",$e);
 
-			foreach ($autoload[$idx] as $row) {
-				$row = str_replace(ROOTPATH,'ROOTPATH.\'',$row);
-				$new_file_content .= chr(9).$row."',".chr(10);
+				if (is_numeric($k)) {
+					$e = str_replace(ROOTPATH,'',$e);
+					$content .= chr(9).'ROOTPATH.\''.$e.'\','.$n;
+				} else {
+					$content .= chr(9)."'".$k."' => '".$e."',".$n;
+				}
 			}
-
-			$new_file_content .= ');'.chr(10).chr(10);
+		
+			$content .= ');'.$n.$n;
 		}
 
-		return file_put_contents($modules_file,$new_file_content);
+		return file_put_contents($modules_file,$content);
 	}
 
 	protected function _normalize($text) {
