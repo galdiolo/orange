@@ -647,12 +647,12 @@ class Module_core {
 		return $this->write($modules_file,$autoload);
 	}
 
-	public function write($modules_file,$ary) {
+	public function write($modules_file,$array) {
 		$n = chr(10);
 	
 		$content = '<?php'.$n.'/*'.$n.'WARNING!'.$n.'This file is directly modified by the framework'.$n.'do not modify it unless you know what you are doing'.$n.'*/'.$n.$n;
 
-		foreach ($ary as $key=>$elements) {
+		foreach ($array as $key=>$elements) {
 			$content .= '$autoload[\''.$key.'\'] = array('.$n;
 		
 			foreach ((array)$elements as $k=>$e) {
