@@ -14,12 +14,11 @@ class install_orange extends module_install {
 		'plugin_o_dialog'=>'1.*.*',
 		'plugin_o_validate_form'=>'1.*.*',
 		'plugin_select3'=>'1.*.*',
-		'plugin_keymaster'=>'1.*.*',
 	];
 	public $requires_composer = [
 		"codeigniter/framework"=>"*",
 		"oodle/krumo"=>"*",
-		"composer/composer"=>"1.0.*"
+		"composer/composer"=>"1.0.*",
 	];
 	public $theme = 'Orange - included with this module';
 	public $table = 'orange_access, orange_nav, orange_role_access, orange_roles, orange_settings, orange_users';

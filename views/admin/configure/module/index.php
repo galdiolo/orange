@@ -3,10 +3,7 @@ theme::header_start('Modules','Interface to manage modules.');
 if ($filter) {
 	theme::header_button('Show All',$controller_path,'filter');
 }
-theme::header_button('Manage Onload',$controller_path.'/onload','link');
-theme::header_button('Composer',$controller_path.'/composer','music');
-theme::header_button('Upload',$controller_path.'/upload','upload');
-theme::header_button('Clone',$controller_path.'/clone','upload');
+o::view_event($controller_path,'header.buttons');
 theme::header_end();
 
 /* display errors */
