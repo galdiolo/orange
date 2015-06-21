@@ -644,33 +644,48 @@ class Module_core {
 		/* let's make sure it's not a dup */
 		$autoload[$key] = array_unique($autoload[$key]);
 
-		return $this->write($modules_file,$autoload);
+		return file_put_contents($modules_file,$this->create_modules_config($autoload));
 	}
 
-	public function write($modules_file,$array) {
+	protected function create_modules_config($array) {
 		$n = chr(10);
-	
-		$content = '<?php'.$n.'/*'.$n.'WARNING!'.$n.'This file is directly modified by the framework'.$n.'do not modify it unless you know what you are doing'.$n.'*/'.$n.$n;
+
+		$content  = '<?php'.$n;
+		$content .= '/*'.$n;
+		$content .= 'WARNING!'.$n;
+		$content .= 'This file is directly modified by the framework'.$n;
+		$content .= 'do not modify it unless you know what you are doing'.$n;
+		$content .= '*/'.$n.$n;
 
 		foreach ($array as $key=>$elements) {
 			$content .= '$autoload[\''.$key.'\'] = array('.$n;
-		
-			foreach ((array)$elements as $k=>$e) {
-				$k = str_replace("'","\'",$k);
-				$e = str_replace("'","\'",$e);
 
-				if (is_numeric($k)) {
-					$e = str_replace(ROOTPATH,'',$e);
-					$content .= chr(9).'ROOTPATH.\''.$e.'\','.$n;
-				} else {
-					$content .= chr(9)."'".$k."' => '".$e."',".$n;
+			if (is_object($elements)) {
+				foreach ((array)$elements as $k=>$e) {
+					$content .= chr(9)."'".$this->has_root($k)."' => '".$this->has_root($e)."',".$n;
+				}
+			} elseif (is_array($elements)) {
+				foreach ($elements as $e) {
+					$content .= chr(9).$this->has_root($e)."',".$n;
 				}
 			}
-		
+
 			$content .= ');'.$n.$n;
 		}
 
-		return file_put_contents($modules_file,$content);
+		return trim($content).$n;
+	}
+
+	/* same function as in module_core.php */
+	protected function has_root($input) {
+		if (strpos($input,'{ROOTPATH}') !== false) {
+			$input = str_replace('{ROOTPATH}','',$input);
+			$input = 'ROOTPATH.\''.$e.'\'';
+		}
+
+		$input = str_replace(ROOTPATH,'ROOTPATH.\'',$input);
+
+		return $input;
 	}
 
 	protected function _normalize($text) {
