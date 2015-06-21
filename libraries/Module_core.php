@@ -662,11 +662,11 @@ class Module_core {
 
 			if (is_object($elements)) {
 				foreach ((array)$elements as $k=>$e) {
-					$content .= chr(9)."'".$this->has_root($k)."' => '".$this->has_root($e)."',".$n;
+					$content .= chr(9).$this->has_root($k)." => ".$this->has_root($e).",".$n;
 				}
 			} elseif (is_array($elements)) {
 				foreach ($elements as $e) {
-					$content .= chr(9).$this->has_root($e)."',".$n;
+					$content .= chr(9).$this->has_root($e).",".$n;
 				}
 			}
 
@@ -678,13 +678,28 @@ class Module_core {
 
 	/* same function as in module_core.php */
 	protected function has_root($input) {
-		if (strpos($input,'{ROOTPATH}') !== false) {
-			$input = str_replace('{ROOTPATH}','',$input);
-			$input = 'ROOTPATH.\''.$e.'\'';
+		if (!defined('ROOTPATH')) {
+			define('ROOTPATH',md5(microtime()));
 		}
-
-		$input = str_replace(ROOTPATH,'ROOTPATH.\'',$input);
-
+	
+		$wrapped = false;
+		
+		if (strpos($input,'{ROOTPATH}') !== false) {
+			/* "{ROOTPATH}modules/plugin_combobox" */
+			$wrapped = true;
+			$input = str_replace('{ROOTPATH}','/',$input);
+			$input = "ROOTPATH.'".$input."'";
+		} elseif (strpos($input,ROOTPATH) !== false) {
+			/* "/a/b/c/modules/plugin_combobox" */
+			$wrapped = true;
+			$input = str_replace(ROOTPATH,'',$input);
+			$input = "ROOTPATH.'".$input."'";
+		}
+	
+		if (!$wrapped) {
+			$input = "'".$input."'";
+		}
+	
 		return $input;
 	}
 
