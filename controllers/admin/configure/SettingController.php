@@ -48,7 +48,7 @@ class settingController extends APP_AdminController {
 
 		$this->_get_data('insert');
 		
-		if ($id = $this->o_setting_model->insert($this->data, $map)) {
+		if ($id = $this->o_setting_model->insert($this->data, 'insert')) {
 			$this->wallet->created($this->content_title, $this->controller_path);
 		}
 
@@ -76,7 +76,7 @@ class settingController extends APP_AdminController {
 
 		$this->_get_data('update');
 
-		if ($this->o_setting_model->update($this->data['id'], $this->data, $map)) {
+		if ($this->o_setting_model->update($this->data['id'], $this->data, 'update')) {
 			$this->wallet->updated($this->content_title, $this->controller_path);
 		}
 
