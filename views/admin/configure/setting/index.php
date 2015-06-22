@@ -29,11 +29,15 @@ foreach ($records['records'] as $tab=>$tab_records) {
 		echo settingController::style_type($record->value);
 
 		theme::table_row('larger txt-ac');
-		echo theme::enum_icon((int)$record->unmanaged);
+		echo theme::enum_icon((int)$record->managed,'check-circle-o|circle-o');
 
 		theme::table_row('actions txt-ac');
 		if ($record->is_editable) {
 			theme::table_action('edit',$this->controller_path.'/edit/'.$record->id);
+		}
+
+		if ($record->is_editable && has_access('Orange::Advanced Settings')) {
+			theme::table_action('pencil-square',$this->controller_path.'/edit/'.$record->id.'/advanced');
 		}
 
 		if ($record->is_deletable) {

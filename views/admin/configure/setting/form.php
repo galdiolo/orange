@@ -7,7 +7,7 @@ o::hr(0,12); /* 4px padding top and bottom */
 
 theme::start_form_section('Name',true,5);
 /* if it wasn't user entered (type 0) than it's not editable */
-if ($record->unmanaged == 1 || $controller_action == 'new') {
+if ($record->managed == 0 || $controller_action == 'new' || ($advanced == true && has_access('Orange::Advanced Settings'))) {
 	o::text('name',$record->name);
 } else {
 	theme::static_text($record->name);
@@ -18,7 +18,6 @@ theme::end_form_section();
 $width = ($record->show_as == 3 && !empty($record->options)) ? $record->options : 9;
 
 theme::start_form_section('Value',false,$width);
-
 /* 0 Textarea, 1 Boolean T/F, 2 Radios (json), 3 Text Input (option width) */
 switch($record->show_as) {
 	case 1: /* boolean */
@@ -42,9 +41,8 @@ switch($record->show_as) {
 }
 theme::end_form_section($record->help);
 
-
 theme::start_form_section('Group',true,5);
-if ($record->unmanaged == 1 || $controller_action == 'new' || ($advanced == true && has_access('Orange::Advanced Settings'))) {
+if ($record->managed == 0 || $controller_action == 'new' || ($advanced == true && has_access('Orange::Advanced Settings'))) {
 	$sorted = o::smart_model_list('o_setting_model','group','group');
 	asort($sorted);
 	plugin_combobox::show('group',$record->group,$sorted);
@@ -55,10 +53,6 @@ if ($record->unmanaged == 1 || $controller_action == 'new' || ($advanced == true
 theme::end_form_section();
 
 if ($advanced == true && has_access('Orange::Advanced Settings')) {
-	$record->enabled = ($controller_action == 'new') ? 1 : $record->enabled;
-	$record->unmanaged = ($controller_action == 'new') ? 1 : $record->unmanaged;
-	$record->show_as = ($controller_action == 'new') ? 0 : $record->show_as;
-
 	theme::start_form_section('Enabled',true);
 	theme::checker('enabled',(int)$record->enabled);
 	theme::end_form_section('Settings which are present are usually considered "enabled" but, this is internally supported for debugging etc...');
@@ -71,8 +65,8 @@ if ($advanced == true && has_access('Orange::Advanced Settings')) {
 	o::text('internal',$record->internal);
 	theme::end_form_section('Internal module "owner"');
 
-	theme::start_form_section('Unmanaged',true);
-	theme::checker('unmanaged',(int)$record->unmanaged);
+	theme::start_form_section('Manged',true);
+	theme::checker('managed',(int)$record->managed);
 	theme::end_form_section('If a setting is managed a user can not change it\'s group or name.');
 
 	theme::start_form_section('Show As',true);
@@ -88,6 +82,24 @@ if ($advanced == true && has_access('Orange::Advanced Settings')) {
 	theme::end_form_section();
 
 	o::hidden('advanced',1);
+} else {
+	if ($controller_action == 'new') {
+		o::hidden('enabled',1);
+		o::hidden('help','');
+		o::hidden('internal','');
+		o::hidden('managed',0);
+		o::hidden('show_as',0);
+		o::hidden('options','');
+		o::hidden('is_deletable',1);
+	} else {
+		o::hidden('enabled',$record->enabled);
+		o::hidden('help',$record->help);
+		o::hidden('internal',$record->internal);
+		o::hidden('managed',$record->managed);
+		o::hidden('show_as',$record->show_as);
+		o::hidden('options',$record->options);
+		o::hidden('is_deletable',$record->is_deletable);
+	}
 }
 
 o::view_event($controller_path,'form.footer');
@@ -101,5 +113,3 @@ theme::footer_required();
 theme::footer_end();
 
 theme::form_end();
-
-echo '<script>document.cookie="shifted=false;path=/";</script>';

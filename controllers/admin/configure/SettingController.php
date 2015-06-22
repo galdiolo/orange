@@ -29,8 +29,8 @@ class settingController extends APP_AdminController {
 			->build();
 	}
 
-	public function newAction() {
-		if ($this->input->cookie('shifted') == 'true' && has_access('Orange::Advanced Settings')) {
+	public function newAction($advanced=null) {
+		if ($advanced == 'advanced' && has_access('Orange::Advanced Settings')) {
 			$this->page->data('advanced',true);
 		}
 
@@ -46,13 +46,7 @@ class settingController extends APP_AdminController {
 			$this->has_access($this->access['create']);
 		}
 
-		$map = 'insert';
-
-		if ($this->input->post('advanced') == '1' && has_access('Orange::Advanced Settings')) {
-			$map .= '_advanced';
-		}
-
-		$this->_get_data($map);
+		$this->_get_data('insert');
 		
 		if ($id = $this->o_setting_model->insert($this->data, $map)) {
 			$this->wallet->created($this->content_title, $this->controller_path);
@@ -61,8 +55,8 @@ class settingController extends APP_AdminController {
 		$this->wallet->failed($this->content_title, $this->controller_path);
 	}
 
-	public function editAction($id = null) {
-		if ($this->input->cookie('shifted') == 'true' && has_access('Orange::Advanced Settings')) {
+	public function editAction($id = null,$advanced = null) {
+		if ($advanced == 'advanced' && has_access('Orange::Advanced Settings')) {
 			$this->page->data('advanced',true);
 		}
 
@@ -80,13 +74,7 @@ class settingController extends APP_AdminController {
 
 		$this->input->is_valid($this->o_setting_model->rules['id']['rules'], '@id');
 
-		$map = 'update';
-
-		if ($this->input->post('advanced') == '1' && has_access('Orange::Advanced Settings')) {
-			$map .= '_advanced';
-		}
-
-		$this->_get_data($map);
+		$this->_get_data('update');
 
 		if ($this->o_setting_model->update($this->data['id'], $this->data, $map)) {
 			$this->wallet->updated($this->content_title, $this->controller_path);

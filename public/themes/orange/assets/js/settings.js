@@ -43,14 +43,3 @@ function IsJsonString(str) {
 	
 	return true;
 }
-
-/* handle shift when selecting group access */
-$('a.js-magic,i.fa.fa-edit').click(function(event) {
-	event.preventDefault();
-	
-	if (event.shiftKey) {
-		document.cookie="shifted=true;path=/";
-	}
-	
-	window.location = $(this).closest('a').attr('href');	
-});
