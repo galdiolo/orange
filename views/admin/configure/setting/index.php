@@ -13,7 +13,7 @@ theme::table_tabs_start();
 foreach ($records['records'] as $tab=>$tab_records) {
 	theme::table_tab_pane_start($tab);
 
-	theme::table_start(['Name','Value','Unmanaged'=>'txt-ac','Actions'=>'txt-ac']);
+	theme::table_start(['Name','Value','Managed'=>'txt-ac','Actions'=>'txt-ac']);
 
 	uasort($tab_records,function($a,$b) {
 		return ($a->name > $b->name) ? 1 : -1;
@@ -29,7 +29,7 @@ foreach ($records['records'] as $tab=>$tab_records) {
 		echo settingController::style_type($record->value);
 
 		theme::table_row('larger txt-ac');
-		echo theme::enum_icon((int)$record->managed,'check-circle-o|circle-o');
+		echo theme::enum_icon((int)$record->managed);
 
 		theme::table_row('actions txt-ac');
 		if ($record->is_editable) {
