@@ -213,9 +213,9 @@ class Theme {
 		}
 
 		$defaults = ['class' => '', 'style' => '', 'id' => ''];
-		extract(array_diff_key($defaults, $extra)+array_intersect_key($extra, $defaults));
+		extract(array_diff_key($defaults, $extra) + array_intersect_key($extra, $defaults));
 
-		echo '<table class="table table-hover '.$class.'"><thead><tr class="panel-default">';
+		echo '<table class="table table-hover '.$class.'" id="'.$id.'" style="'.$style.'"><thead><tr class="panel-default">';
 
 		foreach ($column_names as $key=>$name) {
 			$class = '';
