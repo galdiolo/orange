@@ -15,6 +15,8 @@ class Module_core {
 	protected $root;
 	protected $apppath;
 	protected $where; /* where installed */
+	protected $routes = [];
+
 	public $modules = [];
 
 	public function __construct($rootpath=null,$apppath=null) {
@@ -126,6 +128,10 @@ class Module_core {
 			return $reply;
 		}
 
+		if (is_array($installer->routes)) {
+			$this->routes_add($installer->routes);
+		}
+
 		return true;
 	}
 
@@ -161,6 +167,10 @@ class Module_core {
 
 		if (!$this->update_config('active',$name,true)) {
 			return 'Error removing active.';
+		}
+
+		if (is_array($installer->routes)) {
+			$this->routes_write($this->routes_remove($installer->routes));
 		}
 
 		return true;
@@ -203,6 +213,10 @@ class Module_core {
 
 		if (!$this->update_config('active',$name,true)) {
 			return 'Error removing active.';
+		}
+
+		if (is_array($installer->routes)) {
+			$this->routes_write($this->routes_remove($installer->routes));
 		}
 
 		return true;
@@ -266,6 +280,10 @@ class Module_core {
 			if ($reply = $this->update_config('packages',$name,false) !== true) {
 				return $reply;
 			}
+		}
+
+		if (is_array($upgrades_installer->routes)) {
+			$this->routes_write($this->routes_remove($upgrades_installer->routes));
 		}
 
 		return true;
@@ -573,6 +591,68 @@ class Module_core {
 		return true;
 	}
 
+	public function routes_read() {
+		include APPPATH.'/config/routes.php';
+
+		return $route;
+	}
+
+	public function routes_write($routes=null,$new_url=null,$new_route=null) {
+		$routes = ($routes) ? $routes : $this->routes_read();
+
+		$n = chr(10);
+
+		/* write a new file then move it in one action */
+		$text  = '<?php'.$n.$n;
+		$text .= '/* modified by router module don\'t change the format unless you know what you are doing! */'.$n.$n;
+		$text .= '$route[\'translate_uri_dashes\'] = '.(($route['translate_uri_dashes']) ? 'true' : 'false').';'.$n.$n;
+
+		$text .= '$route[\'default_controller\'] = \''.$route['default_controller'].'\';'.$n;
+		$text .= '$route[\'404_override\'] = \''.$route['404_override'].'\';'.$n.$n;
+
+		foreach ($routes as $k=>$r) {
+			$text .= '$route[\''.$k.'\'] = \''.$r.'\';'.$n;
+		}
+
+		if ($new_url) {
+			$text .= '$route[\''.$new_url.'\'] = \''.$new_route.'\';'.$n;
+		}
+
+		/* atomic single file system action rename */
+		$success = file_put_contents(APPPATH.'/config/swap_routes.php',trim($text).$n);
+
+		/* did we get a error? bail */
+		if (!$success) {
+			return false;
+		}
+
+		return rename(APPPATH.'/config/swap_routes.php',APPPATH.'/config/routes.php');
+	}
+
+	public function routes_add($new_url=null,$new_route=null) {
+		if (is_array($new_url)) {
+			foreach ($new_url as $u=>$r) {
+				$this->routes_write(null,$u,$r);
+			}
+		} else {
+			return $this->routes_write(null,$new_url,$new_route);
+		}
+	}
+
+	public function routes_remove($remove_routes,$routes=null) {
+		$routes = ($routes) ? $routes : $this->routes_read();
+
+		foreach ($routes as $key=>$val) {
+			foreach ($remove_routes as $k=>$v) {
+				if ($key == $k && $val == $v) {
+					unset($routes[$key]);
+				}
+			}
+		}
+
+		return $routes;
+	}
+
 	protected function _version_check($current_version,$must_match) {
 		/*
 		1 = less than
@@ -681,9 +761,9 @@ class Module_core {
 		if (!defined('ROOTPATH')) {
 			define('ROOTPATH',md5(microtime()));
 		}
-	
+
 		$wrapped = false;
-		
+
 		if (strpos($input,'{ROOTPATH}') !== false) {
 			/* "{ROOTPATH}modules/plugin_combobox" */
 			$wrapped = true;
@@ -695,11 +775,11 @@ class Module_core {
 			$input = str_replace(ROOTPATH,'',$input);
 			$input = "ROOTPATH.'".$input."'";
 		}
-	
+
 		if (!$wrapped) {
 			$input = "'".$input."'";
 		}
-	
+
 		return $input;
 	}
 

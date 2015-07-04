@@ -27,6 +27,7 @@ class Module_install {
 	public $required;
 	public $requires_composer;
 	public $table; /* used for remove_all() */
+	public $routes = null;
 
 	protected $root;
 	protected $o_access_model;
