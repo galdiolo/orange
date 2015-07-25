@@ -211,7 +211,6 @@ class Module_install {
 		$this->drop_table();
 	}
 
-	/* for install.php use */
 	public function query($sql) {
 		$success = false;
 

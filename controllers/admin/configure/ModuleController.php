@@ -46,16 +46,15 @@ class moduleController extends APP_AdminController {
 					echo ' <span class="label label-default">'.$module_type.'</span>';
 			}
 		});
-
+		
+		/* any hard errors? */
 		if ($reply = $this->module_core->init(ROOTPATH,APPPATH) !== true) {
 			show_error($reply);
 		}
 	}
 
 	public function indexAction($filter=null) {
-		if ($filter) {
-			$this->input->is_valid('alpha',$filter);
-		}
+		if ($filter) $this->input->is_valid('alpha',$filter);
 
 		$this->page
 			->js('/themes/orange/assets/js/module-index.js')
