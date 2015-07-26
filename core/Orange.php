@@ -10,7 +10,7 @@ function codeigniter_autoload($class) {
 
 		return true;
 	} elseif ($class == 'Database_model') { /* abstract class */	
-		include_once ROOTPATH.'/modules/orange/models/Database_model.php';
+		include_once ROOTPATH.'/packages/orange/models/Database_model.php';
 		
 		return true;
 	} elseif (substr($class, -6) == '_model') { /* is it a CI model? */
@@ -159,10 +159,10 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 
 	/* is $_classes empty? if so it's the first time here add the packages to the search path */
 	if (count($_classes) == 0) {
-		include APPPATH.'config/modules.php';
+		include APPPATH.'config/packages.php';
 
-		if (file_exists(APPPATH.'config/'.ENVIRONMENT.'/modules.php')) {
-			include APPPATH.'config/'.ENVIRONMENT.'/modules.php';
+		if (file_exists(APPPATH.'config/'.ENVIRONMENT.'/packages.php')) {
+			include APPPATH.'config/'.ENVIRONMENT.'/packages.php';
 		}
 
 		/* add application, packages, base */

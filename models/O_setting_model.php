@@ -41,7 +41,7 @@ class o_setting_model extends Database_model {
 		return (count($result) > 0);
 	}
 
-	/* special upsert just for modules */
+	/* special upsert just for packages */
 	public function upsert($data) {
 		$result = $this->_database->where(['name'=>$data['name'],'group'=>$data['group']])->get($this->table)->result();
 

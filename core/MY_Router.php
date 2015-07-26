@@ -12,7 +12,7 @@
 
 class MY_Router extends CI_Router {
 	protected $name = 'orange';
-	protected $module = ''; /* what module are we currently looking for a controller in? */
+	protected $package = ''; /* what package are we currently looking for a controller in? */
 
 	/**
 	* Set default controller
@@ -71,7 +71,7 @@ class MY_Router extends CI_Router {
 			foreach ($search_path as $path) {
 				$path = rtrim($path,'/').'/';
 
-				$this->module = str_replace(ROOTPATH.'/','',$path);
+				$this->package = str_replace(ROOTPATH.'/','',$path);
 
 				$segments[1] = ((isset($segments[1])) ? str_replace('-', '_', $segments[1]) : 'index');
 
@@ -84,8 +84,8 @@ class MY_Router extends CI_Router {
 						$segments[1] .= (($request == 'Get') ? '' : $request).'Action';
 
 						/* re-route codeigniter.php controller loading */
-						if ($this->modules != 'application') {
-							$this->directory = '../../'.$this->module.'controllers/'.$this->directory;
+						if ($this->package != 'application') {
+							$this->directory = '../../'.$this->package.'controllers/'.$this->directory;
 						}
 
 						/* return the controller, method and anything else */
@@ -115,7 +115,7 @@ class MY_Router extends CI_Router {
 
 	public function fetch_directory() {
 		/* strip out controller path re-routing */
-		return ($this->module != '') ? substr($this->directory,strlen('../../'.$this->module.'controllers/')) : $this->directory;
+		return ($this->package != '') ? substr($this->directory,strlen('../../'.$this->package.'controllers/')) : $this->directory;
 	}
 
 	protected function controller_method($input) {

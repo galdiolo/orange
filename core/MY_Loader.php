@@ -316,12 +316,12 @@ class MY_Loader extends CI_Loader {
 
 	/* override parent */
 	protected function _ci_autoloader() {
-		if (file_exists(APPPATH.'config/modules.php')) {
-			include(APPPATH.'config/modules.php');
+		if (file_exists(APPPATH.'config/packages.php')) {
+			include(APPPATH.'config/packages.php');
 		}
 
-		if (file_exists(APPPATH.'config/'.ENVIRONMENT.'/modules.php')) {
-			include(APPPATH.'config/'.ENVIRONMENT.'/modules.php');
+		if (file_exists(APPPATH.'config/'.ENVIRONMENT.'/packages.php')) {
+			include(APPPATH.'config/'.ENVIRONMENT.'/packages.php');
 		}
 
 		if (!isset($autoload)){

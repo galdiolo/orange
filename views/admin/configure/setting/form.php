@@ -63,7 +63,7 @@ if ($advanced == true && has_access('Orange::Advanced Settings')) {
 
 	theme::start_form_section('Internal');
 	o::text('internal',$record->internal);
-	theme::end_form_section('Internal module "owner"');
+	theme::end_form_section('Internal package "owner"');
 
 	theme::start_form_section('Manged',true);
 	theme::checker('managed',(int)$record->managed);

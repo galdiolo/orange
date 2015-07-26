@@ -64,17 +64,17 @@ class Migrations extends CI_Migration {
 	*
 	* @return	array	list of migration file paths sorted by version
 	*
-	* -- bring in from the modules as well
+	* -- bring in from the packages as well
 	*/
 	public function find_migrations() {
 		$migrations = array();
 
-		$module_folders = $this->load->get_package_paths();
+		$package_folders = $this->load->get_package_paths();
 
 		/* add the default to the beginning of the array */
-		array_unshift($module_folders,$this->_migration_path);
+		array_unshift($package_folders,$this->_migration_path);
 
-		foreach ($module_folders as $mfolder) {
+		foreach ($package_folders as $mfolder) {
 			$level1 = glob($mfolder.'*_*.php');
 			$level2 = glob($mfolder.'/support/migrations/*_*.php');
 			

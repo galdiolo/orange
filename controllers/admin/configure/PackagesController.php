@@ -16,10 +16,9 @@ class packagesController extends APP_AdminController {
 	public $controller_path = '/admin/configure/packages';
 	public $controller_title = 'Package';
 	public $controller_titles = 'Packages';
-	public $libraries = ['package_migration','package_manager'];
+	public $libraries = 'package_manager';
 	public $has_access = 'Orange::Manage Packages';
-	public $type_map = [''=>'default','package'=>'danger','core'=>'warning','library'=>'success','libraries'=>'success','theme'=>'warning','module'=>'primary','plugin'=>'info','assets'=>'warning'];
-	public $modules = [];
+	public $type_map = [''=>'default','?'=>'danger','core'=>'warning','library'=>'success','libraries'=>'success','theme'=>'warning','package'=>'primary','plugin'=>'info','assets'=>'warning'];
 
 	public function indexAction($filter=null) {
 		if ($filter) $this->input->is_valid('alpha',$filter);
@@ -27,13 +26,13 @@ class packagesController extends APP_AdminController {
 		$this->page
 			->data([
 				'type_map'=>$this->type_map,
-				'records'=>$this->package_manager->index(),
+				'records'=>$this->package_manager->records(),
 				'filter'=>$filter,
-				'errors'=>$this->package_manager->test_read_write()
+				'errors'=>$this->package_manager->messages,
 			])
 			->build();
 	}
-	
+
 	public function installAction($package=null) {
 		$this->_process($package,'install');
 
@@ -71,7 +70,7 @@ class packagesController extends APP_AdminController {
 		$map = ['install'=>'installed','uninstall'=>'uninstalled','delete'=>'deleted','upgrade'=>'upgraded'];
 
 		$package = hex2bin($name);
-		
+
 		/* dump all caches */
 		$this->cache->clean();
 
@@ -81,12 +80,12 @@ class packagesController extends APP_AdminController {
 			return false;
 		}
 
-		$this->wallet->success('Module "'.$package.'" '.$map[$method].'.');
-			
+		$this->wallet->success('Package "'.$package.'" '.$map[$method].'.');
+
 		/* also refresh the user data */
 		$this->auth->refresh_userdata();
 
 		return true;
 	}
-	
+
 } /* end class */

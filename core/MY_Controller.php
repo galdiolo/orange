@@ -51,13 +51,8 @@ class MY_Controller extends CI_Controller {
 			}
 		}
 
-		/* let the modules do there start up thing */
-		include APPPATH.'/config/modules.php';
-
-		foreach ((array)$autoload[$this->onload_visibility.'_onload'] as $module_onload_file) {
-			/* try to load it but, don't complain if it's not there */
-			include $module_onload_file.'/support/onload.php';
-		}
+		/* let the packages do there start up thing */
+		include APPPATH.'/config/packages.php';
 
 		/* while you could have done this in your onload file - this keeps it "clean" */
 		$this->event->trigger('ci.controller.startup',$this);

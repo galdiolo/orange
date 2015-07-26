@@ -133,27 +133,27 @@ class package_migration {
 	}
 
 	public function add_route($from,$to) {
-		return ci()->package_manager->route($from,$to,'add');
+		return ci()->package_manager->route_config($from,$to,'add');
 	}
 
 	public function remove_route($from,$to) {
-		return ci()->package_manager->route($from,$to,'remove');
+		return ci()->package_manager->route_config($from,$to,'remove');
 	}
 
 	public function add_symlink($from,$to) {
 		$this->ci_load->helper('file');
 
-		/* get module folder name */
+		/* get package folder name */
 		$child_folder = substr(get_called_class(),8);
 
 		$asset = trim($asset,'/');
 
-		$module_folder = $this->root.'/modules/'.$child_folder.'/public/'.$asset;
+		$package_folder = $this->root.'/package/'.$child_folder.'/public/'.$asset;
 		$public_folder = $this->root.'/public/'.$asset;
 
-		/* does the module exists */
-		if (!realpath($module_folder)) {
-			$this->ci_wallet->red('Couldn\'t find module file or folder <small>"'.$child_folder.'/public/'.$asset.'"</small>','/admin/configure/module');
+		/* does the package exists */
+		if (!realpath($package_folder)) {
+			$this->ci_wallet->red('Couldn\'t find package file or folder <small>"'.$child_folder.'/public/'.$asset.'"</small>','/admin/configure/package');
 
 			return false;
 		}
@@ -167,10 +167,10 @@ class package_migration {
 			unlink($public_folder);
 		}
 
-		$success = relative_symlink($module_folder,$public_folder);
+		$success = relative_symlink($package_folder,$public_folder);
 
 		if (!$success) {
-			$this->ci_wallet->red('Couldn\'t create Link ".../public/'.$asset.'".','/admin/configure/module');
+			$this->ci_wallet->red('Couldn\'t create Link ".../public/'.$asset.'".','/admin/configure/package');
 
 			return false;
 		}

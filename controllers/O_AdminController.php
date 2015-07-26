@@ -36,7 +36,7 @@ class O_AdminController extends APP_GuiController {
 		
 		/*
 		settings model already loaded,
-		module model only needed by module controller
+		package model only needed by package controller
 		auth library loaded all the user models
 		*/
 		

@@ -48,7 +48,7 @@ class o_access_model extends Database_model {
 	}
 	
 	/*
-	internal is often used by modules to store a identifier to the module which inserted the record
+	internal is often used by packages to store a identifier to the package which inserted the record
 	this then in turn can be used to delete all access matching this identifier
 	*/
 	public function delete_by_internal($internal) {
@@ -62,7 +62,7 @@ class o_access_model extends Database_model {
 		return $this->delete_by('internal',$internal);
 	}
 	
-	/* upsert used by the module install/upgrade */
+	/* upsert used by the package install/upgrade */
 	public function upsert($data) {
 		$key = strtolower($data['group'].'::'.$data['name']);
 	

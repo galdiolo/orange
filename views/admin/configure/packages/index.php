@@ -51,10 +51,13 @@ foreach ($records as $name=>$record) {
 	} else {
 		o::e($record['name']);
 	}
-	/* (i) for more information */
-	echo ' - ';
-	o::e($record['info']);
-	echo ' <a href="'.$controller_path.'/details/'.$url_name.'" class="" data-name="'.$name.'"><i class="fa fa-info-circle"></i></a> ';
+	
+	if (!$record['json_error']) {
+		/* (i) for more information */
+		echo ' - ';
+		o::e($record['info']);
+		echo ' <a href="'.$controller_path.'/details/'.$url_name.'" class="" data-name="'.$name.'"><i class="fa fa-info-circle"></i></a> ';
+	}
 
 	/* Version */
 	theme::table_row('txt-ac');
