@@ -140,7 +140,7 @@ class package_migration {
 		return ci()->package_manager->route_config($from,$to,'remove');
 	}
 
-	public function add_symlink($from,$to) {
+	public function add_symlink($asset) {
 		$this->ci_load->helper('file');
 
 		/* get package folder name */
@@ -148,8 +148,8 @@ class package_migration {
 
 		$asset = trim($asset,'/');
 
-		$package_folder = $this->root.'/package/'.$child_folder.'/public/'.$asset;
-		$public_folder = $this->root.'/public/'.$asset;
+		$package_folder = ROOTPATH.'/package/'.$child_folder.'/public/'.$asset;
+		$public_folder = ROOTPATH.'/public/'.$asset;
 
 		/* does the package exists */
 		if (!realpath($package_folder)) {
@@ -178,7 +178,7 @@ class package_migration {
 		return true;
 	}
 
-	public function remove_symlink($to) {
+	public function remove_symlink($asset) {
 		$asset = trim($asset,'/');
 		$public = $this->root.'/public/'.$asset;
 

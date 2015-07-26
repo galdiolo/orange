@@ -83,7 +83,7 @@ foreach ($records as $name=>$record) {
 	
 			echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
 		} else {
-			echo '<span class="label label-default">'.$record['migration_version'].'</span> ';
+			echo '<span class="label label-default">'.$record['version'].'</span> ';
 		}
 	}
 
