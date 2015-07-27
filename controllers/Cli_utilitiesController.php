@@ -1,6 +1,6 @@
 <?php
 
-class cli_utilitiesController extends APP_PublicController {
+class cli_utilitiesController extends MY_Controller {
 
 	public function indexCliAction() {
 		$methods = get_class_methods(get_class());
@@ -31,10 +31,26 @@ class cli_utilitiesController extends APP_PublicController {
 
 	}
 
-	public function activate_packageCliAction($package=null) {
+	public function package_updateCliAction($package=null) {
 		$this->load->library('package_manager');
+		
+		if (!$package) {
+			echo 'Please specify a package.'.chr(10);
+			
+			include ROOTPATH.'/application/config/autoload.php';
+			
+			foreach ($autoload['packages'] as $p) {
+				echo basename($p,'.php').chr(10);
+			}
+			
+			die();
+		}
 
-		echo $this->package_manager->install_or_upgrade($package);
+		$bol = $this->package_manager->install_or_upgrade($package);
+		
+		echo ($bol) ? 'Complete' : 'Error';
+		
+		echo chr(10);
 	}
 
 } /* end class */

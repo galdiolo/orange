@@ -314,30 +314,6 @@ class MY_Loader extends CI_Loader {
 		return $this;
 	}
 
-	/* override parent */
-	protected function _ci_autoloader() {
-		if (file_exists(APPPATH.'config/packages.php')) {
-			include(APPPATH.'config/packages.php');
-		}
-
-		if (file_exists(APPPATH.'config/'.ENVIRONMENT.'/packages.php')) {
-			include(APPPATH.'config/'.ENVIRONMENT.'/packages.php');
-		}
-
-		if (!isset($autoload)){
-			return;
-		}
-
-		/* Autoload our packages */
-		if (isset($autoload['packages'])) {
-			foreach ($autoload['packages'] as $package_path) {
-				$this->add_package_path($package_path);
-			}
-		}
-
-		parent::_ci_autoloader();
-	}
-
 	/**
 	* Debug
 	* New Function used to display the search pathes for debugging purposes

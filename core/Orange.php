@@ -159,10 +159,10 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 
 	/* is $_classes empty? if so it's the first time here add the packages to the search path */
 	if (count($_classes) == 0) {
-		include APPPATH.'config/packages.php';
+		include APPPATH.'config/autoload.php';
 
-		if (file_exists(APPPATH.'config/'.ENVIRONMENT.'/packages.php')) {
-			include APPPATH.'config/'.ENVIRONMENT.'/packages.php';
+		if (file_exists(APPPATH.'config/'.ENVIRONMENT.'/autoload.php')) {
+			include APPPATH.'config/'.ENVIRONMENT.'/autoload.php';
 		}
 
 		/* add application, packages, base */

@@ -3,7 +3,6 @@
 class package_manager {
 	public $packages = [];
 	public $config_header = "/*\nWARNING!\nThis file is directly modified by the framework\ndo not modify it unless you know what you are doing\n*/\n\n";
-	public $config_onload;
 	public $config_packages;
 	public $model;
 	public $migration_manager;
@@ -12,22 +11,21 @@ class package_manager {
 	public function __construct() {
 		ci()->load->library(['package/package_migration','package/package_migration_manager']);
 		ci()->load->model('o_packages_model');
-		
+
 		$this->model = ci()->o_packages_model;
 		$this->migration_manager = ci()->package_migration_manager;
-		
-		$this->prepare();		
+
+		$this->prepare();
 	}
 
 	public function prepare() {
 		$packages_folder = ROOTPATH.'/packages';
 		$packages_folders = glob($packages_folder.'/*',GLOB_ONLYDIR);
 
-		$filepath = ROOTPATH.'/application/config/packages.php';
+		$filepath = ROOTPATH.'/application/config/autoload.php';
 
 		include $filepath;
 
-		$this->config_onload = $autoload['onload'];
 		$this->config_packages = $autoload['packages'];
 
 		foreach ($packages_folders as $package) {
@@ -62,10 +60,10 @@ class package_manager {
 
 			$this->packages[$dir_name] = $config;
 		}
-		
+
 		$msgs = false;
 
-		if (!is_writable(ROOTPATH.'/application/config/packages.php')) {
+		if (!is_writable(ROOTPATH.'/application/config/autoload.php')) {
 			$msgs[] = 'package config is not writable';
 		}
 
@@ -98,11 +96,7 @@ class package_manager {
 		$this->model->write($config['version'],$package,true);
 
 		/* update config */
-		$this->packages_config('packages',ROOTPATH.'/packages/'.$package,'add');
-
-		if ($config['onload']) {
-			$this->packages_config('onload',$package,'add');
-		}
+		$this->packages_config(ROOTPATH.'/packages/'.$package,'add');
 
 		return true;
 	}
@@ -124,11 +118,10 @@ class package_manager {
 		/* migrations down */
 		$this->migration_manager->run_migrations($config,'down');
 
-		/* deactive package onload and package autoload */
+		/* deactive package autoload */
 		$this->model->activate($package,false);
 
-		$this->packages_config('packages',ROOTPATH.'/packages/'.$package,'remove');
-		$this->packages_config('onload',$package,'remove');
+		$this->packages_config(ROOTPATH.'/packages/'.$package,'remove');
 
 		return true;
 	}
@@ -136,8 +129,7 @@ class package_manager {
 	public function delete($package) {
 		$this->model->remove($package);
 
-		$this->packages_config('packages',ROOTPATH.'/packages/'.$package,'remove');
-		$this->packages_config('onload',$package,'remove');
+		$this->packages_config(ROOTPATH.'/packages/'.$package,'remove');
 
 		/* delete the entire folder */
 		ci()->load->helper('directory');
@@ -158,7 +150,7 @@ class package_manager {
 			$error = true;
 		} else {
 			$config = json_decode(file_get_contents($json_file),true);
-	
+
 			if ($config === null) {
 				$error = true;
 			}
@@ -175,32 +167,42 @@ class package_manager {
 		return $config;
 	}
 
-	public function packages_config($key,$value,$mode='add') {
-		$filepath = ROOTPATH.'/application/config/packages.php';
+	public function packages_config($new_value,$mode='add') {
+		$filepath = ROOTPATH.'/application/config/autoload.php';
 
 		include $filepath;
 
-		$holder = $autoload[$key];
+		$packages_array = $autoload['packages'];
 
-		if ($mode == 'add') {
-			if (!in_array($value,$holder)) {
-				$holder[] = $value;
-			}
-		} else {
-			foreach ($holder as $k=>$v) {
-				if ($value == $v) {
-					unset($holder[$k]);
-				}
+		$new_value = str_replace('\''.ROOTPATH,'ROOTPATH.\'',$new_value);
+
+		foreach ($packages_array as $k=>$v) {
+			if ($new_value == $v) {
+				unset($packages_array[$k]);
 			}
 		}
 
-		$autoload[$key] = $holder;
+		if ($mode == 'add') {
+			$packages_array[] = $new_value;
+		}
+		
+		$packages_array = preg_replace("/[0-9]+ \=\>/i", '', var_export($packages_array,true));
 
-		$array = preg_replace("/[0-9]+ \=\>/i", '', var_export($autoload,true));
+		$packages_array = '$autoload[\'packages\'] = '.str_replace('\''.ROOTPATH,'ROOTPATH.\'',$packages_array).';';
 
-		$array = str_replace('\''.ROOTPATH,'ROOTPATH.\'',$array);
+		$content = file_get_contents(ROOTPATH.'/application/config/autoload.php');
 
-		return file_put_contents($filepath,'<?php '.chr(10).$this->config_header.'$autoload = '.$array.';');
+		$re = "/^\\s*\\\$autoload\\['packages']\\s*=\\s*array\\s*\\((.+?)\\);/ms"; 
+
+		preg_match_all($re,$content,$matches);
+
+		if (!isset($matches[0][0])) {
+			show_error('Regular Expression Error: autoload.php');
+		}
+
+		$content = str_replace($matches[0][0],$packages_array,$content);
+
+		return file_put_contents($filepath,$content);
 	}
 
 	public function route_config($from,$to,$mode) {
@@ -214,7 +216,7 @@ class package_manager {
 				unset($route[$key]);
 			}
 		}
-		
+
 		/* add mode it? */
 		if ($mode == 'add' && !isset($route[$from])) {
 			$route[$from] = $to;
@@ -222,5 +224,5 @@ class package_manager {
 
 		return file_put_contents($filepath,'<?php '.chr(10).$this->config_header.'$route = '.var_export($route,true).';');
 	}
-	
+
 } /* end class */

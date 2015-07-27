@@ -28,9 +28,7 @@ class O_AdminController extends APP_GuiController {
 	public $controller_model = null; /* allows autoloading */
 	public $has_access = null; /* array, single, * everyone, @ everyone logged in, null will always fail therefore you must set has_access */
 
-	public function __construct() {
-		$this->onload_visibility = 'admin';
-		
+	public function __construct() {		
 		/* call our parent and let them setup */
 		parent::__construct();
 		

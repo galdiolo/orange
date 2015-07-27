@@ -29,10 +29,9 @@ class MY_Controller extends CI_Controller {
 	/* to store the data sent to the view */
 	public $data = [];
 	public $controller_model;
-	public $onload_visibility = 'public';
 
+	/* setup our base controller */
 	public function __construct() {
-		/* setup our base controller */
 		parent::__construct();
 
 		/* auto load a bunch of stuff - If it's filled in */
@@ -52,7 +51,13 @@ class MY_Controller extends CI_Controller {
 		}
 
 		/* let the packages do there start up thing */
-		include APPPATH.'/config/packages.php';
+		include APPPATH.'/config/autoload.php';
+
+		foreach ((array)$autoload['packages'] as $module_onload_file) {
+			if (file_exists($module_onload_file.'/support/onload.php')) {
+				include $module_onload_file.'/support/onload.php';
+			}
+		}
 
 		/* while you could have done this in your onload file - this keeps it "clean" */
 		$this->event->trigger('ci.controller.startup',$this);

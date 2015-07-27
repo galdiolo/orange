@@ -347,8 +347,8 @@ class Theme {
 	}
 
 	static public function header_button_help($name=null) {
-		if (file_exists(ROOTPATH.'/modules/'.$name.'/install/help.html')) {
-			echo '&nbsp;<a class="btn btn-sm btn-default" href="/admin/configure/module/help/'.$name.'" target="_blank"><i class="fa fa-life-ring"></i></a>';
+		if (file_exists(ROOTPATH.'/packages/'.$name.'/install/help.html')) {
+			echo '&nbsp;<a class="btn btn-sm btn-default" href="/admin/configure/package/help/'.$name.'" target="_blank"><i class="fa fa-life-ring"></i></a>';
 		}
 	}
 

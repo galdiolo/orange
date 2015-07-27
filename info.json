@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "info": "These are the main componets of the Orange Framework",
   "type": "core",
-  "onload": true,
   "requires": {
 		"plugin_combobox": "1.*.*",
 		"plugin_flash_msg": "1.*.*",
