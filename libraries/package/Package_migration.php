@@ -141,19 +141,21 @@ class package_migration {
 	}
 
 	public function add_symlink($asset) {
-		$this->ci_load->helper('file');
-
-		/* get package folder name */
-		$child_folder = substr(get_called_class(),8);
+		ci()->load->helper('file');
 
 		$asset = trim($asset,'/');
 
-		$package_folder = ROOTPATH.'/package/'.$child_folder.'/public/'.$asset;
+		/* get package folder name */
+		$folder = explode('_',get_called_class());
+
+		array_shift($folder);
+
+		$package_folder = ROOTPATH.'/packages/'.implode('_',$folder).'/public/'.$asset;
 		$public_folder = ROOTPATH.'/public/'.$asset;
 
 		/* does the package exists */
 		if (!realpath($package_folder)) {
-			$this->ci_wallet->red('Couldn\'t find package file or folder <small>"'.$child_folder.'/public/'.$asset.'"</small>','/admin/configure/package');
+			ci()->wallet->red('Couldn\'t find package file or folder <small>"'.str_replace(ROOTPATH,'',$package_folder).'"</small>','/admin/configure/packages');
 
 			return false;
 		}
@@ -161,16 +163,11 @@ class package_migration {
 		/* let's make the public path if it's not there */
 		@mkdir(dirname($public_folder),0777,true);
 
-		/* is the alias there?  */
-		if (file_exists($public_folder)) {
-			/* first remove it */
-			unlink($public_folder);
-		}
-
-		$success = relative_symlink($package_folder,$public_folder);
-
-		if (!$success) {
-			$this->ci_wallet->red('Couldn\'t create Link ".../public/'.$asset.'".','/admin/configure/package');
+		/* remove the link/file if it's there */
+		remove_symlink($asset);
+		
+		if (!relative_symlink($package_folder,$public_folder)) {
+			ci()->wallet->red('Couldn\'t create Link "'.str_replace(ROOTPATH,'',$public_folder).'".','/admin/configure/packages');
 
 			return false;
 		}
@@ -180,9 +177,9 @@ class package_migration {
 
 	public function remove_symlink($asset) {
 		$asset = trim($asset,'/');
-		$public = $this->root.'/public/'.$asset;
-
-		return unlink($public);
+		$public_folder = ROOTPATH.'/public/'.$asset;
+		
+		return (file_exists($public_folder)) ? unlink($public_folder) : true;
 	}
 
 	public function query($sql,$database_config='default') {

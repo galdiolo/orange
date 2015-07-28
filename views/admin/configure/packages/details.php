@@ -5,7 +5,11 @@ theme::header_end();
 ?>
 <table class="table">
 	<tr>
-		<td>Internal Name (folder name)</td>
+		<td>Name</td>
+		<td><?=$record['name'] ?></td>
+	</tr>
+	<tr>
+		<td>Internal Name <small>(folder name)</small></td>
 		<td><?=$record['folder'] ?></td>
 	</tr>
 	<tr>
@@ -23,14 +27,6 @@ theme::header_end();
 	<tr>
 		<td>Type</td>
 		<td><span class="label label-<?=$type_map[$record['type']]?>"><?=$record['type'] ?></span></td>
-	</tr>
-	<tr>
-		<td>Uninstallable</td>
-		<td><?=($record['uninstall']) ? '<span class="label label-success">TRUE</span>' : '<span class="label label-danger">FALSE</span>' ?></td>
-	</tr>
-	<tr>
-		<td>Onload</td>
-		<td><?=($record['onload']) ? '<span class="label label-success">TRUE</span>' : '<span class="label label-danger">FALSE</span>' ?></td>
 	</tr>
 	<tr>
 		<td>Requires</td>
@@ -57,6 +53,13 @@ theme::header_end();
 	</tr>
 
 	<tr>
+		<td>Required By</td>
+		<td>
+			<?=implode(', ',$record['required_error_raw']) ?>
+		</td>
+	</tr>
+
+	<tr>
 		<td>Table<?=(strpos($record['tables'],',') === false) ? '' : 's' ?></td>
 		<td><?=$record['tables'] ?></td>
 	</tr>
@@ -72,7 +75,7 @@ theme::header_end();
 	</tr>
 
 	<tr>
-		<td>Migration</td>
+		<td>Migration Status</td>
 		<?php $map = [1=>'Less Than',2=>'Equal To',3=>'Greater Than'] ?>
 		<td><?=$map[$record['version_check']] ?> Migration Version</td>
 	</tr>
@@ -80,5 +83,29 @@ theme::header_end();
 	<tr>
 		<td>Has Migrations</td>
 		<td><span class="badge"><?=count($record['migrations']) ?></span></td>
+	</tr>
+
+	<tr>
+		<td colspan="2">
+			<h4>Requirements</h4>
+		</td>
+	</tr>
+
+	<tr>
+		<td>Missing Required Packages</td>
+		<td class="text-danger">
+			<strong>
+			<?=implode(', ',$record['package_error_raw']) ?>
+			</strong>
+		</td>
+	</tr>
+
+	<tr>
+		<td>Missing Required Composer Packages</td>
+		<td class="text-danger">
+			<strong>
+			<?=implode(', ',$record['composer_error_raw']) ?>
+			</strong>
+		</td>
 	</tr>
 </table>

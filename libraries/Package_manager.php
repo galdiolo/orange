@@ -7,13 +7,15 @@ class package_manager {
 	public $model;
 	public $migration_manager;
 	public $messages;
+	public $requirements;
 
 	public function __construct() {
-		ci()->load->library(['package/package_migration','package/package_migration_manager']);
+		ci()->load->library(['package/package_migration','package/package_migration_manager','package/package_requirements']);
 		ci()->load->model('o_packages_model');
 
 		$this->model = ci()->o_packages_model;
 		$this->migration_manager = ci()->package_migration_manager;
+		$this->requirements = ci()->package_requirements;
 
 		$this->prepare();
 	}
@@ -58,8 +60,10 @@ class package_manager {
 				$this->model->write_new_version($config['folder'],$config['version']);
 			}
 
-			$this->packages[$dir_name] = $config;
+			$this->packages[$dir_name] = $config;			
 		}
+
+		$this->requirements->process($this->packages);
 
 		$msgs = false;
 
@@ -160,7 +164,6 @@ class package_manager {
 			$config['json_error'] = true;
 			$config['is_active'] = false;
 		} else {
-			$config['uninstall'] = (isset($config['uninstall'])) ? $config['uninstall'] : true;
 			$config['type'] = (isset($config['type'])) ? $config['type'] : 'package';
 		}
 
