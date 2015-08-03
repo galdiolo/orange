@@ -29,11 +29,11 @@ theme::header_end();
 		<td><span class="label label-<?=$type_map[$record['type']]?>"><?=$record['type'] ?></span></td>
 	</tr>
 	<tr>
-		<td>Requires</td>
+		<td>Package Requires</td>
 		<td>
 			<?
 			foreach ($record['requires'] as $folder=>$version) {
-				$r[] = $folder.' <small>v '.$version.'</small>';
+				$r[] = $folder.' <small>v'.$version.'</small>';
 			}
 			echo implode('<br>',$r);
 			?>
@@ -45,7 +45,7 @@ theme::header_end();
 		<td>
 			<?
 			foreach ($record['requires-composer'] as $name=>$version) {
-				$c[] = $name.' <small>v '.$version.'</small>';
+				$c[] = $name.' <small>v'.$version.'</small>';
 			}
 			echo implode('<br>',$c);
 			?>
@@ -61,7 +61,7 @@ theme::header_end();
 
 	<tr>
 		<td>Table<?=(strpos($record['tables'],',') === false) ? '' : 's' ?></td>
-		<td><?=$record['tables'] ?></td>
+		<td><?=str_replace(',','<br>',$record['tables']) ?></td>
 	</tr>
 
 	<tr>
@@ -95,7 +95,7 @@ theme::header_end();
 		<td>Missing Required Packages</td>
 		<td class="text-danger">
 			<strong>
-			<?=implode(', ',$record['package_error_raw']) ?>
+			<?=implode('<br>',$record['package_error_raw']) ?>
 			</strong>
 		</td>
 	</tr>
@@ -104,7 +104,7 @@ theme::header_end();
 		<td>Missing Required Composer Packages</td>
 		<td class="text-danger">
 			<strong>
-			<?=implode(', ',$record['composer_error_raw']) ?>
+			<?=implode('<br>',$record['composer_error_raw']) ?>
 			</strong>
 		</td>
 	</tr>

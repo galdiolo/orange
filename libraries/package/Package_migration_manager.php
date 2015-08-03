@@ -55,9 +55,13 @@ class package_migration_manager {
 	}
 
 	public function version_in_range($current_version,$range) {
+		$range = ($range == '*') ? '*.*.*' : $range;
+
 		$regex = str_replace(['.', '*'], ['\.', '(\d+)'], '/^'.$range.'/');
 
-		return (bool)(preg_match($regex, $current_version));
+		$bol = (bool)(preg_match($regex, $current_version));
+
+		return $bol;
 	}
 
 	public function run_migrations($config,$dir) {

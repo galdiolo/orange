@@ -40,11 +40,9 @@ class package_requirements {
 					return true;
 				}
 
-				$composer_version = preg_replace("/[^0-9\.]/", "0",$composer_version);
-
-				if (ci()->package_migration_manager->version_in_range($looking_for_version,$composer_version)) {
+				if (!ci()->package_migration_manager->version_in_range($composer_version,$looking_for_version)) {
 					$this->add_issue($folder,'composer_error','Required composer package "'.$name.' v'.$looking_for_version.'" is not loaded.');
-					$this->add_issue($folder,'composer_error_raw',$name.' v'.$looking_for_version);
+					$this->add_issue($folder,'composer_error_raw',$name.' v'.$looking_for_version.' - found v'.$composer_version);
 				}
 			}
 		}
@@ -57,17 +55,15 @@ class package_requirements {
 		$folder = $package['folder'];
 
 		foreach ($package_requirements as $name=>$looking_for_version) {
-
 			if (!array_key_exists($name,$this->packages)) {
 				$this->add_issue($folder,'package_error','Required package "'.$name.' v'.$looking_for_version.'" is not loaded.');
 				$this->add_issue($folder,'package_error_raw',$name.' v'.$looking_for_version);
 			} else {
+				$package_version = $this->packages[$folder]['version'];
 
-				$package_version = preg_replace("/[^0-9\.]/", "0",$this->packages[$folder]['version']);
-
-				if (ci()->package_migration_manager->version_in_range($looking_for_version,$package_version)) {
+				if (!ci()->package_migration_manager->version_in_range($package_version,$looking_for_version)) {
 					$this->add_issue($folder,'package_error','Required package "'.$name.' v'.$looking_for_version.'" is not loaded.');
-					$this->add_issue($folder,'package_error_raw',$name.' v'.$looking_for_version);
+					$this->add_issue($folder,'package_error_raw',$name.' v'.$looking_for_version.' - found v'.$package_version);
 				}
 			}
 		}

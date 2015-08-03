@@ -16,5 +16,5 @@
 		"oodle/krumo": "*",
 		"composer/composer": "1.0.*"
   },
-  "tables":"orange_access, orange_nav, orange_role_access, orange_roles, orange_settings, orange_users"
+  "tables":"orange_access,orange_nav,orange_role_access,orange_roles,orange_settings,orange_users"
 }

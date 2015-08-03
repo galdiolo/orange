@@ -164,7 +164,7 @@ class package_migration {
 		@mkdir(dirname($public_folder),0777,true);
 
 		/* remove the link/file if it's there */
-		remove_symlink($asset);
+		$this->remove_symlink($asset);
 		
 		if (!relative_symlink($package_folder,$public_folder)) {
 			ci()->wallet->red('Couldn\'t create Link "'.str_replace(ROOTPATH,'',$public_folder).'".','/admin/configure/packages');
