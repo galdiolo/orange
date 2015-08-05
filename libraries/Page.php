@@ -40,7 +40,7 @@ class Page {
 		$this->template = $this->ci_load->setting('page','Default Template','_templates/default');
 
 		$this->themes = realpath(ROOTPATH.'/public'.$this->theme_www_path);
-		
+
 		$this->encryption_key = $this->ci_load->setting('config','encryption_key');
 
 		/* load any config file entries into the views variables */
@@ -242,6 +242,8 @@ class Page {
 			return $this;
 		}
 
+		$this->find_asset($file);
+
 		/* has it already been added? */
 		if (!isset($this->assets[$file]) && !empty($file)) {
 			$html = $this->_ary2element('link', array_merge($this->link_attributes, ['href' => $file]));
@@ -273,6 +275,8 @@ class Page {
 
 			return $this;
 		}
+
+		$this->find_asset($file);
 
 		if (!isset($this->assets[$file]) && !empty($file)) {
 			$html = $this->_ary2element('script', array_merge($this->script_attributes, ['src' => $file]), '');
@@ -312,7 +316,7 @@ class Page {
 	public function style($style, $where = '>') {
 		return $this->_data_core('page_style',$style,$where);
 	}
-	
+
 	/* place inside <script> */
 	public function script($script, $where = '>') {
 		return $this->_data_core('page_script',$script,$where);
@@ -482,6 +486,13 @@ class Page {
 		$output = trim($output);
 
 		return ($wrapper === false) ? $output.'/>' : $output.'>'.$wrapper.'</'.$element.'>';
+	}
+
+	protected function find_asset(&$www_path) {
+		/* does the current theme have a override file for this asset? */
+		$current_theme = ci()->page->theme_path();
+
+		$www_path = (file_exists(ROOTPATH.'/public'.$current_theme.$www_path)) ? $current_theme.$www_path : $www_path;
 	}
 
 } /* end class */
