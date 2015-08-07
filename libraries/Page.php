@@ -242,7 +242,8 @@ class Page {
 			return $this;
 		}
 
-		$this->find_asset($file);
+		/* search the theme first then exact location */
+		$file = $this->find_asset($file);
 
 		/* has it already been added? */
 		if (!isset($this->assets[$file]) && !empty($file)) {
@@ -276,7 +277,8 @@ class Page {
 			return $this;
 		}
 
-		$this->find_asset($file);
+		/* search the theme first then exact location */
+		$file = $this->find_asset($file);
 
 		if (!isset($this->assets[$file]) && !empty($file)) {
 			$html = $this->_ary2element('script', array_merge($this->script_attributes, ['src' => $file]), '');
@@ -488,11 +490,8 @@ class Page {
 		return ($wrapper === false) ? $output.'/>' : $output.'>'.$wrapper.'</'.$element.'>';
 	}
 
-	protected function find_asset(&$www_path) {
-		/* does the current theme have a override file for this asset? */
-		$current_theme = ci()->page->theme_path();
-
-		$www_path = (file_exists(ROOTPATH.'/public'.$current_theme.$www_path)) ? $current_theme.$www_path : $www_path;
+	protected function find_asset($www_path) {
+		return (file_exists(ROOTPATH.'/public'.$this->theme_path.$www_path)) ? $this->theme_path.$www_path : $www_path;
 	}
 
 } /* end class */

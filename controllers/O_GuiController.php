@@ -15,6 +15,9 @@ class O_GuiController extends MY_Controller {
 	public function __construct() {
 		parent::__construct();
 		
+		/* turn on output caching? */
+		//$this->output->cache(60);
+		
 		/* Doing GUI so, load the Page Library and Orange Library (static methods used mostly for views) */
 		$this->load->library(['Page','O']);
 

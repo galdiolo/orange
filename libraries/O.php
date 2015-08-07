@@ -446,19 +446,19 @@ class O {
 		
 		foreach ($data as $k=>$v) {
 			if (!empty($k)) {
-				$html .= ' data-'.$k.'="'.str_replace('"','&quot;',$v).'"';
+				$html .= ' data-'.$k.'="'.trim(str_replace('"','&quot;',$v)).'"';
 			}
 		}
 	
 		return $html.' ';
 	}
 	
-	static public function convert2attributes($attr) {
+	static public function convert2attributes($data) {
 		$html = '';
 		
 		foreach ($data as $k=>$v) {
 			if (!empty($k)) {
-				$html .= ' '.$k.'="'.str_replace('"','&quot;',$v).'"';
+				$html .= ' '.$k.'="'.trim(str_replace('"','&quot;',$v)).'"';
 			}
 		}
 	
