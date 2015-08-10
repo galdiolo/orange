@@ -65,7 +65,7 @@ if ($advanced == true && has_access('Orange::Advanced Settings')) {
 	o::text('internal',$record->internal);
 	theme::end_form_section('Internal package "owner"');
 
-	theme::start_form_section('Manged',true);
+	theme::start_form_section('Managed',true);
 	theme::checker('managed',(int)$record->managed);
 	theme::end_form_section('If a setting is managed a user can not change it\'s group or name.');
 

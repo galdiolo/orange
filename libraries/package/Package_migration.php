@@ -103,7 +103,7 @@ class package_migration {
 	public function add_setting($data) {
 		$package = ($package) ? $package : $this->name;
 
-		$defaults = ['name'=>'','value'=>'','group'=>'','help'=>'','type'=>0,'options'=>'','package'=>$package,'is_editable'=>1,'is_deletable'=>0,'enabled'=>1,'unmanaged'=>1];
+		$defaults = ['name'=>'','value'=>'','group'=>'','help'=>'','type'=>0,'options'=>'','package'=>$package,'is_editable'=>1,'is_deletable'=>0,'enabled'=>1,'managed'=>1];
 
 		$merged = array_merge($defaults,$data);
 
@@ -118,7 +118,7 @@ class package_migration {
 			'enabled'=>$enabled, /* not used at this time */
 			'help'=>$help,
 			'internal'=>$package,
-			'unmanaged'=>$unmanaged, /* unmanaged setting */
+			'managed'=>$managed, /* managed setting */
 			'show_as'=>$type, /* 0 textarea, 1 True/False (radios), 2 Radios (json format), 3 text input (option is length) */
 			'options'=>$options,
 		];
