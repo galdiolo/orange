@@ -208,26 +208,25 @@ class MY_Loader extends CI_Loader {
 
 			/* setup the class name, filename, and cache key */
 			$filename = 'plugin_'.strtolower(basename($file));
+			$actual_filename = ucfirst($filename);
 
 			if (!$this->plugins[$filename]) {
-				$found = $this->current_theme.'/plugins/'.$file.'/'.ucfirst($filename).'.php';
 
-				/* is it there? */
-				if (file_exists($found)) {
-					/* let's load it */
-					include_once $found;
+				/* search the php path - this includes our packages and is the default method */
+				if (file_exists($this->current_theme.'/plugins/'.$file.'/'.$actual_filename.'.php')) {
+					include_once $this->current_theme.'/plugins/'.$file.'/'.$actual_filename.'.php';
+				
+				/* search public theme plugins folder - back up location if it's included with a theme package */
+				} elseif (file_exists(ROOTPATH.'/plugin/'.ci()->page->theme_path().'/plugins/'.$file.'/'.$actual_filename.'.php')) {
+					include_once ROOTPATH.'/plugin/'.ci()->page->theme_path().'/plugins/'.$file.'/'.$actual_filename.'.php';
+
+				/* search public plugins folder - global plugin location */
+				} elseif (file_exists(ROOTPATH.'/public/plugins/'.$file.'/'.$actual_filename.'.php')) {
+					include_once ROOTPATH.'/public/plugins/'.$file.'/'.$actual_filename.'.php';
+
 				} else {
-					/* let's try the default location */
-					$found = ROOTPATH.'/public/plugins/'.$file.'/'.ucfirst($filename).'.php';
-
-					/* does it exist there? */
-					if (file_exists($found)) {
-						/* include it */
-						include_once $found;
-					} else {
-						/* Not sure what your trying to load */
-						show_error('Plugin: "'.$file.'" Not Found');
-					}
+					/* Not sure what your trying to load */
+					show_error('Plugin: "'.$file.'"/"'.$filename.'" Not Found');
 				}
 
 				/* did the file include the correct class? */

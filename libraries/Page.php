@@ -493,30 +493,5 @@ class Page {
 	protected function find_asset($www_path) {
 		return (file_exists(ROOTPATH.'/public'.$this->theme_path.$www_path)) ? $this->theme_path.$www_path : $www_path;
 	}
-	
-	public function theme_plugin($name) {
-		/* handle it if it's a array */
-		if (is_array($name)) {
-			foreach ($name as $n) {
-				$this->theme_plugin($n);
-			}
-
-			return $this;
-		}
-
-		$name = 'plugin_'.strtolower($name);
-		
-		$file = ROOTPATH.'/public/'.$this->theme_path.'/plugins/'.$name.'/'.ucfirst($name).'.php';
-		
-		if (!file_exists($file)) {
-			show_error('Error: plugin "'.$name.'" not found in the "'.basename($this->theme_path).'" theme.');
-		}
-		
-		require_once $file;
-	
-		new $name();
-		
-		return $this;
-	}
 
 } /* end class */
