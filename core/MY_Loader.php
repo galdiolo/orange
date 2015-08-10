@@ -17,6 +17,7 @@ class MY_Loader extends CI_Loader {
 	public $settings = null; /* local per request storage */
 	public $plugins = []; /* loaded plugins */
 	protected $merged_settings_cache_key = 'loader.settings';
+	protected $cache_ttl;
 
 	/**
 	* Helper Loader
@@ -70,10 +71,11 @@ class MY_Loader extends CI_Loader {
 			/* let's make sure the cache is loaded */
 			$this->driver('cache', ['adapter' => ci()->config->item('cache_default'), 'backup' => ci()->config->item('cache_backup')]);
 
-			/* set the page request cached settings */
-			$this->settings = ci()->cache->get($this->merged_settings_cache_key);
+			$this->cache_ttl = ci()->config->item('cache_ttl');
 
-			if (!$this->settings) {
+			/* set the page request cached settings */
+
+			if (!$this->settings = ci()->cache->get($this->merged_settings_cache_key)) {
 				/* setup the empty array and load'em */
 				$this->settings = [];
 
@@ -110,11 +112,9 @@ class MY_Loader extends CI_Loader {
 					}
 				}
 
-				$cache_ttl = ci()->config->item('cache_ttl');
+				$this->settings['config']['cache_ttl'] = $this->cache_ttl;
 
-				$this->settings['config']['cache_ttl'] = $cache_ttl;
-
-				ci()->cache->save($this->merged_settings_cache_key,$this->settings,$cache_ttl);
+				ci()->cache->save($this->merged_settings_cache_key,$this->settings,$this->cache_ttl);
 			}
 		}
 
@@ -209,24 +209,36 @@ class MY_Loader extends CI_Loader {
 			/* setup the class name, filename, and cache key */
 			$filename = 'plugin_'.strtolower(basename($file));
 			$actual_filename = ucfirst($filename);
-
-			if (!$this->plugins[$filename]) {
-
-				/* search the php path - this includes our packages and is the default method */
-				if (file_exists($this->current_theme.'/plugins/'.$file.'/'.$actual_filename.'.php')) {
-					include_once $this->current_theme.'/plugins/'.$file.'/'.$actual_filename.'.php';
+			$cache_key = 'plugin_location_'.$filename;
+			
+			/* already loaded on this page? */
+			if (!$this->plugins[$cache_key]) {
+			
+				/* cache location */
+				if (!$location = ci()->cache->get($cache_key)) {
+					$plugin_path = '/plugins/'.$file.'/'.$actual_filename.'.php';
 				
-				/* search public theme plugins folder - back up location if it's included with a theme package */
-				} elseif (file_exists(ROOTPATH.'/plugin/'.ci()->page->theme_path().'/plugins/'.$file.'/'.$actual_filename.'.php')) {
-					include_once ROOTPATH.'/plugin/'.ci()->page->theme_path().'/plugins/'.$file.'/'.$actual_filename.'.php';
+					if (file_exists(ROOTPATH.'/public/'.$plugin_path)) {
+						/* search public plugins folder - global plugin location */
+						include_once ROOTPATH.'/public/'.$plugin_path;
 
-				/* search public plugins folder - global plugin location */
-				} elseif (file_exists(ROOTPATH.'/public/plugins/'.$file.'/'.$actual_filename.'.php')) {
-					include_once ROOTPATH.'/public/plugins/'.$file.'/'.$actual_filename.'.php';
+						ci()->cache->save($cache_key,ROOTPATH.'/public/'.$plugin_path,$this->cache_ttl);
+					} elseif (file_exists($this->current_theme.$plugin_path)) {
+						/* search the php path - this includes our packages and is the default method */
+						include_once $this->current_theme.$plugin_path;
 
+						ci()->cache->save($cache_key,$this->current_theme.$plugin_path,$this->cache_ttl);
+					} elseif (file_exists(ROOTPATH.'/plugin/'.ci()->page->theme_path().$plugin_path)) {
+						/* search public theme plugins folder - back up location if it's included with a theme package */
+						include_once ROOTPATH.'/plugin/'.ci()->page->theme_path().$plugin_path;
+	
+						ci()->cache->save($cache_key,ROOTPATH.'/plugin/'.ci()->page->theme_path().$plugin_path,$this->cache_ttl);
+					} else {
+						/* Not sure what your trying to load */
+						show_error('Plugin: "'.$file.'"/"'.$filename.'" Not Found');
+					}
 				} else {
-					/* Not sure what your trying to load */
-					show_error('Plugin: "'.$file.'"/"'.$filename.'" Not Found');
+					include_once $location;
 				}
 
 				/* did the file include the correct class? */
@@ -238,7 +250,7 @@ class MY_Loader extends CI_Loader {
 				}
 			}
 
-			$this->plugins[$filename] = true;
+			$this->plugins[$cache_key] = true;
 		}
 
 		/* allow chaining */
