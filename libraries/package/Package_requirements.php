@@ -55,7 +55,7 @@ class package_requirements {
 		$folder = $package['folder'];
 
 		foreach ($package_requirements as $name=>$looking_for_version) {
-			if (!array_key_exists($name,$this->packages)) {
+			if ($this->packages[$name]['is_active'] != true) {
 				$this->add_issue($folder,'package_error','Required package "'.$name.' v'.$looking_for_version.'" is not loaded.');
 				$this->add_issue($folder,'package_error_raw',$name.' v'.$looking_for_version);
 			} else {
@@ -75,13 +75,15 @@ class package_requirements {
 	public function allow_uninstall($package) {
 		$folder = $package['folder'];
 
-		foreach ($this->packages as $p) {
-			foreach ((array)$p['requires'] as $n=>$v) {
-				if ($n == $folder) {
-					$this->add_issue($folder,'required_error','This package is required by "'.$p['folder'].'" package');
-					$this->add_issue($folder,'required_error_raw',$p['folder']);
-	
-					break;
+		foreach ($this->packages as $package) {
+			if ($package['is_active']) {
+				foreach ((array)$package['requires'] as $name=>$version) {
+					if ($name == $folder) {
+						$this->add_issue($folder,'required_error','This package is required by "'.$package['folder'].'" package');
+						$this->add_issue($folder,'required_error_raw',$package['folder']);
+		
+						break;
+					}
 				}
 			}
 		}
