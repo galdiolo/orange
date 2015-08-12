@@ -5,7 +5,7 @@ theme::header_end();
 
 theme::table_empty($records['records']);
 
-theme::table_tabs($records['records']);
+theme::table_tabs($records['records'],['human'=>true]);
 
 theme::table_tabs_start();
 

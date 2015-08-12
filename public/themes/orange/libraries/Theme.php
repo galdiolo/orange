@@ -234,6 +234,9 @@ class Theme {
 	/* table tabs */
 
 	static public function table_tabs($records, $extra = []) {
+		$human = $extra['human'];
+		unset($extra['human']);
+		
 		$defaults = ['class' => '', 'style' => '', 'tab_text' => 'tab_text', 'tab_name' => 'tabs', 'nav_class' => 'nav-pills', 'hash_tabs' => TRUE];
 		extract(array_diff_key($defaults, $extra)+array_intersect_key($extra, $defaults));
 
@@ -241,7 +244,8 @@ class Theme {
 
 		foreach ($records as $tab_text => $record) {
 			$tab_id = 'table-tab-'.md5($tab_text);
-			echo '<li role="presentation" '.$class.'"><a href="#'.$tab_id.'" aria-controls="'.$tab_id.'" role="tab" data-toggle="pill">'.$record[0]->tab_text.'</a></li>';
+			$txt = ($human) ? ucwords(strtolower(str_replace(['_','-'],' ',$record[0]->tab_text))) : $record[0]->tab_text;
+			echo '<li role="presentation" '.$class.'"><a href="#'.$tab_id.'" aria-controls="'.$tab_id.'" role="tab" data-toggle="pill">'.$txt.'</a></li>';
 		}
 
 		echo '</ul>';

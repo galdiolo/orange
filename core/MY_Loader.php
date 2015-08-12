@@ -21,7 +21,7 @@ class MY_Loader extends CI_Loader {
 
 	/**
 	* Helper Loader
-	* Overridden to allow O_helpers to load
+	* Overridden to allow O_helpers to load after user helpers
 	*
 	* @param	string|string[]	$helpers	Helper name(s)
 	* @return	object
@@ -172,6 +172,8 @@ class MY_Loader extends CI_Loader {
 	* @return	mixed		if name supplied reference to loader ($this). if name not supplied the partial contents
 	*/
 	public function partial($view, $data = [], $name = null) {
+		log_message('debug', 'my_loader::partial '.$view);
+
 		/* normal load view and return content */
 		$partial = $this->view($view, $data, true);
 
@@ -188,6 +190,9 @@ class MY_Loader extends CI_Loader {
 	* Plugin
 	* New Function
 	* load a front-end plugin
+	* Search:
+	* /public/plugins/*
+	* /public/themes/{current-theme}/plugins/*
 	*
 	* @param	mixed		array of filenames or single filename
 	* @param	array		options passed to loaded plugin(s)
@@ -195,6 +200,8 @@ class MY_Loader extends CI_Loader {
 	* @return	mixed		plugin filename or reference to loader for chaining
 	*/
 	public function plugin($file = null) {
+		log_message('debug', 'my_loader::plugin '.$file);
+
 		if ($file) {
 			/* handle array */
 			if (is_array($file)) {
@@ -213,33 +220,24 @@ class MY_Loader extends CI_Loader {
 			
 			/* already loaded on this page? */
 			if (!$this->plugins[$cache_key]) {
-			
-				/* cache location */
 				if (!$location = ci()->cache->get($cache_key)) {
 					$plugin_path = '/plugins/'.$file.'/'.$actual_filename.'.php';
-				
+
 					if (file_exists(ROOTPATH.'/public/'.$plugin_path)) {
 						/* search public plugins folder - global plugin location */
-						include_once ROOTPATH.'/public/'.$plugin_path;
-
-						ci()->cache->save($cache_key,ROOTPATH.'/public/'.$plugin_path,$this->cache_ttl);
+						$location = ROOTPATH.'/public/'.$plugin_path;
 					} elseif (file_exists($this->current_theme.$plugin_path)) {
 						/* search the php path - this includes our packages and is the default method */
-						include_once $this->current_theme.$plugin_path;
-
-						ci()->cache->save($cache_key,$this->current_theme.$plugin_path,$this->cache_ttl);
-					} elseif (file_exists(ROOTPATH.'/plugin/'.ci()->page->theme_path().$plugin_path)) {
-						/* search public theme plugins folder - back up location if it's included with a theme package */
-						include_once ROOTPATH.'/plugin/'.ci()->page->theme_path().$plugin_path;
-	
-						ci()->cache->save($cache_key,ROOTPATH.'/plugin/'.ci()->page->theme_path().$plugin_path,$this->cache_ttl);
+						$location = $this->current_theme.$plugin_path;
 					} else {
 						/* Not sure what your trying to load */
 						show_error('Plugin: "'.$file.'"/"'.$filename.'" Not Found');
 					}
-				} else {
-					include_once $location;
+
+					ci()->cache->save($cache_key,$location,$this->cache_ttl);
 				}
+
+				include_once $location;
 
 				/* did the file include the correct class? */
 				if (class_exists($filename, false)) {
@@ -261,11 +259,16 @@ class MY_Loader extends CI_Loader {
 	* Add Theme Path
 	* New Function
 	* Add a theme path to the search array & include array
+	* NOTE:
+	* use the page->theme() function not this function directly
+	* (unless you know what you are doing!)
 	*
 	* @param	string	package path to add
 	* @return	object	reference to loader to allow chaining
 	*/
 	public function theme($path) {
+		log_message('debug', 'my_loader::theme '.$path);
+
 		/* remove the current theme if any */
 		remove_include_path($this->current_theme);
 
@@ -297,7 +300,7 @@ class MY_Loader extends CI_Loader {
 	* @param	bool		weither to also add it to the view cascading
 	*/
 	public function add_package_path($path, $append = true) {
-		log_message('debug', 'my_loader::add_package_path');
+		log_message('debug', 'my_loader::add_package_path '.$path.' '.(boolean)$append);
 
 		/*
 		prepend new package in front of the others

@@ -29,7 +29,7 @@ class package_migration {
 	public function add_menu($data=[]) {
 		$package = ($package) ? $package : $this->name;
 
-		$defaults = ['url'=>'','text'=>'','parent_id'=>1,'access_id'=>1,'sort'=>0,'class'=>'','color'=>null,'icon'=>nul,'package'=>$package,'is_editable'=>1,'is_deletable'=>0,'active'=>1];
+		$defaults = ['url'=>'','text'=>'','parent_id'=>1,'access_id'=>1,'sort'=>0,'class'=>'','color'=>null,'icon'=>null,'package'=>$package,'is_editable'=>1,'is_deletable'=>0,'active'=>1];
 	
 		extract(array_diff_key($defaults,$data) + array_intersect_key($data,$defaults));	
 

@@ -491,6 +491,13 @@ class Page {
 	}
 
 	protected function find_asset($www_path) {
+		/* search:
+		*
+		* /public/{current_theme}/*
+		* /public/*
+		*
+		*/
+
 		return (file_exists(ROOTPATH.'/public'.$this->theme_path.$www_path)) ? $this->theme_path.$www_path : $www_path;
 	}
 
