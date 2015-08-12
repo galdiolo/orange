@@ -33,16 +33,24 @@ if (setting('menubar','Show Class')) {
 }
 
 if (setting('menubar','Show Color')) {
-	theme::start_form_section('Color',2);
-	plugin_colorpicker::picker('color',$record->color);
+	theme::start_form_section('Color',3);
+	if (ci()->load->plugin_exists('colorpicker')) {
+		plugin_colorpicker::picker('color',$record->color);
+	} else {
+		o::text('color',$record->color);
+	}
 	theme::end_form_section();
 } else {
 	o::hidden('color','d28445');
 }
 
 if (setting('menubar','Show Icon')) {
-	theme::start_form_section('Icon');
-	plugin_fontawesome::dropdown('icon',$record->icon);
+	theme::start_form_section('Icon',3);
+	if (ci()->load->plugin_exists('fontawesome')) {
+		plugin_fontawesome::dropdown('icon',$record->icon);
+	} else {
+		o::text('icon',$record->icon);
+	}
 	theme::end_form_section();
 } else {
 	o::hidden('icon','square');

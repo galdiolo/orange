@@ -186,6 +186,27 @@ class MY_Loader extends CI_Loader {
 		return $partial;
 	}
 
+	public function plugin_exists($file = null) {
+		log_message('debug', 'my_loader::plugin_exists '.$file);
+
+		$exists = false;
+
+		$filename = 'plugin_'.strtolower(basename($file));
+		$actual_filename = ucfirst($filename);
+		
+		$plugin_path = '/plugins/'.$file.'/'.$actual_filename.'.php';
+
+		if (file_exists(ROOTPATH.'/public/'.$plugin_path)) {
+			/* search public plugins folder - global plugin location */
+			$exists = true;
+		} elseif (file_exists($this->current_theme.$plugin_path)) {
+			/* search the php path - this includes our packages and is the default method */
+			$exists = true;
+		}
+
+		return $exists;
+	}
+
 	/**
 	* Plugin
 	* New Function
