@@ -26,6 +26,6 @@
 		<?=$page_js ?>
 		<script><?=$page_script ?></script>
 		<?=$page_end ?>
-		<!--<?=base64_encode('ROUTE_RAW:'.$route_raw.' ROUTE_CLASS:'.$route_class.' ROUTE:'.$route.' ENV:'.ENVIRONMENT.' DEBUG:'.DEBUG.' LOG_THRESHOLD:'.LOG_THRESHOLD) ?>-->
+		<!--<?=base64_encode('ROUTE_RAW:'.$route_raw.' ROUTE_CLASS:'.$route_class.' ROUTE:'.$route.' ENV:'.ENVIRONMENT.' CONFIG:'.CONFIG.' LOG_THRESHOLD:'.LOG_THRESHOLD) ?>-->
 	</body>
 </html>

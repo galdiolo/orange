@@ -85,7 +85,7 @@ function add_include_path($path, $prepend = false) {
 	$package_path = rtrim(realpath($path), '/').'/';
 
 	/* if the package path is empty then it's no good */
-	if ($package_path === '/' && DEBUG !== 'production') {
+	if ($package_path === '/' && CONFIG !== 'production') {
 		die('Setup Failed - Package Not Found: "'.$path.'". Check your ENV folders.');
 	}
 
@@ -161,8 +161,8 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 	if (count($_classes) == 0) {
 		include APPPATH.'config/autoload.php';
 
-		if (file_exists(APPPATH.'config/'.ENVIRONMENT.'/autoload.php')) {
-			include APPPATH.'config/'.ENVIRONMENT.'/autoload.php';
+		if (file_exists(APPPATH.'config/'.CONFIG.'/autoload.php')) {
+			include APPPATH.'config/'.CONFIG.'/autoload.php';
 		}
 
 		/* add application, packages, base */

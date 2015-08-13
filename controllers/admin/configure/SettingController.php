@@ -133,12 +133,16 @@ class settingController extends APP_AdminController {
 
 		$merged = array_merge($file_array, $db_array);
 
-		$env_file = APPPATH.'config/'.ENVIRONMENT.'/'.$which.'.php';
+		$env_array = [];
 
-		if (file_exists($env_file)) {
-			include APPPATH.'config/'.ENVIRONMENT.'/'.$which.'.php';
-			$env_array = (array) $config;
-			unset($config);
+		if (CONFIG) {
+			$env_file = APPPATH.'config/'.CONFIG.'/'.$which.'.php';
+	
+			if (file_exists($env_file)) {
+				include APPPATH.'config/'.CONFIG.'/'.$which.'.php';
+				$env_array = (array) $config;
+				unset($config);
+			}
 		}
 
 		$this->page
@@ -192,6 +196,7 @@ class settingController extends APP_AdminController {
 			'enabled'=>1,
 			'managed'=>0,
 			'show_as'=>$show_as,
+			'is_deletable'=>1,
 		];
 
 		$this->output->json('err',$this->o_setting_model->insert($data,'insert'));

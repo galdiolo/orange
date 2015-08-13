@@ -11,9 +11,11 @@ echo '<div class="panel panel-info"><div class="panel-heading"><h3 class="panel-
 settingController::looper($file_array);
 echo '</div></div>';
 
-echo '<div class="panel panel-info"><div class="panel-heading"><h3 class="panel-title">Environment Config File /'.ENVIRONMENT.'/'.$which.'.php</h3></div><div class="panel-body" style="padding: 0">';
-settingController::looper($env_array);
-echo '</div></div>';
+if (count($env_array) > 0) {
+	echo '<div class="panel panel-info"><div class="panel-heading"><h3 class="panel-title">Environment Config File /'.CONFIG.'/'.$which.'.php</h3></div><div class="panel-body" style="padding: 0">';
+	settingController::looper($env_array);
+	echo '</div></div>';
+}
 
 echo '<div class="panel panel-success"><div class="panel-heading"><h3 class="panel-title">Database Settings</h3></div><div class="panel-body" style="padding: 0">';
 settingController::looper($db_array);

@@ -90,17 +90,19 @@ class MY_Loader extends CI_Loader {
 					$this->settings[basename($file,'.php')] = $config;
 				}
 
-				/* get environment */
-				$config_files = glob(ROOTPATH.'/application/config/'.ENVIRONMENT.'/*.php');
+				/* get environment configuration - if it's set */
+				if (CONFIG) {
+					$config_files = glob(ROOTPATH.'/application/config/'.CONFIG.'/*.php');
 
-				foreach ($config_files as $file) {
-					$config = [];
+					foreach ($config_files as $file) {
+						$config = [];
 
-					require $file;
+						require $file;
 
-					$filename = basename($file,'.php');
+						$filename = basename($file,'.php');
 
-					$this->settings[$filename] = array_merge_recursive($this->settings[$filename],$config);
+						$this->settings[$filename] = array_merge_recursive($this->settings[$filename],$config);
+					}
 				}
 
 				/* get all database "settings" */
@@ -193,7 +195,7 @@ class MY_Loader extends CI_Loader {
 
 		$filename = 'plugin_'.strtolower(basename($file));
 		$actual_filename = ucfirst($filename);
-		
+
 		$plugin_path = '/plugins/'.$file.'/'.$actual_filename.'.php';
 
 		if (file_exists(ROOTPATH.'/public/'.$plugin_path)) {
@@ -238,7 +240,7 @@ class MY_Loader extends CI_Loader {
 			$filename = 'plugin_'.strtolower(basename($file));
 			$actual_filename = ucfirst($filename);
 			$cache_key = 'plugin_location_'.$filename;
-			
+
 			/* already loaded on this page? */
 			if (!$this->plugins[$cache_key]) {
 				if (!$location = ci()->cache->get($cache_key)) {
