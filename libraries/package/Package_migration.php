@@ -103,7 +103,7 @@ class package_migration {
 	public function add_setting($data) {
 		$package = ($package) ? $package : $this->name;
 
-		$defaults = ['name'=>'','value'=>'','group'=>'','help'=>'','type'=>0,'options'=>'','package'=>$package,'is_editable'=>1,'is_deletable'=>0,'enabled'=>1,'managed'=>1];
+		$defaults = ['name'=>'','value'=>'','group'=>$package,'help'=>'','type'=>0,'options'=>'','package'=>$package,'is_editable'=>1,'is_deletable'=>0,'enabled'=>1,'managed'=>1];
 
 		$merged = array_merge($defaults,$data);
 
@@ -186,7 +186,7 @@ class package_migration {
 		$success = false;
 
 		if (!empty($sql)) {
-			$db = $this->ci_load->database($database_config,true);
+			$db = ci()->load->database($database_config,true);
 
 			$success = $db->query($sql);
 

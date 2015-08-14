@@ -120,6 +120,8 @@ foreach ($records as $name=>$record) {
 	/* show uninstall */
 	if ($is_active && !$record['json_error'] && !$is_required) {
 		echo '<a href="'.$this->controller_path.'/uninstall/'.$url_name.'" data-name="'.$record['name'].'" class="btn btn-xs btn-warning js-uninstallable">Uninstall</a> ';
+	} elseif ($is_active && $is_required) {
+		echo '<a href="'.$controller_path.'/details/'.$url_name.'" class="btn btn-xs btn-primary"><i class="fa fa-question-circle"></i></a> ';
 	}
 
 	/* show delete */

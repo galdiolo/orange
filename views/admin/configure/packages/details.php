@@ -54,8 +54,10 @@ theme::header_end();
 
 	<tr>
 		<td>Required By</td>
-		<td>
-			<?=implode(', ',$record['required_error_raw']) ?>
+		<td class="text-danger">
+			<strong>
+			<?=implode('<br>',$record['required_error_raw']) ?>
+			</strong>
 		</td>
 	</tr>
 
