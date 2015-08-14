@@ -53,11 +53,22 @@ class MY_Router extends CI_Router {
 	*
 	*/
 	public function _validate_request($segments) {
+		$cache_key = ROOTPATH.'/var/cache/uri_'.md5(print_r($segments,true));
+		
+		/* get it from the cache? cache for a hour */
+		if (file_exists($cache_key) && (filemtime($cache_key) > (time()-URI_CACHE))) {
+			$cached = unserialize(file_get_contents($cache_key));
+
+			$this->directory = $cached['directory'];
+			$this->package = $cached['package'];
+
+			return $cached['segments'];
+		}
+
 		/*
 		we just need to see if it's there not load it
 		we also ALWAYS convert - to _
 		*/
-
 		$search_path = explode(PATH_SEPARATOR, get_include_path());
 
 		/* http request method - this make the CI 3 method invalid */
@@ -88,6 +99,11 @@ class MY_Router extends CI_Router {
 							$this->directory = '../../'.$this->package.'controllers/'.$this->directory;
 						}
 
+						/* atomic creation */
+						$tmpfname = tempnam(ROOTPATH.'/var/cache','temp');
+						file_put_contents($tmpfname,serialize(['segments'=>$segments,'directory'=>$this->directory,'package'=>$this->package]));
+						rename($tmpfname,$cache_key); /* atomic */
+						
 						/* return the controller, method and anything else */
 						return $segments;
 					}
