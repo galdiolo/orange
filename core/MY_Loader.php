@@ -130,33 +130,6 @@ class MY_Loader extends CI_Loader {
 		return $rtn;
 	}
 
-	protected function _format_setting($value) {
-		/* is it JSON? if not this will return null */
-		$is_json = @json_decode($value, true);
-
-		if ($is_json !== null) {
-			$value = $is_json;
-		} else {
-			switch(trim(strtolower($value))) {
-				case 'true':
-					$value = true;
-				break;
-				case 'false':
-					$value = false;
-				break;
-				case 'null':
-					$value = null;
-				break;
-				default:
-					if (is_numeric($value)) {
-						$value = (is_float($value)) ? (float)$value : (int)$value;
-					}
-			}
-		}
-
-		return $value;
-	}
-
 	public function settings_flush() {
 		/* master */
 		return ci()->cache->delete($this->merged_settings_cache_key);
@@ -229,7 +202,6 @@ class MY_Loader extends CI_Loader {
 		/* prepend the new theme it's always first in the load order & update our paths */
 		$this->add_package_path($this->current_theme);
 
-
 		return $this;
 	}
 
@@ -287,6 +259,33 @@ class MY_Loader extends CI_Loader {
 		$data['variables'] = $this->_ci_cached_vars;
 
 		return ($which) ? $data[$which] : $data;
+	}
+
+	protected function _format_setting($value) {
+		/* is it JSON? if not this will return null */
+		$is_json = @json_decode($value, true);
+
+		if ($is_json !== null) {
+			$value = $is_json;
+		} else {
+			switch(trim(strtolower($value))) {
+				case 'true':
+					$value = true;
+				break;
+				case 'false':
+					$value = false;
+				break;
+				case 'null':
+					$value = null;
+				break;
+				default:
+					if (is_numeric($value)) {
+						$value = (is_float($value)) ? (float)$value : (int)$value;
+					}
+			}
+		}
+
+		return $value;
 	}
 
 } /* end class */

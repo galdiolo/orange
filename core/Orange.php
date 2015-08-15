@@ -99,7 +99,7 @@ function add_include_path($path, $prepend = false) {
 		$ADDED_PATHS = [];
 		/* application path is always first */
 		$APPLICATION_PATH = $path;
-	} elseif (strpos($path,'/themes/') !== false) {
+	} elseif (strpos($path,'theme_') !== false) { /* does it contain the theme_ package prefix? */
 		/* there can be only 1 */
 		$THEME_PATH = $path;
 	} else {

@@ -12,7 +12,6 @@
 class Page {
 	protected $route; /* used for auto loading of views */
 	protected $template; /* template to use in build method */
-	protected $themes; /* themes absolute directory */
 	protected $theme = ''; /* current theme */
 	protected $assets = []; /* combined js and css storage */
 	protected $javascript_variables = []; /* javascript vairables added to page */
@@ -38,8 +37,6 @@ class Page {
 		/* these are cached so they should be pretty fast - this also permits the use of a default */
 		$this->theme_www_path = $this->ci_load->setting('paths','WWW Themes','/themes');
 		$this->template = $this->ci_load->setting('page','Default Template','_templates/default');
-
-		$this->themes = realpath(ROOTPATH.'/public'.$this->theme_www_path);
 
 		$this->encryption_key = $this->ci_load->setting('config','encryption_key');
 
@@ -96,8 +93,8 @@ class Page {
 		}
 
 		/* does this theme even exist? */
-		if (!$theme_path = realpath($this->themes.'/'.$name)) {
-			show_error('Can not locate theme '.$name);
+		if (!$theme_path = realpath(ROOTPATH.'/packages/theme_'.$name)) {
+			show_error('Cannot locate theme '.$name);
 		}
 
 		/* 1 theme at a time so make this our new theme */
@@ -114,9 +111,11 @@ class Page {
 
 		$this->ci_load->vars(['theme_path'=>$this->theme_path]);
 
+		$theme_file = ROOTPATH.'/packages/theme_'.$name.'/support/'.$name.'_theme.php';
+
 		/* does it have a theme init file? */
-		if (file_exists($theme_path.'/'.$name.'_theme.php')) {
-			include_once $theme_path.'/'.$name.'_theme.php';
+		if (file_exists($theme_file)) {
+			include_once $theme_file;
 
 			$function_name = $name.'_theme_setup';
 
