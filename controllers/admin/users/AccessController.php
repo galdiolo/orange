@@ -18,8 +18,7 @@ class AccessController extends APP_AdminController {
 	public $controller_model  = 'o_access_model';
 	public $controller_help 	= 'Access are used to control access to different sections.';
 	public $has_access 				= 'Orange::Manage Access';
-	public $plugins           = 'combobox';
-
+	public $libraries         = 'plugin_combobox';
 
 	public function indexAction() {
 		$records = $this->o_access_model->index('group,name');

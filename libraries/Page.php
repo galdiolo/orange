@@ -138,8 +138,8 @@ class Page {
 	$this->page->plugin('something');
 	$this->page->plugin(['something','something']);
 	*/
-	public function plugin($file = null) {
-		$this->ci_load->plugin($file);
+	public function library($file = null) {
+		$this->ci_load->library($file);
 
 		/* chain-able */
 		return $this;

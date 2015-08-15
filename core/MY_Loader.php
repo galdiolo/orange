@@ -15,7 +15,6 @@ class MY_Loader extends CI_Loader {
 	public $current_theme = ''; /* current theme */
 	public $orange_extended_helpers = ['array','date','directory','file','string'];
 	public $settings = null; /* local per request storage */
-	public $plugins = []; /* loaded plugins */
 	protected $merged_settings_cache_key = 'loader.settings';
 	protected $cache_ttl;
 
@@ -188,94 +187,16 @@ class MY_Loader extends CI_Loader {
 		return $partial;
 	}
 
-	public function plugin_exists($file = null) {
-		log_message('debug', 'my_loader::plugin_exists '.$file);
+	public function library_exists($file = null) {
+		/* this would be in the libraries folder */
+		$file = str_replace('.php', '', trim($file, '/'));
 
-		$exists = false;
+		/* prepare with uppercase 1st letter in the library file name */
+		$file = 'libraries/'.dirname($file).'/'.ucfirst(strtolower(basename($file))).'.php';
 
-		$filename = 'plugin_'.strtolower(basename($file));
-		$actual_filename = ucfirst($filename);
+		log_message('debug', 'my_loader::library_exists '.$file);
 
-		$plugin_path = '/plugins/'.$file.'/'.$actual_filename.'.php';
-
-		if (file_exists(ROOTPATH.'/public/'.$plugin_path)) {
-			/* search public plugins folder - global plugin location */
-			$exists = true;
-		} elseif (file_exists($this->current_theme.$plugin_path)) {
-			/* search the php path - this includes our packages and is the default method */
-			$exists = true;
-		}
-
-		return $exists;
-	}
-
-	/**
-	* Plugin
-	* New Function
-	* load a front-end plugin
-	* Search:
-	* /public/plugins/*
-	* /public/themes/{current-theme}/plugins/*
-	*
-	* @param	mixed		array of filenames or single filename
-	* @param	array		options passed to loaded plugin(s)
-	* @param	bool		flag to return name or return reference to loader for chaining (default)
-	* @return	mixed		plugin filename or reference to loader for chaining
-	*/
-	public function plugin($file = null) {
-		log_message('debug', 'my_loader::plugin '.$file);
-
-		if ($file) {
-			/* handle array */
-			if (is_array($file)) {
-				foreach ($file as $single) {
-					/* always returns a reference to loader for chaining */
-					$this->plugin($single);
-				}
-
-				return $this;
-			}
-
-			/* setup the class name, filename, and cache key */
-			$filename = 'plugin_'.strtolower(basename($file));
-			$actual_filename = ucfirst($filename);
-			$cache_key = 'plugin_location_'.$filename;
-
-			/* already loaded on this page? */
-			if (!$this->plugins[$cache_key]) {
-				if (!$location = ci()->cache->get($cache_key)) {
-					$plugin_path = '/plugins/'.$file.'/'.$actual_filename.'.php';
-
-					if (file_exists(ROOTPATH.'/public/'.$plugin_path)) {
-						/* search public plugins folder - global plugin location */
-						$location = ROOTPATH.'/public/'.$plugin_path;
-					} elseif (file_exists($this->current_theme.$plugin_path)) {
-						/* search the php path - this includes our packages and is the default method */
-						$location = $this->current_theme.$plugin_path;
-					} else {
-						/* Not sure what your trying to load */
-						show_error('Plugin: "'.$file.'"/"'.$filename.'" Not Found');
-					}
-
-					ci()->cache->save($cache_key,$location,$this->cache_ttl);
-				}
-
-				include_once $location;
-
-				/* did the file include the correct class? */
-				if (class_exists($filename, false)) {
-					/* attach a instance of it to CI */
-					ci()->$filename = new $filename($found, $options);
-				} else {
-					show_error('Plugin Class: "'.$filename.'" Not Found');
-				}
-			}
-
-			$this->plugins[$cache_key] = true;
-		}
-
-		/* allow chaining */
-		return $this;
+		return stream_resolve_include_path($file);
 	}
 
 	/**
@@ -308,8 +229,6 @@ class MY_Loader extends CI_Loader {
 		/* prepend the new theme it's always first in the load order & update our paths */
 		$this->add_package_path($this->current_theme);
 
-		/* ci "is" the current controller so let's get any plugins attached */
-		$this->plugin(ci()->plugins);
 
 		return $this;
 	}

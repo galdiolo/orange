@@ -12,7 +12,7 @@ class package_migration {
 	public function __construct($config) {
 		$this->config;
 		$this->name = $config['folder'];
-	
+
 		$this->o_access_model = &ci()->o_access_model;
 		$this->o_menubar_model = &ci()->o_menubar_model;
 		$this->o_setting_model = &ci()->o_setting_model;
@@ -30,8 +30,8 @@ class package_migration {
 		$package = ($package) ? $package : $this->name;
 
 		$defaults = ['url'=>'','text'=>'','parent_id'=>1,'access_id'=>1,'sort'=>0,'class'=>'','color'=>null,'icon'=>null,'package'=>$package,'is_editable'=>1,'is_deletable'=>0,'active'=>1];
-	
-		extract(array_diff_key($defaults,$data) + array_intersect_key($data,$defaults));	
+
+		extract(array_diff_key($defaults,$data) + array_intersect_key($data,$defaults));
 
 		if ($icon == null) {
 			$icons = ['arrows','arrows-alt','arrow-left','arrow-right','arrow-up','arrow-down','arrows-h','arrows-v'];
@@ -77,8 +77,8 @@ class package_migration {
 		$package = ($package) ? $package : $this->name;
 
 		$defaults = ['name'=>'','description'=>'','package'=>$package,'type'=>2,'is_editable'=>0,'is_deletable'=>0];
-	
-		extract(array_diff_key($defaults,$data) + array_intersect_key($data,$defaults));	
+
+		extract(array_diff_key($defaults,$data) + array_intersect_key($data,$defaults));
 
 		$data = [
 			'is_editable'=>$is_editable, /* Lock down individual records */
@@ -96,7 +96,7 @@ class package_migration {
 
 	public function remove_access($package=null) {
 		$package = ($package) ? $package : $this->name;
-	
+
 		return $this->o_access_model->delete_by('internal',$package);
 	}
 
@@ -165,7 +165,7 @@ class package_migration {
 
 		/* remove the link/file if it's there */
 		$this->remove_symlink($asset);
-		
+
 		if (!relative_symlink($package_folder,$public_folder)) {
 			ci()->wallet->red('Couldn\'t create Link "'.str_replace(ROOTPATH,'',$public_folder).'".','/admin/configure/packages');
 
@@ -178,7 +178,7 @@ class package_migration {
 	public function remove_symlink($asset) {
 		$asset = trim($asset,'/');
 		$public_folder = ROOTPATH.'/public/'.$asset;
-		
+
 		return (file_exists($public_folder)) ? unlink($public_folder) : true;
 	}
 
@@ -211,10 +211,10 @@ class package_migration {
 				$success = $db->affected_rows();
 			break;
 		}
-		
+
 		return $success;
 	}
-	
+
 	public function drop_table($tablename) {
 		return $this->query("DROP TABLE IF EXISTS `".$tablename."`");
 	}

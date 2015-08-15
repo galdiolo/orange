@@ -34,7 +34,7 @@ if (setting('menubar','Show Class')) {
 
 if (setting('menubar','Show Color')) {
 	theme::start_form_section('Color',3);
-	if (ci()->load->plugin_exists('colorpicker')) {
+	if (ci()->load->library_exists('plugin_colorpicker')) {
 		plugin_colorpicker::picker('color',$record->color);
 	} else {
 		o::text('color',$record->color);
@@ -46,7 +46,7 @@ if (setting('menubar','Show Color')) {
 
 if (setting('menubar','Show Icon')) {
 	theme::start_form_section('Icon',3);
-	if (ci()->load->plugin_exists('fontawesome')) {
+	if (ci()->load->library_exists('plugin_fontawesome')) {
 		plugin_fontawesome::dropdown('icon',$record->icon);
 	} else {
 		o::text('icon',$record->icon);

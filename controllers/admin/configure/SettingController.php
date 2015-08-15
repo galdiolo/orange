@@ -16,7 +16,7 @@ class settingController extends APP_AdminController {
 	public $controller_titles = 'Settings';
 	public $controller_path = '/admin/configure/setting';
 	public $controller_model = 'o_setting_model';
-	public $plugins = 'combobox'; /* orange required */
+	public $libraries = 'combobox'; /* orange required */
 	public $has_access = 'Orange::Manage Settings';
 
 	public function indexAction() {

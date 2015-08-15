@@ -16,18 +16,18 @@ class menubarController extends APP_AdminController {
 	public $controller_model = 'o_menubar_model';
 	public $controller_title = 'Root Menu';
 	public $controller_titles = 'Menus';
-	public $plugins = ['nestable'];
+	public $libraries = 'plugin_nestable';
 	public $has_access = 'Orange::Manage Menubar';
 
 	public function __construct() {
 		parent::__construct();
 		
-		if (setting('menubar','Show Color',false) && $this->load->plugin_exists('colorpicker')) {
-			$this->load->plugin('colorpicker');
+		if (setting('menubar','Show Color',false) && $this->load->library_exists('plugin_colorpicker')) {
+			$this->load->library('plugin_colorpicker');
 		}
 
-		if (setting('menubar','Show Icon',false) && $this->load->plugin_exists('fontawesome')) {
-			$this->load->plugin('fontawesome');
+		if (setting('menubar','Show Icon',false) && $this->load->library_exists('plugin_fontawesome')) {
+			$this->load->library('plugin_fontawesome');
 		}
 	}
 

@@ -23,7 +23,6 @@ class MY_Controller extends CI_Controller {
 	public $libraries = [];
 	public $helpers = [];
 	public $models = [];
-	public $plugins = [];
 	public $catalogs = [];
 
 	/* to store the data sent to the view */
