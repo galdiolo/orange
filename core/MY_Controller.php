@@ -52,9 +52,9 @@ class MY_Controller extends CI_Controller {
 		/* let the packages do there start up thing */
 		include APPPATH.'/config/autoload.php';
 
-		foreach ((array)$autoload['packages'] as $module_onload_file) {
-			if (file_exists($module_onload_file.'/support/onload.php')) {
-				include $module_onload_file.'/support/onload.php';
+		foreach ((array)$autoload['packages'] as $package_onload_file) {
+			if (file_exists($package_onload_file.'/support/onload.php')) {
+				include $package_onload_file.'/support/onload.php';
 			}
 		}
 

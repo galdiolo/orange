@@ -16,7 +16,7 @@ class settingController extends APP_AdminController {
 	public $controller_titles = 'Settings';
 	public $controller_path = '/admin/configure/setting';
 	public $controller_model = 'o_setting_model';
-	public $libraries = 'combobox'; /* orange required */
+	public $libraries = 'plugin_combobox'; /* orange required */
 	public $has_access = 'Orange::Manage Settings';
 
 	public function indexAction() {
@@ -203,7 +203,7 @@ class settingController extends APP_AdminController {
 	}
 
 	/* used on the /admin/configure/setting/group/menubar view */
-	static public function looper($inp,$add_link=false) {
+	static public function looper($inp,$add_link=false,$db=[],$file=[],$env=[]) {
 		if (count($inp) > 0) {
 			echo '<table class="table table-condensed" style="margin:0">';
 			foreach ($inp as $name => $value) {
@@ -216,8 +216,11 @@ class settingController extends APP_AdminController {
 				if (!ci()->o_setting_model->compound_key_exists($name,$group)) {
 					$link = ($add_link) ? '<a class="js-add-link" href="'.ci()->page->data('controller_path').'/add/'.bin2hex($name.chr(0).$value.chr(0).$group.chr(0).$show_as).'"><i class="fa fa-plus-square"></i></a>' : '&nbsp;';
 				}
+				
+				$file_flag = ($file[$name] != $db[$name] && isset($env[$name])) ? '<span class="label label-default">DB &ne; APP</span>' : '';
+				$env_flag = ($env[$name] != $db[$name] && isset($env[$name])) ? '<span class="label label-default">DB &ne; ENV</span>' : '';
 
-				echo '<tr><td>'.$name.'&nbsp;</td><td>'.$html.'&nbsp;</td><td>'.$link.'</td></tr>';
+				echo '<tr><td>'.$name.'&nbsp;</td><td>'.$html.'&nbsp;'.$file_flag.' '.$env_flag.'</td><td>'.$link.'</td></tr>';
 			}
 			echo '</table>';
 		}

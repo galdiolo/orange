@@ -12,7 +12,7 @@ class package_requirements {
 
 		$this->composer = (array)$composer_json->require;
 		
-		/* test the modules */
+		/* test the packages */
 		foreach ($packages as $package) {
 			$this->check_composer($package);
 			$this->check_packages($package);

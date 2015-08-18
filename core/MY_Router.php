@@ -53,8 +53,9 @@ class MY_Router extends CI_Router {
 	*
 	*/
 	public function _validate_request($segments) {
-		$cache_key = ROOTPATH.'/var/cache/uri_'.md5(print_r($segments,true));
-		
+		/* only a file cache is supported because the normal CI cache isn't even loaded yet */
+		$cache_key = ROOTPATH.'/var/cache/uri-'.preg_replace("/[^0-9a-zA-Z-]/",'', implode('-',$segments));		
+
 		/* get it from the cache? cache for a hour */
 		if (file_exists($cache_key) && (filemtime($cache_key) > (time()-URI_CACHE))) {
 			$cached = unserialize(file_get_contents($cache_key));

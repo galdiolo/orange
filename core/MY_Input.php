@@ -23,6 +23,7 @@ class MY_Input extends CI_Input {
 			/* don't die because they sent in a Human readable field name */
 			$die = false;
 		}
+
 		/* post variable? */
 		if ($input{0} == '@') {
 			$input = $this->_fetch_from_array($_POST,substr($input,1));
