@@ -246,6 +246,7 @@ class Auth {
 
 		/* if they didn't send in anything then return false - fail */
 		if ($access === null) {
+		
 			log_message('debug', 'auth::has_access access null');
 
 			show_error('has_access $access is empty. This is probably because you don\'t have it set on your controller');
@@ -262,6 +263,8 @@ class Auth {
 		$user_access = (is_array($user_access)) ? $user_access : ci()->user->access;
 
 		foreach ((array)$access as $a) {
+			$a = strtolower($a); /* all access keys are lowercase */
+			
 			/* everyone */
 			if ($a === '*') {
 				return true;
