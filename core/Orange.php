@@ -253,7 +253,7 @@ function console($var,$type='log') {
 }
 
 function array_cache($filename=null,$data=null) {
-	if (is_array($data)) {
+	if (is_array($data) && $filename) {
 		/* write */
 		$tmpfname = tempnam(dirname($filename),'temp');
 		file_put_contents($tmpfname,'<?php return '.var_export($data,true).';');
