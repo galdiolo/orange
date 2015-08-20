@@ -9,9 +9,9 @@ function codeigniter_autoload($class) {
 		include_once $file;
 
 		return true;
-	} elseif ($class == 'Database_model') { /* abstract class */	
+	} elseif ($class == 'Database_model') { /* abstract class */
 		include_once ROOTPATH.'/packages/orange/models/Database_model.php';
-		
+
 		return true;
 	} elseif (substr($class, -6) == '_model') { /* is it a CI model? */
 		ci()->load->model($class);
@@ -253,8 +253,6 @@ function console($var,$type='log') {
 }
 
 function array_cache($filename=null,$data=null) {
-	$cached_data = false;
-	
 	if (is_array($data)) {
 		/* write */
 		$tmpfname = tempnam(dirname($filename),'temp');
@@ -262,10 +260,6 @@ function array_cache($filename=null,$data=null) {
 		rename($tmpfname,$filename); /* atomic */
 	} else {
 		/* read */
-		if (file_exists($cache_key)) {
-			$cached_data = require $cache_key;
-		}
+		return (file_exists($filename)) ? require $filename : false;
 	}
-	
-	return $cached_data;
 }

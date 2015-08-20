@@ -59,9 +59,7 @@ class MY_Router extends CI_Router {
 		$cached = [];
 
 		/* get it from the cache? cache for a hour */
-		if (file_exists($cache_file)) {
-			$cached = require $cache_file;
-
+		if ($cached = array_cache($cache_file)) {
 			/* if we cached this then set it and jump out */
 			if (isset($cached[$segments_key])) {
 				$this->directory = $cached[$segments_key]['directory'];
@@ -107,10 +105,7 @@ class MY_Router extends CI_Router {
 
 						$cached[$segments_key] = ['segments'=>$segments,'directory'=>$this->directory,'package'=>$this->package];
 
-						/* atomic creation */
-						$tmpfname = tempnam(ROOTPATH.'/var/cache','temp');
-						file_put_contents($tmpfname,'<?php return '.var_export($cached,true).';');
-						rename($tmpfname,$cache_file); /* atomic */
+						array_cache($cache_file,$cached);
 
 						/* return the controller, method and anything else */
 						return $segments;
