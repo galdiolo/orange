@@ -54,16 +54,21 @@ class MY_Router extends CI_Router {
 	*/
 	public function _validate_request($segments) {
 		/* only a file cache is supported because the normal CI cache isn't even loaded yet */
-		$cache_key = ROOTPATH.'/var/cache/uri-'.preg_replace("/[^0-9a-zA-Z-]/",'', implode('-',$segments));		
+		$segments_key = preg_replace("/[^0-9a-zA-Z-]/",'', implode('-',$segments));
+		$cache_file = ROOTPATH.'/var/cache/validate_request.php';
+		$cached = [];
 
 		/* get it from the cache? cache for a hour */
-		if (file_exists($cache_key) && (filemtime($cache_key) > (time()-URI_CACHE))) {
-			$cached = unserialize(file_get_contents($cache_key));
+		if (file_exists($cache_file)) {
+			$cached = require $cache_file;
 
-			$this->directory = $cached['directory'];
-			$this->package = $cached['package'];
+			/* if we cached this then set it and jump out */
+			if (isset($cached[$segments_key])) {
+				$this->directory = $cached[$segments_key]['directory'];
+				$this->package = $cached[$segments_key]['package'];
 
-			return $cached['segments'];
+				return $cached[$segments_key]['segments'];
+			}
 		}
 
 		/*
@@ -100,11 +105,13 @@ class MY_Router extends CI_Router {
 							$this->directory = '../../'.$this->package.'controllers/'.$this->directory;
 						}
 
+						$cached[$segments_key] = ['segments'=>$segments,'directory'=>$this->directory,'package'=>$this->package];
+
 						/* atomic creation */
 						$tmpfname = tempnam(ROOTPATH.'/var/cache','temp');
-						file_put_contents($tmpfname,serialize(['segments'=>$segments,'directory'=>$this->directory,'package'=>$this->package]));
-						rename($tmpfname,$cache_key); /* atomic */
-						
+						file_put_contents($tmpfname,'<?php return '.var_export($cached,true).';');
+						rename($tmpfname,$cache_file); /* atomic */
+
 						/* return the controller, method and anything else */
 						return $segments;
 					}
@@ -123,7 +130,7 @@ class MY_Router extends CI_Router {
 		ERROR controller in orange from folder
 		$this->directory = '../../'.$this->name.'/controllers/';
 		*/
-		
+
 		/* ERROR controller in application folder */
 		$this->directory = '';
 

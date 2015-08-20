@@ -251,3 +251,21 @@ function has_access($access=null) {
 function console($var,$type='log') {
 	echo '<script type="text/javascript">console.'.$type.'('.json_encode($var).')</script>';
 }
+
+function array_cache($filename=null,$data=null) {
+	$cached_data = false;
+	
+	if (is_array($data)) {
+		/* write */
+		$tmpfname = tempnam(dirname($filename),'temp');
+		file_put_contents($tmpfname,'<?php return '.var_export($data,true).';');
+		rename($tmpfname,$filename); /* atomic */
+	} else {
+		/* read */
+		if (file_exists($cache_key)) {
+			$cached_data = require $cache_key;
+		}
+	}
+	
+	return $cached_data;
+}
