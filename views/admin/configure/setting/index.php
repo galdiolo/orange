@@ -16,9 +16,11 @@ foreach ($records['records'] as $tab=>$tab_records) {
 
 	theme::table_start(['Name','Value','Managed'=>'txt-ac','Actions'=>'txt-ac']);
 
+/*
 	uasort($tab_records,function($a,$b) {
 		return ($a->name > $b->name) ? 1 : -1;
 	});
+*/
 
 	foreach ($tab_records as $record) {
 		theme::table_start_tr();

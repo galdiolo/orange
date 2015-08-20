@@ -7,7 +7,8 @@ class package_migration_manager {
 		$migration_folder = ROOTPATH.'/packages/'.$package.'/support/migrations';
 
 		if (is_dir($migration_folder)) {
-			$migrations = glob($migration_folder.'/*.php');
+			/* migrations start with v ie. v1.0.0-name_of_migration.php */
+			$migrations = glob($migration_folder.'/v*.php');
 
 			foreach ($migrations as $migration) {
 				$filename = basename($migration);
