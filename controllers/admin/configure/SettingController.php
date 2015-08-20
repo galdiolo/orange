@@ -150,10 +150,7 @@ class settingController extends APP_AdminController {
 			->data([
 				'controller_titles' => 'Complete Settings for "'.$which.'"',
 				'which' => $which,
-				'env_array' => $env_array,
-				'file_array' => $file_array,
-				'db_array' => $db_array,
-				'merged' => $merged,
+				'all' => ['merged'=>$merged,'env'=>$env_array,'file'=>$file_array,'db'=>$db_array],
 			])
 			->build();
 	}
@@ -203,52 +200,70 @@ class settingController extends APP_AdminController {
 	}
 
 	/* used on the /admin/configure/setting/group/menubar view */
-	static public function looper($inp,$add_link=false,$db=[],$file=[],$env=[]) {
+	static public function looper($all,$which) {
+		$inp = $all[$which];
+
 		if (count($inp) > 0) {
 			echo '<table class="table table-condensed" style="margin:0">';
 			foreach ($inp as $name => $value) {
 
 				$show_as = 0; /* text area default */
-				$html = self::style_type($value,$show_as);
+				$overridden = null;
+
+				switch ($which) {
+					case 'db':
+						if ($all['env'][$name] != $all['db'][$name] && isset($all['env'][$name])) {
+							$overridden = '<i class="fa fa-exchange"></i>';
+						}
+					break;
+					case 'env':
+						if ($all['file'][$name] != $all['env'][$name] && isset($all['file'][$name])) {
+							$overridden = '<i class="fa fa-exchange"></i>';
+						}
+					break;
+					case 'file':
+					break;
+				}
+
+				$html = self::style_type($value,$show_as,$overridden);
 				$group = ci()->uri->segment(5);
 				$link = '&nbsp;';
 
 				if (!ci()->o_setting_model->compound_key_exists($name,$group)) {
 					$link = ($add_link) ? '<a class="js-add-link" href="'.ci()->page->data('controller_path').'/add/'.bin2hex($name.chr(0).$value.chr(0).$group.chr(0).$show_as).'"><i class="fa fa-plus-square"></i></a>' : '&nbsp;';
 				}
-				
-				$file_flag = ($file[$name] != $db[$name] && isset($env[$name])) ? '<span class="label label-default">DB &ne; APP</span>' : '';
-				$env_flag = ($env[$name] != $db[$name] && isset($env[$name])) ? '<span class="label label-default">DB &ne; ENV</span>' : '';
 
-				echo '<tr><td>'.$name.'&nbsp;</td><td>'.$html.'&nbsp;'.$file_flag.' '.$env_flag.'</td><td>'.$link.'</td></tr>';
+				echo '<tr><td>'.$name.'&nbsp;</td><td style="width:20%">'.$html.'</td><td>'.$link.'</td></tr>';
 			}
 			echo '</table>';
 		}
 	}
 	
 	/* make the setting values "pretty" */
-	static public function style_type(&$value='',&$show_as=0) {
+	static public function style_type(&$value='',&$show_as=0,$overridden=null) {
+		$overridden = ($overridden) ? ' '.$overridden : '';
+
 		if (is_array($value)) {
 			$html = htmlentities(var_export($value,true));
 			$value = json_encode($value);
 		} elseif (is_numeric($value)) {
-			$html = '<span class="label label-warning">'.$value.'</span>';
+			$html = '<span class="label label-warning">'.$value.$overridden.'</span>';
 			$show_as = 3; /* single line text input */
 		} elseif (is_integer($value)) {
-			$html = '<span class="label label-info">'.$value.'</span>';
+			$html = '<span class="label label-info">'.$value.$overridden.'</span>';
 			$show_as = 3; /* single line text input */
 		} elseif (is_bool($value)) {
 			$str = ($value) ? 'True' : 'False';
 			$color = ['True'=>'success','False'=>'danger'];
-			$html = '<span class="label label-'.$color[$str].'">'.$str.'</span>';
+			$html = '<span class="label label-'.$color[$str].'">'.$str.$overridden.'</span>';
 			$value = strtolower($str);
 			$show_as = 1; /* true / false radio's */
 		} elseif (strtolower($value) == 'true') {
-			$html = '<span class="label label-success">True</span>';
+			$html = '<span class="label label-success">True'.$overridden.'</span>';
 			$value = strtolower($value);
 			$show_as = 1; /* true / false radio's */
 		} elseif (strtolower($value) == 'false') {
-			$html = '<span class="label label-danger">False</span>';
+			$html = '<span class="label label-danger">False'.$overridden.'</span>';
 			$value = strtolower($value);
 			$show_as = 1; /* true / false radio's */
 		} else {
