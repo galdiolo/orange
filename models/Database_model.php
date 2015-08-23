@@ -323,7 +323,7 @@ abstract class Database_model extends MY_Model {
 
 		return $result;
 	}
-	
+
 	/* --------------------------------------------------------------
 	* UTILITY METHODS
 	* ------------------------------------------------------------ */
@@ -535,7 +535,7 @@ abstract class Database_model extends MY_Model {
 		$cache_key = $this->cache_prefix.'.'.$key.'.'.$name.'.catalog';
 
 		ci()->event->trigger('database.'.$this->object.'.before.get',$method,$data,$cache_key);
-		
+
 		/* is this already in the objects page "request" cache */
 		if ($this->caches[$cache_key]) {
 			/* send it out ASAP */

@@ -270,10 +270,10 @@ class settingController extends APP_AdminController {
 			/* shorten it first */
 			$hellip = (strlen($value) > 128) ? '&hellip;' : '';
 
-			$html = htmlentities(substr($value,0,128)).$hellip;
+			$value = htmlentities(substr($value,0,128)).$hellip;
 		}
 		
-		return $html;
+		return $value;
 	}
 
 } /* end settings */

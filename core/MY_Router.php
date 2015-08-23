@@ -53,20 +53,18 @@ class MY_Router extends CI_Router {
 	*
 	*/
 	public function _validate_request($segments) {
+		/* http request method - this make the CI 3 method invalid */
+		$request = isset($_SERVER['REQUEST_METHOD']) ? ucfirst(strtolower($_SERVER['REQUEST_METHOD'])) : 'Cli';
+
 		/* only a file cache is supported because the normal CI cache isn't even loaded yet */
-		$segments_key = preg_replace("/[^0-9a-zA-Z-]/",'', implode('-',$segments));
-		$cache_file = ROOTPATH.'/var/cache/validate_request.php';
-		$cached = [];
+		$cache_file = ROOTPATH.'/var/cache/vr_'.preg_replace("/[^0-9a-zA-Z_]/",'', implode('_',$segments).'_'.$request).'.php';
 
 		/* get it from the cache? cache for a hour */
 		if ($cached = array_cache($cache_file)) {
-			/* if we cached this then set it and jump out */
-			if (isset($cached[$segments_key])) {
-				$this->directory = $cached[$segments_key]['directory'];
-				$this->package = $cached[$segments_key]['package'];
+			$this->directory = $cached['directory'];
+			$this->package = $cached['package'];
 
-				return $cached[$segments_key]['segments'];
-			}
+			return $cached['segments'];
 		}
 
 		/*
@@ -74,9 +72,6 @@ class MY_Router extends CI_Router {
 		we also ALWAYS convert - to _
 		*/
 		$search_path = explode(PATH_SEPARATOR, get_include_path());
-
-		/* http request method - this make the CI 3 method invalid */
-		$request = isset($_SERVER['REQUEST_METHOD']) ? ucfirst(strtolower($_SERVER['REQUEST_METHOD'])) : 'Cli';
 
 		/* let's find that controller */
 		foreach ($segments as $folder) {
@@ -103,9 +98,7 @@ class MY_Router extends CI_Router {
 							$this->directory = '../../'.$this->package.'controllers/'.$this->directory;
 						}
 
-						$cached[$segments_key] = ['segments'=>$segments,'directory'=>$this->directory,'package'=>$this->package];
-
-						array_cache($cache_file,$cached);
+						array_cache($cache_file,['segments'=>$segments,'directory'=>$this->directory,'package'=>$this->package]);
 
 						/* return the controller, method and anything else */
 						return $segments;

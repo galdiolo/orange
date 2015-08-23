@@ -14,9 +14,11 @@ function codeigniter_autoload($class) {
 
 		return true;
 	} elseif (substr($class, -6) == '_model') { /* is it a CI model? */
-		ci()->load->model($class);
+		if (stream_resolve_include_path('models/'.$class.'.php')) {
+			ci()->load->model($class);
 
-		return true;
+			return true;
+		}
 	} elseif (substr($class, -10) == 'Controller') { /* is it a CI Controller? */
 		if ($file = stream_resolve_include_path('controllers/'.$class.'.php')) {
 			include $file;

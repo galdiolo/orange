@@ -107,7 +107,7 @@ o::view_event($controller_path,'form.footer');
 o::hr(0,12); /* 4px padding top and bottom */
 
 theme::footer_start();
-theme::footer_cancel_button($this->controller_path);
+theme::footer_cancel_button($controller_path);
 theme::footer_submit_button();
 theme::footer_required();
 theme::footer_end();
