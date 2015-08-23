@@ -520,6 +520,7 @@ abstract class Database_model extends MY_Model {
 	*
 	* catalog() - primary id=>(object)record
 	* catalog(id,color) - id=>color
+	* catalog(name,*) - name=>(object)record
 	*
 	*/
 	public function catalog($key=null,$name=null) {
@@ -527,7 +528,7 @@ abstract class Database_model extends MY_Model {
 		$order_by = $name;
 
 		if ($key == null || $name == null) {
-			$key = $this->primary_key;
+			$key = ($key) ? $key : $this->primary_key;
 			$name = '*';
 			$order_by = 'id';
 		}

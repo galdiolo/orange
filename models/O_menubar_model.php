@@ -58,7 +58,10 @@ class o_menubar_model extends Database_model {
 
 				ci()->cache->save($key, $cache);
 			}
+			
+			/* does the user have access to this menu? */
 			foreach ($cache as $id => $rec) {
+				/* access is the complete array */
 				if (in_array($rec->access_id, $access)) {
 					$menus[$rec->id] = $rec;
 				}
@@ -89,7 +92,8 @@ class o_menubar_model extends Database_model {
 
 		return $result;
 	}
-
+	
+	/* make sure there is a empty placeholder record if the table is complete empty */
 	public function test_internal_placeholder() {
 		$records = $this->get_many();
 
