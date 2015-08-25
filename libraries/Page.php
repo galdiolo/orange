@@ -440,7 +440,10 @@ class Page {
 		$this->prep();
 
 		/* did they send in a view file for "page_center"? */
-		$view = ($view) ? $view : str_replace('-', '_',$this->route);
+		$view = ($view) ? $view : $this->route;
+		
+		/* convert all controller automagic loads to underscores */
+		$view = str_replace('-', '_',$view);
 
 		/* fire off a view specific event */
 		$this->ci_event->trigger('page.build.'.str_replace('/', '.',trim($view,'/')), $this, $layout);
