@@ -13,8 +13,7 @@
 			<button type="submit" id="submit-button" class="btn-login">Login</button>
 		</form>
 		<div class="extra">
-			<!--<a href="/user-registration">User Registration</a>-->
-			<!--<a href="/forgot-password">Forgot Password</a>-->
+			<?php o::view_event($controller_path,'login') ?>
 			<a href="/">Back to Home Page</a>
 		</div>
 	</div>
