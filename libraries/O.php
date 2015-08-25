@@ -103,10 +103,10 @@ class O {
 		$defaults = ['checked'=>1,'unchecked'=>0];
 		$list = array_merge($defaults, $extra);
 		$checked = ($value == $matches) ? ' checked' : '';
-	
+
 		echo '<input type="checkbox" class="checkers" data-real="'.$name.'" data-checked="'.$list['checked'].'" data-unchecked="'.$list['unchecked'].'"'.$checked.'>';
 	}
-	
+
 	static public function radio($name = '', $value = null, $checked = null, $extra = []) {
 		/* the name matches all radios */
 		$checked = ($checked) ? 'checked' : '';
@@ -394,14 +394,14 @@ class O {
 
 		echo(($link) ? '<a href="'.$link.'">' : '').((strlen($text) > $length) ? self::e(substr($text, 0, $length)).'&hellip;' : self::e($text)).(($link) ? '</a>' : '');
 	}
-	
+
 	static public function extract_data_uri($html,$just_path=false) {
-    $map = [
-      'data:image/png;base64'=>'png',
-      'data:image/jpg;base64'=>'jpg',
-      'data:image/jpeg;base64'=>'jpg',
-      'data:image/gif;base64'=>'gif',
-    ];
+		$map = [
+			'data:image/png;base64'=>'png',
+			'data:image/jpg;base64'=>'jpg',
+			'data:image/jpeg;base64'=>'jpg',
+			'data:image/gif;base64'=>'gif',
+		];
 
 		/* extract all the images into a array */
 		$parts = explode('<img src="data',$html);
@@ -409,20 +409,20 @@ class O {
 		foreach ($parts as $part) {
 			if (substr($part,0,7) == ':image/') {
 				$raw_image = 'data'.substr($part,0,strpos($part,'">'));
-        /* data:image/png;base64,iVBORw0KGg.... */
-        
-        $parts = explode(',',$raw_image);
+				/* data:image/png;base64,iVBORw0KGg.... */
 
-        $abs_image_path = ROOTPATH.'/public'.setting('paths','WWW Image','/images').'/'.md5($raw_image).'.'.$map[$parts[0]];
+				$parts = explode(',',$raw_image);
 
-        $ifp = fopen($abs_image_path,'wb');
-        fwrite($ifp,base64_decode($parts[1]));
-        fclose($ifp);
+				$abs_image_path = ROOTPATH.'/public'.setting('paths','WWW Image','/images').'/'.md5($raw_image).'.'.$map[$parts[0]];
 
-        $www_image_path = str_replace(ROOTPATH.'/public','',$abs_image_path);
+				$ifp = fopen($abs_image_path,'wb');
+				fwrite($ifp,base64_decode($parts[1]));
+				fclose($ifp);
 
-  			$html = str_replace($raw_image,$www_image_path,$html);
-  		}
+				$www_image_path = str_replace(ROOTPATH.'/public','',$abs_image_path);
+
+				$html = str_replace($raw_image,$www_image_path,$html);
+			}
 		}
 
 		/*
@@ -436,37 +436,38 @@ class O {
 
 		return $html;
 	}
-	
+
 	static public function convert2element($element,$attr=null,$data=null) {
 		return '<'.$element.self::convert2attributes($attr).$element.self::convert2data($data).'>';
 	}
 
 	static public function convert2data($data) {
 		$html = '';
-		
+
 		foreach ($data as $k=>$v) {
 			if (!empty($k)) {
 				$html .= ' data-'.$k.'="'.trim(str_replace('"','&quot;',$v)).'"';
 			}
 		}
-	
+
 		return $html.' ';
 	}
-	
+
 	static public function convert2attributes($data) {
 		$html = '';
-		
+
 		foreach ($data as $k=>$v) {
 			if (!empty($k)) {
 				$html .= ' '.$k.'="'.trim(str_replace('"','&quot;',$v)).'"';
 			}
 		}
-	
+
 		return $html.' ';
 	}
-	
+
 	static public function view_event($controller_path,$tag) {
+		/* if you want to see what is triggered check event::trigger:: lines */
 		ci()->event->trigger('view.'.trim(str_replace('/','.',$controller_path),'.').'.'.$tag);
 	}
-	
+
 } /* end class */
