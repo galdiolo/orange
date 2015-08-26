@@ -36,13 +36,16 @@ function add_block(that) {
 	var target = that.attr('target');
 	var icon = that.data('icon');
 	var color = that.data('color');
+	var html = that.html();
 
 	icon = (icon) ? icon : 'link';
 	color = (color) ? color : 'E36B2A';
 	target = (target) ? ' target="'+target+'" ' : '';
 
 	if (href != '#' && href != '') {
-		$('#dashboards').append('<div class="col-xs-12 col-sm-6 col-md-3 col-lg-2"><a href="'+href+'" '+target+'style="background-color: #'+color+';" class="btn dashboard-block"><i class="fa fa-'+icon+'"></i><br>'+that.html()+'</div>');
+		var html_stripped = html.replace(/(<([^>]+)>)/ig,"");
+		
+		$('#dashboards').append('<div class="col-xs-12 col-sm-6 col-md-3 col-lg-2"><a href="'+href+'" '+target+'style="background-color: #'+color+';" class="btn dashboard-block"><i class="fa fa-'+icon+'"></i><br>'+html_stripped+'</div>');
 	}
 }
 document.addEventListener("DOMContentLoaded", function(event) {

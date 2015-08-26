@@ -57,7 +57,7 @@ class MY_Router extends CI_Router {
 		$request = isset($_SERVER['REQUEST_METHOD']) ? ucfirst(strtolower($_SERVER['REQUEST_METHOD'])) : 'Cli';
 
 		/* only a file cache is supported because the normal CI cache isn't even loaded yet */
-		$cache_file = ROOTPATH.'/var/cache/vr_'.preg_replace("/[^0-9a-zA-Z_]/",'', implode('_',$segments).'_'.$request).'.php';
+		$cache_file = ROOTPATH.'/var/cache/uri_'.preg_replace("/[^0-9a-zA-Z_]/",'', implode('_',$segments).'_'.$request).'.php';
 
 		/* get it from the cache? cache for a hour */
 		if ($cached = array_cache($cache_file)) {

@@ -14,7 +14,7 @@ theme::table_tabs_start();
 foreach ($records['records'] as $tab=>$tab_records) {
 	theme::table_tab_pane_start($tab);
 
-	theme::table_start(['Name','Value','Managed'=>'txt-ac','Actions'=>'txt-ac']);
+	theme::table_start(['Name','Value','Managed'=>'text-center','Actions'=>'text-center']);
 
 /*
 	uasort($tab_records,function($a,$b) {
@@ -31,10 +31,10 @@ foreach ($records['records'] as $tab=>$tab_records) {
 		theme::table_row();
 		echo settingController::style_type($record->value);
 
-		theme::table_row('larger txt-ac');
+		theme::table_row('larger text-center');
 		echo theme::enum_icon((int)$record->managed);
 
-		theme::table_row('actions txt-ac');
+		theme::table_row('actions text-center');
 		if ($record->is_editable) {
 			theme::table_action('edit',$this->controller_path.'/edit/'.$record->id);
 		}

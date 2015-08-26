@@ -15,7 +15,7 @@ if ($errors) {
 	echo '</div>';
 }
 
-theme::table_start(['Name','Type'=>'txt-ac','Description','Version'=>'txt-ac','Actions'=>'txt-ac'],null,$records);
+theme::table_start(['Name','Type'=>'text-center','Description','Version'=>'text-center','Actions'=>'text-center'],null,$records);
 
 foreach ($records as $name=>$record) {
 	//k($record);
@@ -37,7 +37,7 @@ foreach ($records as $name=>$record) {
 	echo '</span>';
 
 	/* type */
-	theme::table_row('txt-ac');
+	theme::table_row('text-center');
 	echo '<a href="'.$controller_path.'/index/'.$record['type'].'">';
 	echo '<span class="label label-'.$type_map[$record['type']].'">'.$record['type'].'</span>';
 	echo '</a>';
@@ -60,7 +60,7 @@ foreach ($records as $name=>$record) {
 	}
 
 	/* Version */
-	theme::table_row('txt-ac');
+	theme::table_row('text-center');
 	/* show upgrade version and up arrow? */
 	if (!$record['json_error']) {
 		if ($is_active) {
@@ -88,7 +88,7 @@ foreach ($records as $name=>$record) {
 	}
 
 	/* Actions */
-	theme::table_row('txt-ac');
+	theme::table_row('text-center');
 	echo '<nobr>';
 	
 	/*

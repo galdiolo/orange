@@ -13,7 +13,7 @@ asort($records['records']);
 
 foreach ($records['records'] as $tab=>$tab_records) {
 	theme::table_tab_pane_start($tab);
-	theme::table_start(['Name','Description','Key','Actions'=>'txt-ac']);
+	theme::table_start(['Name','Description','Key','Actions'=>'text-center']);
 
 	uasort($tab_records,function($a,$b) {
 		return ($a->name > $b->name) ? 1 : -1;
@@ -29,7 +29,7 @@ foreach ($records['records'] as $tab=>$tab_records) {
 		theme::table_row();
 		o::e($record->key);
 			
-		theme::table_row('actions txt-ac');
+		theme::table_row('actions text-center');
 	
 		if ($record->is_editable) {
 			theme::table_action('edit',$this->controller_path.'/edit/'.$record->id);

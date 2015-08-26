@@ -3,7 +3,7 @@ theme::header_start('Menubar','manage menubars using the list view.');
 theme::header_button('Back',$controller_path,'reply');
 theme::header_end();
 
-theme::table_start(['Text','URL','Access','Parent','Active'=>'txt-ac','Actions'=>'txt-ac']);
+theme::table_start(['Text','URL','Access','Parent','Active'=>'text-center','Actions'=>'text-center']);
 
 foreach ($records as $record) {
 	theme::table_start_tr();
@@ -18,10 +18,10 @@ foreach ($records as $record) {
 	theme::table_row();
 	o::smart_model('o_menubar',$record->parent_id,'text');
 
-	theme::table_row('txt-ac larger');
+	theme::table_row('text-center larger');
 	theme::enum_icon($record->active);
 
-	theme::table_row('actions txt-ac');
+	theme::table_row('actions text-center');
 	if ($record->is_editable || has_access('Orange::Menubar::Override is editable')) {
 		theme::table_action('edit',$this->controller_path.'/edit/'.$record->id);
 	}

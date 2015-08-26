@@ -6,7 +6,7 @@ theme::header_start('Roles','manage user roles.');
 theme::header_button_new();
 theme::header_end();
 
-theme::table_start(['Name','Description','Actions'=>'txt-ac']);
+theme::table_start(['Name','Description','Actions'=>'text-center']);
 
 foreach ($records as $record) {
 	theme::table_start_tr();
@@ -15,7 +15,7 @@ foreach ($records as $record) {
 	theme::table_row();
 	o::e($record->description);
 
-	theme::table_row('actions txt-ac');
+	theme::table_row('actions text-center');
 
 	if ($record->is_editable) {
 		theme::table_action('edit',$this->controller_path.'/edit/'.$record->id);
