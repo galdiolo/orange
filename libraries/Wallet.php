@@ -26,9 +26,8 @@ class Wallet {
 	protected $snap_key_prefix = 'internal::wallet::snap::';
 	protected $url_key = 'internal::wallet::url';
 	protected $breadcrumb_key = 'internal::wallet::breadcrumbs';
-	protected $smart_redirect_key = 'internal::wallet::smart';
 	protected $stash_key = 'internal::wallet::stash';
-	
+
 	protected $ci_load;
 	protected $ci_session;
 
@@ -68,15 +67,15 @@ class Wallet {
 			'initial_pause'  => $this->ci_load->setting('wallet','initial_pause',3),
 			'pause_for_each' => $this->ci_load->setting('wallet','pause_for_each',1000),
 		]]);
-		
+
 		$default_msgs = $this->ci_load->setting('wallet','default_msgs',null);
-		
+
 		if (is_array($default_msgs)) {
 			$this->default_msgs = $default_msgs;
 		}
 
 		$default_breadcrumb_style = $this->ci_load->setting('wallet','default_breadcrumb_style',null);
-		
+
 		if (is_array($default_breadcrumb_style)) {
 			$this->default_breadcrumb_style = $default_breadcrumb_style;
 		}
@@ -84,12 +83,12 @@ class Wallet {
 
 	/*
 	Page Request Shared Storage
-	
+
 	This data is lost between page requests
 	*/
 	public function pocket($name,$value=null) {
 		$return = $this;
-		
+
 		if ($value) {
 			$this->request[$name] = $value;
 		}	else {
@@ -118,7 +117,7 @@ class Wallet {
 				$this->ci_session->set_userdata($this->snap_key_prefix.$key, $val);
 			}
 		}
-		
+
 		return $this;
 	}
 
@@ -152,21 +151,6 @@ class Wallet {
 		return $this->ci_session->userdata($this->snap_key_prefix.$key);
 	}
 
-	/*
-	set a snap msg and redirect
-	unlike flash messages this won't be removed until it's read
-	*/
-	public function smart_redirect($msg,$redirect) {
-		$this->snapdata($this->smart_redirect_key,$msg);
-
-		redirect($redirect);
-	}
-
-	/* pick up a msg saved previously */
-	public function smart_msg() {
-		return $this->get_snapdata($this->smart_redirect_key);
-	}
-
 	/* save url for use later */
 	public function save_previous_page() {
 		return $this->save_this_page(parse_url(ci()->input->server('HTTP_REFERER'), PHP_URL_PATH));
@@ -191,9 +175,9 @@ class Wallet {
 
 		return (!empty($previous_url)) ? $previous_url : $default_url;
 	}
-	
+
 	/* append a new bread crumb on the end */
-	public function breadcrumb($page=null,$href=null) {		
+	public function breadcrumb($page=null,$href=null) {
 		/* no page or href provided */
 		if ($page && $href) {
 			$breadcrumbs = $this->ci_session->userdata($this->breadcrumb_key);
@@ -233,7 +217,7 @@ class Wallet {
 			/* pop off the last */
 			$crumb = array_pop($breadcrumbs);
 		}
-		
+
 		$this->ci_session->set_userdata($this->breadcrumb_key,$breadcrumbs);
 
 		return $crumb;
@@ -280,7 +264,7 @@ class Wallet {
 		if ($redirect) {
 			redirect($redirect);
 
-			exit(1); /* shouldn't be needed but just incase */
+			exit; /* shouldn't be needed but just incase */
 		}
 
 		return $this;

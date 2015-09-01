@@ -28,16 +28,16 @@ class O_AdminController extends APP_GuiController {
 	public $controller_model = null; /* allows autoloading */
 	public $has_access = null; /* array, single, * everyone, @ everyone logged in, null will always fail therefore you must set has_access */
 
-	public function __construct() {		
+	public function __construct() {
 		/* call our parent and let them setup */
 		parent::__construct();
-		
+
 		/*
 		settings model already loaded,
 		package model only needed by package controller
 		auth library loaded all the user models
 		*/
-		
+
 		/* Therefore the only orange model left to load is the menubar */
 		ci()->load->model('o_menubar_model');
 
@@ -46,43 +46,43 @@ class O_AdminController extends APP_GuiController {
 
 		/* use the orange_default template */
 		$this->page->template('_templates/orange_default');
-		
+
 		$this->page->data([
 			'controller'=>$this->controller,
 			'controller_path'=>$this->controller_path,
 			'controller_title'=>$this->controller_title,
 			'controller_titles'=>$this->controller_titles,
 		]);
-		
+
 		/* test access */
 		$this->has_access($this->has_access);
 	}
-	
+
 	/* has access test for the Admin controllers */
 	public function has_access($access,$die=true) {
 		$success = $this->auth->has_access($access);
 
 		if ($success === false && $die === true) {
 			$this->access_denied();
-			exit(1);
+			exit;
 		}
 
 		return $success;
 	}
-	
+
 	/* make throwing a "access denied" from a admin controller easier */
 	public function access_denied($url = '') {
 		$this->auth->denied($url);
 	}
 
 	/* crud functions */
-	
+
 	/* read */
 	public function indexAction() {
 		if ($this->access['read']) {
 			$this->has_access($this->access['read']);
 		}
-	
+
 		if ($this->controller_model != NULL) {
 			/* get all records apply order by or search if any */
 			$records = $this->{$this->controller_model}->index($this->controller_orderby);
@@ -105,7 +105,7 @@ class O_AdminController extends APP_GuiController {
 
 		$this->page->data($data)->build($this->controller_path.'/form');
 	}
-	
+
 	/* create validate form input */
 	public function newValidatePostAction() {
 		if ($this->access['create']) {
@@ -133,7 +133,7 @@ class O_AdminController extends APP_GuiController {
 
 		$this->wallet->failed($this->content_title, $this->controller_path);
 	}
-	
+
 	/* update */
 	public function editAction($id = null) {
 		if ($this->access['update']) {
@@ -150,7 +150,7 @@ class O_AdminController extends APP_GuiController {
 
 		$this->page->data($data)->build($this->controller_path.'/form');
 	}
-	
+
 	/* update validate form input */
 	public function editValidatePostAction() {
 		if ($this->access['update']) {
@@ -161,7 +161,7 @@ class O_AdminController extends APP_GuiController {
 		$this->{$this->controller_model}->validate($this->data, 'update');
 		$this->output->json($this->{$this->controller_model}->errors_json);
 	}
-	
+
 	/* update record */
 	public function editPostAction() {
 		if ($this->access['update']) {
@@ -180,7 +180,7 @@ class O_AdminController extends APP_GuiController {
 
 		$this->wallet->failed($this->content_title, $this->controller_path);
 	}
-	
+
 	/* delete record */
 	public function deleteAction($id = null) {
 		if ($this->access['delete']) {
@@ -191,7 +191,7 @@ class O_AdminController extends APP_GuiController {
 
 		$this->output->json('err', !$this->{$this->controller_model}->delete($id));
 	}
-	
+
 	/* standard format content into tabs if needed in the view */
 	protected function _format_tabs($tabs_dbc, $tab_text = 'tab') {
 		$tabs = [];
@@ -209,7 +209,7 @@ class O_AdminController extends APP_GuiController {
 
 		return ['tabs' => $tabs,'records' => $records];
 	}
-	
+
 	/* get the form data for the model */
 	protected function _get_data($which = null) {
 		/*

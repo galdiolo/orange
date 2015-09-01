@@ -430,7 +430,7 @@ class Validate {
 	* @param	array	mixed variables to be tested passed by reference so it can be modified by the method if needed
 	* @return	boolean true on success false on failure
 	*/
-	public function multiple($rules, &$fields) {
+	public function multiple($rules, &$fields, $strip = false) {
 		$this->_field_data = &$fields;
 
 		foreach ($rules as $fieldname => $rule) {
@@ -439,6 +439,15 @@ class Validate {
 		}
 
 		$fields = &$this->_field_data;
+		
+		/* strip any field which doesn't have a rule */
+		if ($strip) {
+			foreach ($fields as $k=>$f) {
+				if (!array_key_exists($k,$rules)) {
+					unset($fields[$k]);
+				}
+			}
+		}
 
 		return (bool) (count($this->_error_array) == 0);
 	}

@@ -223,7 +223,7 @@ class Auth {
 
 		$this->error('forged');
 
-		exit(1); /* fail safe */
+		exit; /* fail safe */
 	}
 
 	public function denied($logged_url='') {
@@ -237,10 +237,17 @@ class Auth {
 
 		$this->error('denied');
 
-		exit(1); /* fail safe */
+		exit; /* fail safe */
 	}
 
-	/* used to test regular access */
+	/*
+	used to test regular access
+	
+	name = specific access
+	* = everyone
+	@ = everyone logged in
+	
+	*/
 	public function has_access($access=null,$user_access=null) {
 		log_message('debug', 'auth::has_access '.implode(', ',(array)$access));
 
@@ -334,7 +341,7 @@ class Auth {
 		if ((int) $user_id < 1) {
 			/* display error and exit since we can't build this profile "bad things" could happen if we proceed */
 			$this->error('generic','Could Not Build Profile. 001');
-			exit(1); /* just incase */
+			exit; /* just incase */
 		}
 
 		$user = $this->o_user_model->get((int)$user_id);
@@ -343,7 +350,7 @@ class Auth {
 		if (!is_object($user)) {
 			/* display error and exit since we can't build this profile "bad things" could happen if we proceed */
 			$this->error('generic','Could Not Build Profile. 002');
-			exit(1); /* just incase */
+			exit; /* just incase */
 		}
 
 		/* clear out a bunch of un-needed stuff and save this for later */
@@ -454,7 +461,7 @@ class Auth {
 			}
 		}
 
-		exit(1); /* fail safe */
+		exit; /* fail safe */
 	}
 
 } /* end class */

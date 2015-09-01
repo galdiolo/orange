@@ -68,7 +68,7 @@ trait validate_dependent {
 					if (ci()->input->is_ajax_request()) {
 						/* die hard */
 						echo '{"err":true,"errors":"<p>'.$err_msg.'<\/p>\n","errors_array":["'.$err_msg.'"]}';
-						exit(1);
+						exit;
 					} else {
 						show_error($err_msg);
 					}

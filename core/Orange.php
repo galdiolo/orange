@@ -215,7 +215,7 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 		// self-referencing loop with the Exceptions class
 		set_status_header(503);
 		echo 'Unable to locate the specified class: '.$class.'.php';
-		exit(5); // EXIT_UNK_CLASS
+		exit;
 	}
 
 	// Keep track of what we just loaded

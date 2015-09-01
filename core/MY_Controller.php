@@ -43,7 +43,7 @@ class MY_Controller extends CI_Controller {
 		/* load model catalogs into view */
 		foreach ((array)$this->catalogs as $c) {
 			$this->load->model($c.'_model');
-			
+
 			if (method_exists($this->{$c.'_model'},'catalog')) {
 				$this->load->vars($c.'_catalog',$this->{$c.'_model'}->catalog());
 			}
@@ -76,7 +76,7 @@ class MY_Controller extends CI_Controller {
 			}
 
 			/* if it is a ajax request the 503 error should be handled by the ajax requesting javascript */
-			exit(0);
+			exit;
 		}
 
 		/* setup a default model if one is specified */
