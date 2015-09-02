@@ -265,3 +265,47 @@ function array_cache($filename=null,$data=null) {
 		return (file_exists($filename)) ? require $filename : false;
 	}
 }
+
+/* convet to real value from string */
+function convert_to_real($value) {
+	/* is it JSON? if not this will return null */
+	$is_json = @json_decode($value, true);
+	
+	if ($is_json !== null) {
+		$value = $is_json;
+	} else {
+		switch(trim(strtolower($value))) {
+			case 'true':
+				$value = true;
+			break;
+			case 'false':
+				$value = false;
+			break;
+			case 'null':
+				$value = null;
+			break;
+			default:
+				if (is_numeric($value)) {
+					$value = (is_float($value)) ? (float)$value : (int)$value;
+				}
+		}
+	}
+	
+	return $value;
+}
+
+function convert_to_string($value) {
+	if (is_array($value)) {
+		return var_export($value,true);
+	}
+	
+	if ($value === true) {
+		return 'true';
+	}
+
+	if ($value === false) {
+		return 'false';
+	}
+	
+	return (string)$value;
+}

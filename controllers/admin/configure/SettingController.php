@@ -47,7 +47,7 @@ class settingController extends APP_AdminController {
 		}
 
 		$this->_get_data('insert');
-		
+
 		if ($id = $this->o_setting_model->insert($this->data, 'insert')) {
 			$this->wallet->created($this->content_title, $this->controller_path);
 		}
@@ -124,12 +124,12 @@ class settingController extends APP_AdminController {
 			unset($config);
 		}
 
-    $db_array = $this->o_setting_model->get_many_by(['enabled'=>1,'group'=>$which]);
+		$db_array = $this->o_setting_model->get_many_by(['enabled'=>1,'group'=>$which]);
 
-    foreach ($db_array as $idx=>$record) {
-      unset($db_array[$idx]);
-      $db_array[$record->name] = $this->_format_setting($record->value);
-    }
+		foreach ($db_array as $idx=>$record) {
+			unset($db_array[$idx]);
+			$db_array[$record->name] = convert_to_real($record->value);
+		}
 
 		$merged = array_merge($file_array, $db_array);
 
@@ -137,7 +137,7 @@ class settingController extends APP_AdminController {
 
 		if (CONFIG) {
 			$env_file = APPPATH.'config/'.CONFIG.'/'.$which.'.php';
-	
+
 			if (file_exists($env_file)) {
 				include APPPATH.'config/'.CONFIG.'/'.$which.'.php';
 				$env_array = (array) $config;
@@ -155,31 +155,6 @@ class settingController extends APP_AdminController {
 			->build();
 	}
 
-	protected function _format_setting($value) {
-		/* is it JSON? if not this will return null */
-		$value = @json_decode($value, true);
-
-		if ($value === null) {
-			switch(trim(strtolower($value))) {
-				case 'true':
-					$value = true;
-				break;
-				case 'false':
-					$value = false;
-				break;
-				case 'null':
-					$value = null;
-				break;
-				default:
-					if (is_numeric($value)) {
-						$value = (is_float($value)) ? (float)$value : (int)$value;
-					}
-			}
-		}
-		
-		return $value;
-	}
-
 	/* dynamic add from the "built in" view */
 	public function addAction($hex=null) {
 		$add = hex2bin($hex);
@@ -191,9 +166,9 @@ class settingController extends APP_AdminController {
 			'value'=>$value,
 			'group'=>$group,
 			'enabled'=>1,
-			'managed'=>0,
+			'managed'=>1, /* code added = managed */
 			'show_as'=>$show_as,
-			'is_deletable'=>1,
+			'is_deletable'=>1, /* but they can delete it again */
 		];
 
 		$this->output->json('err',$this->o_setting_model->insert($data,'insert'));
@@ -201,6 +176,8 @@ class settingController extends APP_AdminController {
 
 	/* used on the /admin/configure/setting/group/menubar view */
 	static public function looper($all,$which) {
+		$overridden_icon = '<i class="fa fa-exchange"></i>';
+		$controller_path = ci()->page->data('controller_path');
 		$inp = $all[$which];
 
 		if (count($inp) > 0) {
@@ -208,72 +185,57 @@ class settingController extends APP_AdminController {
 			foreach ($inp as $name => $value) {
 
 				$show_as = 0; /* text area default */
-				$overridden = null;
+				$overridden = '&nbsp;';
+				$link = '&nbsp;';
 
 				switch ($which) {
 					case 'db':
-						if ($all['env'][$name] != $all['db'][$name] && isset($all['env'][$name])) {
-							$overridden = '<i class="fa fa-exchange"></i>';
+						if ($all['db'][$name] != $all['env'][$name] && isset($all['env'][$name])) {
+							$overridden = $overridden_icon;
+						}
+						if ($all['db'][$name] != $all['file'][$name] && isset($all['db'][$name])) {
+							$overridden = $overridden_icon;
 						}
 					break;
 					case 'env':
-						if ($all['file'][$name] != $all['env'][$name] && isset($all['file'][$name])) {
-							$overridden = '<i class="fa fa-exchange"></i>';
+						if ($all['env'][$name] != $all['file'][$name] && isset($all['file'][$name])) {
+							$overridden = $overridden_icon;
 						}
 					break;
 					case 'file':
+						if ($all['file'][$name] != $all['env'][$name] && isset($all['env'][$name])) {
+							$overridden = $overridden_icon;
+						}
 					break;
 				}
 
-				$html = self::style_type($value,$show_as,$overridden);
 				$group = ci()->uri->segment(5);
-				$link = '&nbsp;';
 
-				if (!ci()->o_setting_model->compound_key_exists($name,$group)) {
-					$link = ($add_link) ? '<a class="js-add-link" href="'.ci()->page->data('controller_path').'/add/'.bin2hex($name.chr(0).$value.chr(0).$group.chr(0).$show_as).'"><i class="fa fa-plus-square"></i></a>' : '&nbsp;';
+				switch(gettype($value)) {
+					case 'string';
+					case 'integer';
+					case 'null';
+					case 'float';
+					break;
+					case 'boolean';
+						$show_as = 1; /* true / false radio's */
+					break;
 				}
 
-				echo '<tr><td>'.$name.'&nbsp;</td><td style="width:20%">'.$html.'</td><td>'.$link.'</td></tr>';
+				if (!ci()->o_setting_model->compound_key_exists($name,$group) && $which == 'merged') {
+					$hash = bin2hex($name.chr(0).convert_to_string($value).chr(0).$group.chr(0).$show_as);
+					$link = '<a class="js-add-link" href="'.$controller_path.'/add/'.$hash.'"><i class="fa fa-plus-square"></i></a>';
+				}
+
+				echo '<tr>';
+				echo '<td width="47%">'.$name.'&nbsp;</td>';
+				echo '<td style="width:47%;">'.theme::format_value($value).'</td>';
+				echo '<td style="width:3%; text-align:center">'.$link.'</td>';
+				echo '<td style="width:3%; text-align:center">'.$overridden.'</td>';
+				echo '</tr>';
 			}
 			echo '</table>';
 		}
-	}
-	
-	/* make the setting values "pretty" */
-	static public function style_type(&$value='',&$show_as=0,$overridden=null) {
-		$overridden = ($overridden) ? ' '.$overridden : '';
-
-		if (is_array($value)) {
-			$html = htmlentities(var_export($value,true));
-			$value = json_encode($value);
-		} elseif (is_numeric($value)) {
-			$html = '<span class="label label-warning">'.$value.$overridden.'</span>';
-			$show_as = 3; /* single line text input */
-		} elseif (is_integer($value)) {
-			$html = '<span class="label label-info">'.$value.$overridden.'</span>';
-			$show_as = 3; /* single line text input */
-		} elseif (is_bool($value)) {
-			$str = ($value) ? 'True' : 'False';
-			$color = ['True'=>'success','False'=>'danger'];
-			$html = '<span class="label label-'.$color[$str].'">'.$str.$overridden.'</span>';
-			$value = strtolower($str);
-			$show_as = 1; /* true / false radio's */
-		} elseif (strtolower($value) == 'true') {
-			$html = '<span class="label label-success">True'.$overridden.'</span>';
-			$value = strtolower($value);
-			$show_as = 1; /* true / false radio's */
-		} elseif (strtolower($value) == 'false') {
-			$html = '<span class="label label-danger">False'.$overridden.'</span>';
-			$value = strtolower($value);
-			$show_as = 1; /* true / false radio's */
-		} else {
-			/* shorten it first */
-			$hellip = (strlen($value) > 128) ? '&hellip;' : '';
-
-			$value = htmlentities(substr($value,0,128)).$hellip;
-		}
-		
-		return $value;
 	}
 
 } /* end settings */

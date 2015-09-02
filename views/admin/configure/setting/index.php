@@ -29,7 +29,7 @@ foreach ($records['records'] as $tab=>$tab_records) {
 		echo (!$record->enabled) ? '</i>' : '';
 
 		theme::table_row();
-		echo settingController::style_type($record->value);
+		echo theme::format_value($record->value,128);
 
 		theme::table_row('larger text-center');
 		echo theme::enum_icon((int)$record->managed);

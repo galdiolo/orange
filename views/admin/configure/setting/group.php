@@ -1,5 +1,5 @@
 <?php
-theme::header_start('Set "'.ci()->uri->segment(5).'"');
+theme::header_start($controller_titles);
 theme::header_button('Back',$controller_path.'/list-all','reply');
 theme::header_end();
 
@@ -20,5 +20,3 @@ settingController::looper($all,'file');
 echo '</div></div>';
 
 theme::return_to_top();
-
-

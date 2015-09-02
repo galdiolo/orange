@@ -13,6 +13,11 @@
 class MY_Loader extends CI_Loader {
 	/* only one theme at a time can be assigned so we can save that here */
 	public $current_theme = ''; /* current theme */
+	/*
+	add helpers here to autoload these AFTER the normal helpers are loaded
+	this way our helpers can "extend" the loaded helpers
+	remember to use "function_exists" in these helpers
+	*/
 	public $orange_extended_helpers = ['array','date','directory','file','string'];
 	public $settings = null; /* local per request storage */
 	protected $merged_settings_cache_key = 'loader.settings';
@@ -109,7 +114,8 @@ class MY_Loader extends CI_Loader {
 
 				if (is_array($db_array)) {
 					foreach ($db_array as $record) {
-						$this->settings[$record->group][$record->name] = $this->_format_setting($record->value);
+						/* let's make sure a boolean is a boolean and a integer is a integer etc... */
+						$this->settings[$record->group][$record->name] = convert_to_real($record->value);
 					}
 				}
 
@@ -259,33 +265,6 @@ class MY_Loader extends CI_Loader {
 		$data['variables'] = $this->_ci_cached_vars;
 
 		return ($which) ? $data[$which] : $data;
-	}
-
-	protected function _format_setting($value) {
-		/* is it JSON? if not this will return null */
-		$is_json = @json_decode($value, true);
-
-		if ($is_json !== null) {
-			$value = $is_json;
-		} else {
-			switch(trim(strtolower($value))) {
-				case 'true':
-					$value = true;
-				break;
-				case 'false':
-					$value = false;
-				break;
-				case 'null':
-					$value = null;
-				break;
-				default:
-					if (is_numeric($value)) {
-						$value = (is_float($value)) ? (float)$value : (int)$value;
-					}
-			}
-		}
-
-		return $value;
 	}
 
 } /* end class */
