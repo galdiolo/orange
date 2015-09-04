@@ -42,6 +42,7 @@ class MY_Controller extends CI_Controller {
 
 		/* load model catalogs into view */
 		foreach ((array)$this->catalogs as $c) {
+			$c = str_replace('_model','',$c);
 			$this->load->model($c.'_model');
 
 			if (method_exists($this->{$c.'_model'},'catalog')) {

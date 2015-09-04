@@ -254,6 +254,7 @@ function console($var,$type='log') {
 	echo '<script type="text/javascript">console.'.$type.'('.json_encode($var).')</script>';
 }
 
+/* export as php array for super fast loading */
 function array_cache($filename=null,$data=null) {
 	if (is_array($data) && $filename) {
 		/* write */
@@ -262,7 +263,7 @@ function array_cache($filename=null,$data=null) {
 		rename($tmpfname,$filename); /* atomic */
 	} else {
 		/* read */
-		return (file_exists($filename)) ? require $filename : false;
+		return (file_exists($filename)) ? include $filename : false;
 	}
 }
 

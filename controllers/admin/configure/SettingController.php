@@ -112,6 +112,14 @@ class settingController extends APP_AdminController {
 		$this->page->data('records',$records)->build();
 	}
 
+	public function exportAction() {
+		$this->load->helper('download');
+	
+		$export = var_export($this->load->settings,true);
+		
+		force_download('settings.php','<?php'.chr(10).'return '.$export.';');
+	}
+
 	public function groupAction($which = null) {
 		/* load file based */
 		$this->load->config($which, true, true);

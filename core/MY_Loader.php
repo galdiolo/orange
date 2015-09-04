@@ -20,8 +20,13 @@ class MY_Loader extends CI_Loader {
 	*/
 	public $orange_extended_helpers = ['array','date','directory','file','string'];
 	public $settings = null; /* local per request storage */
-	protected $merged_settings_cache_key = 'loader.settings';
-	protected $cache_ttl;
+	protected $cache_file;
+
+	public function __construct() {
+		parent::__construct();
+
+		$this->cache_file = ROOTPATH.'/var/cache/settings.php';
+	}
 
 	/**
 	* Helper Loader
@@ -75,11 +80,9 @@ class MY_Loader extends CI_Loader {
 			/* let's make sure the cache is loaded */
 			$this->driver('cache', ['adapter' => ci()->config->item('cache_default'), 'backup' => ci()->config->item('cache_backup')]);
 
-			$this->cache_ttl = ci()->config->item('cache_ttl');
-
 			/* set the page request cached settings */
 
-			if (!$this->settings = ci()->cache->get($this->merged_settings_cache_key)) {
+			if (!$this->settings = array_cache($this->cache_file)) {
 				/* setup the empty array and load'em */
 				$this->settings = [];
 
@@ -119,9 +122,7 @@ class MY_Loader extends CI_Loader {
 					}
 				}
 
-				$this->settings['config']['cache_ttl'] = $this->cache_ttl;
-
-				ci()->cache->save($this->merged_settings_cache_key,$this->settings,$this->cache_ttl);
+				array_cache($this->cache_file,$this->settings);
 			}
 		}
 
@@ -137,8 +138,18 @@ class MY_Loader extends CI_Loader {
 	}
 
 	public function settings_flush() {
-		/* master */
-		return ci()->cache->delete($this->merged_settings_cache_key);
+		$return = true;
+
+		if (file_exists($this->cache_file)) {
+			$return = unlink($this->cache_file);
+		}
+		
+		/* force flush opcached filed if exists */
+		if (function_exists('opcache_invalidate')) {
+			opcache_invalidate($this->cache_file,true);
+		}
+		
+		return $return;
 	}
 
 	/**
