@@ -182,6 +182,32 @@ class settingController extends APP_AdminController {
 		$this->output->json('err',$this->o_setting_model->insert($data,'insert'));
 	}
 
+	public function manageAction() {
+		$records = $this->o_setting_model->index('group,name');
+
+		$this->page
+			->js('/themes/orange/assets/js/settings.js')
+			->data(['records'=>$records])
+			->build();		
+	}
+	
+	public function manage_exportPostAction() {
+		/* build download temp file and pass the temp name back */
+	}
+	
+	public function manage_export_downloadAction($hash=null) {
+		/*
+		get the temp file and forcedownload
+		that way they don't leave the page
+		if the file doesn't exist then show error
+		delete file after downloaded
+		*/
+	}
+	
+	public function manage_importPostAction() {
+	
+	}
+
 	/* used on the /admin/configure/setting/group/menubar view */
 	static public function looper($all,$which) {
 		$overridden_icon = '<i class="fa fa-exchange"></i>';

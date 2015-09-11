@@ -63,6 +63,34 @@ class MY_Loader extends CI_Loader {
 		}
 	}
 
+	public function presenter($presenter,$object=null) {
+		/* what is the presenter classes name */
+		$classname = ucfirst($presenter).'_presenter';
+
+		/* does it exist? don't try to load it! */
+		if (!class_exists($classname,false)) {
+			/* is it part of our include path? */
+			$presenter_file = stream_resolve_include_path('presenters/'.$classname.'.php');
+
+			/* nope couldn't find it raise a fatal error */
+			if (!$presenter_file) {
+				show_error('Presenter Not Found "'.$presenter.'"');
+			}
+
+			/* load this for later on each row */
+			include $presenter_file;
+
+			log_message('debug', "Presenter: Loaded '$classname'.");
+		}
+
+		/*
+		if it's a array of objects return it as part of a Iterator
+		if it's not then return it as the presenter classes only record
+		*/
+		return (is_array($object)) ? new Presenter_iterator($object,$classname) : new $classname($object);
+	}
+
+
 	/**
 	* Settings
 	* New Function
@@ -143,12 +171,12 @@ class MY_Loader extends CI_Loader {
 		if (file_exists($this->cache_file)) {
 			$return = unlink($this->cache_file);
 		}
-		
+
 		/* force flush opcached filed if exists */
 		if (function_exists('opcache_invalidate')) {
 			opcache_invalidate($this->cache_file,true);
 		}
-		
+
 		return $return;
 	}
 

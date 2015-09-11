@@ -30,5 +30,37 @@ class dashboardController extends APP_AdminController {
 
 		redirect($this->controller_path);
 	}
+	
+	public function testAction() {
+		$record = $this->o_user_model->get(1);
+		$record = ci()->load->presenter('role',$record);
+		
+		echo '<h2>single</h2>';
+		xxx($record->username);
+		xxx($record->is_deleted__human_date);
+		xxx($record->cookies);
+		xxx($record->name);
+		
+		$records = $this->o_user_model->index();
+		$records = ci()->load->presenter('role',$records);
+		
+		echo '<h2>multi</h2>';
+		foreach ($records as $record) {
+			echo '<hr>';
+			xxx($record->id);
+			xxx($record->username);
+			xxx($record->is_deleted__human_date);
+			xxx($record->cookies);
+			xxx($record->name);
+			xxx($record->username__uppercase);
+		}
+		
+	}
 
 } /* end dashboardController */
+
+function xxx($x) {
+	echo '<pre>';
+	var_dump($x);
+	echo '</pre>';
+}
