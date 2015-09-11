@@ -1,7 +1,7 @@
 <?php
 class Role_presenter extends Presenter {
 	public function cookies() {
-		return 'cookies value is: '.$this->object->username.' Moster!';
+		return 'cookies value is: '.$this->object->username.' Monster!';
 	}
 
 	public function name() {

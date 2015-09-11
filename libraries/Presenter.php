@@ -73,7 +73,9 @@ class Presenter {
 	}
 
 	public function i_human_date($value) {
-		return date('l jS \of F Y h:i:s A',strtotime($this->object->$value));
+		$format = settings('presenter','date','l jS \of F Y h:i:s A');
+	
+		return date($format,strtotime($this->object->$value));
 	}
 
 	public function i_uppercase($value) {
@@ -82,6 +84,18 @@ class Presenter {
 
 	public function i_lowercase($value) {
 		return strtolower($this->object->$value);
+	}
+	
+	public function i_enum($value) {
+		$enum = settings('presenter','enum',[0=>'False',1=>'True']);
+	
+		return $enum[$this->object->value];
+	}
+
+	public function i_enum_icon($value) {
+		$enum = [0=>'circle-o',1=>'check-circle-o'];
+	
+		return $enum[$this->object->value];
 	}
 
 } /* end class */

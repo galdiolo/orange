@@ -33,7 +33,7 @@ class dashboardController extends APP_AdminController {
 	
 	public function testAction() {
 		$record = $this->o_user_model->get(1);
-		$record = ci()->load->presenter('role',$record);
+		$record = ci()->load->presenter($record,'role');
 		
 		echo '<h2>single</h2>';
 		xxx($record->username);
@@ -42,7 +42,7 @@ class dashboardController extends APP_AdminController {
 		xxx($record->name);
 		
 		$records = $this->o_user_model->index();
-		$records = ci()->load->presenter('role',$records);
+		$records = ci()->load->presenter($records,'role');
 		
 		echo '<h2>multi</h2>';
 		foreach ($records as $record) {

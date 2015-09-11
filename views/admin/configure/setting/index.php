@@ -3,8 +3,6 @@ $config = (CONFIG) ? 'Config "'.CONFIG.'"' : '';
 theme::header_start('Settings','Manage application wide settings. '.$config);
 theme::header_button_new();
 theme::header_button('Built in',$controller_path.'/list-all','file');
-theme::header_button('Export',$controller_path.'/export','download');
-theme::header_button('Manage',$controller_path.'/manage','cog');
 theme::header_end();
 
 theme::table_empty($records['records']);

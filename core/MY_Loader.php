@@ -63,7 +63,7 @@ class MY_Loader extends CI_Loader {
 		}
 	}
 
-	public function presenter($presenter,$object=null) {
+	public function presenter($object=null,$presenter='') {
 		/* what is the presenter classes name */
 		$classname = ucfirst($presenter).'_presenter';
 
