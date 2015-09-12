@@ -39,12 +39,23 @@ if (!function_exists('format_size_units')) {
 	}
 }
 
+if (!function_exists('format_size_to_bytes')) {
+	function format_size_to_bytes($format) {
+		$units = array('B'=>0, 'K'=>1, 'KB'=>1, 'M'=>2, 'MB'=>2, 'GB'=>3, 'G'=>3, 'TB'=>4, 'T'=>4);
+
+		$number = strtoupper(trim(preg_replace("/[^0-9\.]/", '',$format)));
+		$letter = strtoupper(trim(substr($format,strlen($number))));
+
+		return $number * pow(1024, $units[$letter]);
+	}
+}
+
 /**
 * Deletes files in a directory older then a certain date with the added option to exclude certain files
 *
 * @access	public
-* @param 	string directory
-* @param 	string older then str to time
+* @param 	string directory ie. ROOTPATH.'/var/upload_temp'
+* @param 	string older then str to time ie. -1 hour
 * @param 	mixed exclude
 * @return	void
 */
