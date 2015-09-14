@@ -34,7 +34,7 @@ trait validate_dependent {
 		return (method_exists(ci()->$model, 'exists')) ? ci()->$model->exists($column, $field) : false;
 	}
 
-	/* dependent on a database model */
+	/* dependent on a database model is_uniquem[o_user_model.email.id] */
 	public function is_uniquem($field, $options = null) {
 		/* is_uniquem[model_name,column_name,$_POST[primary_key]] */
 		$this->set_message('is_uniquem', 'The %s is already being used.');

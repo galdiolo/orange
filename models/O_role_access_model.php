@@ -29,6 +29,10 @@ class o_role_access_model extends Database_model {
 		}
 	}
 
+	public function replace($role_id,$access_id) {
+		return $this->_database->replace($this->table,['role_id'=>$role_id,'access_id'=>$access_id]);
+	}
+
 	public function delete_by_role_id($role_id) {
 		return $this->delete_by('role_id', $role_id);
 	}

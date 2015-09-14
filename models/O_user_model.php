@@ -25,7 +25,7 @@ class o_user_model extends Database_model {
 		'username' => ['field' => 'username','label' => 'User Name','rules' => 'required|xss_clean'],
 		'password' => ['field' => 'password','label' => 'Password','rules' => 'required|password|max_length[255]|filter_input[255]'],
 
-		'email' => ['field' => 'email','label' => 'Email','rules' => 'required|strtolower|valid_email|max_length[255]|filter_input[255]'],
+		'email' => ['field' => 'email','label' => 'Email','rules' => 'required|strtolower|valid_email|is_uniquem[o_user_model.email.id]|max_length[255]|filter_input[255]'],
 		'is_active' => ['field' => 'is_active','label' => 'Active','rules' => 'if_empty[0]|one_of[0,1]|filter_int[1]|max_length[1]|less_than[2]'],
 
 		'role_id' => ['field' => 'role_id','label' => 'Role Id','rules' => 'if_empty[0]|integer|max_length[10]|less_than[4294967295]|filter_int[10]'],
