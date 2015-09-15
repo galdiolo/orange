@@ -110,4 +110,15 @@ theme::header_end();
 			</strong>
 		</td>
 	</tr>
+	
+	<tr>
+		<td>Additional Help</td>
+		<td>
+			<?php if ($help) { ?>
+			<a href="/admin/configure/packages/help/<?=$help_folder ?>" target="_blank">Open</a>
+			<?php } else { ?>
+				None Available
+			<?php } ?>
+		</td>
+	</tr>
 </table>
