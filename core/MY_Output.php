@@ -51,4 +51,10 @@ class MY_Output extends CI_Output {
 		/* allow chaining */
 		return $this;
 	}
+	
+	/* wrapper */
+	public function set_cookie($name='',$value='',$expire='',$domain='',$path='/',$prefix='',$secure=FALSE,$httponly=FALSE) {
+		return ci()->input->set_cookie($name,$value,$expire,$domain,$path,$prefix,$secure,$httponly);
+	}
+	
 } /* end MY_Output */

@@ -11,15 +11,11 @@
 */
 class dashboardController extends APP_AdminController {
 	public $controller_path   = '/admin/dashboard';
-	public $has_access = '@'; /* Allow everyone logged in */
+	public $has_access = '@'; /* Allow everyone logged in (not guest) */
 
 	public function indexAction() {
 		if (setting('application','Refresh Profile in Dashboard')) {
 			$this->auth->refresh_userdata();
-		}
-
-		if (setting('application','Show Bogus Dashboard')) {
-			$this->load->partial('/admin/dashboard/bogus_dashboard',[],'bogus_dashboard');
 		}
 
 		$this->page->build();

@@ -164,7 +164,7 @@ class Auth {
 			return false;
 		}
 
-		/* TEST -- OK the password check user the PHP built in password hasher */
+		/* TEST -- OK check users password with the built in password hasher */
 		if (password_verify($password, $user->password) !== true) {
 			/* this is the real password wrong error */
 			$this->ci_event->trigger('user.login.fail',$login);
@@ -184,9 +184,14 @@ class Auth {
 
 			return false;
 		}
+		
+		/* attach it to CI */
+		return $this->attach($user);
+	}
 
+	public function attach($user_id) {
 		/* now build the complete profile (user id object) */
-		$user = $this->build_profile($user->id);
+		$user = $this->build_profile($user_id);
 
 		if ($this->validate_profile($user) !== true) {
 			$this->error = 'User profile could not be built.';
@@ -279,7 +284,7 @@ class Auth {
 
 			/* everyone logged in */
 			if ($a === '@') {
-				if (ci()->user->is_active === true) {
+				if (ci()->user->is_active === true && ci()->user->role_id !== setting('auth','Guest Id')) {
 					return true;
 				}
 			}
@@ -307,8 +312,8 @@ class Auth {
 	*
 	* @return	void
 	*/
-	public function logout($dump_auto_login = true) {
-		$this->ci_event->trigger('user.logout',$dump_auto_login);
+	public function logout() {
+		$this->ci_event->trigger('user.logout');
 
 		/* clear all places we have a user available */
 		$this->ci_session->set_userdata([$this->session_key => [], 'session_id' => '']);
