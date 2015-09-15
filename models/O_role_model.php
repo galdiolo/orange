@@ -22,7 +22,7 @@ class o_role_model extends Database_model {
 		'name'            => ['field' => 'name','label' => 'Name','rules' => 'required|max_length[64]|filter_input[64]'],
 		'description'     => ['field' => 'description','label' => 'Description','rules' => 'max_length[255]|filter_input[255]'],
 
-		'access'					=> ['field' => 'access','label' => 'Access','rules' => 'is_array']
+		'access'					=> ['field' => 'access','label' => 'Access','rules' => 'is_array'],
 	];
 	protected $rule_sets = [
 		'insert' => 'created_on,created_by,updated_on,updated_by,is_editable,is_deletable,name,description,access',
@@ -37,7 +37,7 @@ class o_role_model extends Database_model {
 		}
 
 		/* return FALSE on failure data validated & filtered */
-		$data = $this->validate($data, 'insert');
+		$data = $this->validate($data,$skip_validation);
 
 		$groups = $data['access'];
 
@@ -66,7 +66,7 @@ class o_role_model extends Database_model {
 		$this->flush_caches();
 
 		/* return FALSE on failure data validated & filtered */
-		$data = $this->validate($data, 'update');
+		$data = $this->validate($data,$skip_validation);
 
 		$groups = $data['access'];
 

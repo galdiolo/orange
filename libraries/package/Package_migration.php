@@ -79,6 +79,9 @@ class package_migration {
 		$defaults = ['name'=>'','description'=>'','package'=>$package,'type'=>2,'is_editable'=>0,'is_deletable'=>0];
 
 		extract(array_diff_key($defaults,$data) + array_intersect_key($data,$defaults));
+		
+		/* if they only sent in the name use that for the description */
+		$description = (!empty($description)) ? $description : $name;
 
 		$data = [
 			'is_editable'=>$is_editable, /* Lock down individual records */
