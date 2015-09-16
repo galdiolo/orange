@@ -137,7 +137,7 @@ class Auth {
 			}
 		}
 
-		/* TEST -- ok does this login exists? */
+		/* TEST -- ok does this users email exists? */
 		if (is_null($user = $this->o_user_model->get_user_by_email($login))) {
 			log_message('debug', 'Auth Get User Function returned NULL');
 
@@ -175,6 +175,14 @@ class Auth {
 
 			return false;
 		}
+		
+		/* attach it to CI */
+		return $this->attach($user);
+	}
+
+	public function attach($user_id) {
+		/* now build the complete profile (user id object) */
+		$user = $this->build_profile($user_id);
 
 		/* TEST -- Logged in but, has this user been activated? */
 		if ((int) $user->is_active !== 1) {
@@ -185,14 +193,7 @@ class Auth {
 			return false;
 		}
 		
-		/* attach it to CI */
-		return $this->attach($user);
-	}
-
-	public function attach($user_id) {
-		/* now build the complete profile (user id object) */
-		$user = $this->build_profile($user_id);
-
+		/* do basic validation to make sure this profile meets our standards */
 		if ($this->validate_profile($user) !== true) {
 			$this->error = 'User profile could not be built.';
 
