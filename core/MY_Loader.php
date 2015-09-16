@@ -268,19 +268,15 @@ class MY_Loader extends CI_Loader {
 		*/
 		$paths = add_include_path($path);
 
+		/* older ci style paths */
+		$this->_ci_view_paths[rtrim($path, '/').'/views/'] = $view_cascade;
+
 		/* get ref to config class */
 		$config = & $this->_ci_get_component('config');
-
-		$paths = explode(PATH_SEPARATOR, get_include_path());
-
-		/* older ci style */
-		$this->_ci_view_paths = [];
-
-		foreach ($paths as $p) {
-			$this->_ci_view_paths[rtrim($p, '/').'/views/'] = $view_cascade;
-		}
-
+		
+		/* set paths */
 		$config->_config_paths   = $paths;
+
 		$this->_ci_library_paths = $paths;
 		$this->_ci_helper_paths  = $paths;
 		$this->_ci_model_paths   = $paths;
