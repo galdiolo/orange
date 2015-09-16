@@ -71,13 +71,13 @@ function include_if_exists($file) {
 * @param	string	include search path to add
 * @param	bool		option to prepend the path default append
 */
-function add_include_path($path, $prepend = false) {
+function add_include_path($path) {
 	static $ROOT_PATHS, $ADDED_PATHS, $THEME_PATH, $APPLICATION_PATH;
 
 	/* if they sent in an array handle it */
 	if (is_array($path)) {
 		foreach ($path as $path) {
-			add_include_path($path, $prepend);
+			add_include_path($path);
 		}
 
 		return;
@@ -105,13 +105,8 @@ function add_include_path($path, $prepend = false) {
 		/* there can be only 1 */
 		$THEME_PATH = $path;
 	} else {
-		if ($prepend) {
-			/* append before what we currently have */
-			$ADDED_PATHS = [$package_path => $package_path] + $ADDED_PATHS;
-		} else {
-			/* prepend to what we have */
-			$ADDED_PATHS[$package_path] = $package_path;
-		}
+		/* prepend to what we have */
+		$ADDED_PATHS[$package_path] = $package_path;
 	}
 
 	/*
@@ -119,6 +114,8 @@ function add_include_path($path, $prepend = false) {
 	root, theme, application, packages
 	*/
 	set_include_path($ROOT_PATHS.PATH_SEPARATOR.$THEME_PATH.PATH_SEPARATOR.$APPLICATION_PATH.PATH_SEPARATOR.implode(PATH_SEPARATOR, $ADDED_PATHS));
+	
+	return $ADDED_PATHS;
 }
 
 /**
