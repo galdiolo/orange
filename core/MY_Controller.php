@@ -55,7 +55,8 @@ class MY_Controller extends CI_Controller {
 			/* no create it */
 			ci()->load->create_onload($this->load->onload_path);
 		}
-
+		
+		/* load the "cached" onload */
 		include $this->load->onload_path;
 
 		/* while you could have done this in your onload file - this keeps it "clean" 
