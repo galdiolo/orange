@@ -49,17 +49,16 @@ class MY_Controller extends CI_Controller {
 				$this->load->vars($c.'_catalog',$this->{$c.'_model'}->catalog());
 			}
 		}
-
-		/* let the packages do there start up thing */
-		include APPPATH.'/config/autoload.php';
-
-		foreach ((array)$autoload['packages'] as $package_onload_file) {
-			if (file_exists($package_onload_file.'/support/onload.php')) {
-				include $package_onload_file.'/support/onload.php';
-			}
+				
+		/* does the cached onload exist? */
+		if (!file_exists($this->load->onload_path)) {
+			/* no create it */
+			ci()->load->create_onload($this->load->onload_path);
 		}
 
-		/* while you could have done this in your onload file - this keeps it "clean" */
+		include $this->load->onload_path;
+
+		/* while you could have done this in your onload file - this keeps it "clean" 
 		$this->event->trigger('ci.controller.startup',$this);
 
 		/*
@@ -86,4 +85,9 @@ class MY_Controller extends CI_Controller {
 		}
 
 	}
+
+	protected function _internal_production_onload($file_path) {
+	}
+
+
 } /* end controller */

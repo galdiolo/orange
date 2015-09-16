@@ -60,7 +60,7 @@ class package_manager {
 				$this->model->write_new_version($config['folder'],$config['version']);
 			}
 
-			$this->packages[$dir_name] = $config;			
+			$this->packages[$dir_name] = $config;
 		}
 
 		$this->requirements->process($this->packages);
@@ -101,6 +101,9 @@ class package_manager {
 
 		/* update config */
 		$this->packages_config(ROOTPATH.'/packages/'.$package,'add');
+
+		/* create onload */
+		ci()->load->create_onload();
 
 		return true;
 	}
@@ -188,14 +191,14 @@ class package_manager {
 		if ($mode == 'add') {
 			$packages_array[] = $new_value;
 		}
-		
+
 		$packages_array = preg_replace("/[0-9]+ \=\>/i", '', var_export($packages_array,true));
 
 		$packages_array = '$autoload[\'packages\'] = '.str_replace('\''.ROOTPATH,'ROOTPATH.\'',$packages_array).';';
 
 		$content = file_get_contents(ROOTPATH.'/application/config/autoload.php');
 
-		$re = "/^\\s*\\\$autoload\\['packages']\\s*=\\s*array\\s*\\((.+?)\\);/ms"; 
+		$re = "/^\\s*\\\$autoload\\['packages']\\s*=\\s*array\\s*\\((.+?)\\);/ms";
 
 		preg_match_all($re,$content,$matches);
 

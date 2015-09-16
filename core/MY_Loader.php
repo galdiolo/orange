@@ -21,6 +21,7 @@ class MY_Loader extends CI_Loader {
 	public $orange_extended_helpers = ['array','date','directory','file','string'];
 	public $settings = null; /* local per request storage */
 	protected $cache_file;
+	public $onload_path = ROOTPATH.'/var/cache/onload.php';
 
 	public function __construct() {
 		parent::__construct();
@@ -304,6 +305,21 @@ class MY_Loader extends CI_Loader {
 		$data['variables'] = $this->_ci_cached_vars;
 
 		return ($which) ? $data[$which] : $data;
+	}
+
+	public function create_onload() {
+		$combined = '<?php'.chr(10);
+
+		/* let the packages do there start up thing */
+		include APPPATH.'/config/autoload.php';
+
+		foreach ((array)$autoload['packages'] as $package_onload_file) {
+			if (file_exists($package_onload_file.'/support/onload.php')) {
+				$combined .= str_replace('<?php','',file_get_contents($package_onload_file.'/support/onload.php')).chr(10);
+			}
+		}
+
+		file_put_contents($this->onload_path,$combined);
 	}
 
 } /* end class */
