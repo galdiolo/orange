@@ -267,7 +267,7 @@ class MY_Loader extends CI_Loader {
 		new search path style
 		*/
 		$paths = add_include_path($path);
-		
+
 		/*
 		we need to rebuild the view path each time because the file search order is very important
 		$ROOT_PATHS + $THEME_PATH + $APPLICATION_PATH + $ADDED_PATHS
@@ -281,7 +281,7 @@ class MY_Loader extends CI_Loader {
 
 		/* get ref to config class */
 		$config = & $this->_ci_get_component('config');
-		
+
 		/* set paths */
 		$config->_config_paths   = $paths;
 
@@ -324,6 +324,24 @@ class MY_Loader extends CI_Loader {
 		}
 
 		file_put_contents($this->onload_path,$combined);
+	}
+
+	public function create_autoload() {
+		/* build the packages path cache file */
+		
+		/* load the database settings to determine which modules are active */
+		
+		/* glob the packages folders */
+		
+		/*
+			build an array of packages also load the info.json file to determine the load order
+			make this a $array[$order][$name] = $name;
+			if $order is empty make it 50 (order 1 - 100)
+		*/
+
+		/* build the path cache array */
+		
+		/* save it using array_cache($filename=null,$data=null) */
 	}
 
 } /* end class */

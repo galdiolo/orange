@@ -90,7 +90,7 @@ function add_include_path($path) {
 	if (!isset($ROOT_PATHS)) {
 		/* get root for later */
 		$ROOT_PATHS  = get_include_path();
-		
+
 		/* what did they add? */
 		$ADDED_PATHS = '';
 
@@ -104,15 +104,13 @@ function add_include_path($path) {
 		$ADDED_PATHS .= PATH_SEPARATOR.$package_path;
 	}
 
+	/* build our php path - set our new include search path root, theme, application, packages */
 	$php_search = $ROOT_PATHS.PATH_SEPARATOR.$THEME_PATH.PATH_SEPARATOR.$APPLICATION_PATH.$ADDED_PATHS;
 
-	/*
-	set our new include search path
-	root, theme, application, packages
-	*/
+	/* set our new include search path */
 	set_include_path($php_search);
-	
-	/* return the entire include path array */	
+
+	/* return the entire include path array */
 	return explode(PATH_SEPARATOR,$php_search);
 }
 
@@ -124,13 +122,22 @@ function add_include_path($path) {
 * @param	string	include search path to remove
 */
 function remove_include_path($path = '') {
-	static $ROOT_PATHS, $ADDED_PATHS;
+	static $ROOT_PATHS, $THEME_PATH, $APPLICATION_PATH, $ADDED_PATHS;
+
+	/* clean up our package path */
+	$package_path = rtrim(realpath($path), '/').'/';
+
+	/* build our php path */
+	$php_search = $ROOT_PATHS.PATH_SEPARATOR.$THEME_PATH.PATH_SEPARATOR.$APPLICATION_PATH.$ADDED_PATHS;
 
 	/* clean it if it's sent */
-	unset($ADDED_PATHS[rtrim(realpath($path), '/').'/']);
+	$php_search = str_replace(PATH_SEPARATOR.$package_path,'',$php_search);
 
 	/* set our new include search path */
-	set_include_path($ROOT_PATHS.PATH_SEPARATOR.implode(PATH_SEPARATOR, (array) $ADDED_PATHS));
+	set_include_path($php_search);
+
+	/* return the entire include path array */
+	return explode(PATH_SEPARATOR,$php_search);
 }
 
 /**
@@ -268,7 +275,7 @@ function array_cache($filename=null,$data=null) {
 function convert_to_real($value) {
 	/* is it JSON? if not this will return null */
 	$is_json = @json_decode($value, true);
-	
+
 	if ($is_json !== null) {
 		$value = $is_json;
 	} else {
@@ -288,7 +295,7 @@ function convert_to_real($value) {
 				}
 		}
 	}
-	
+
 	return $value;
 }
 
@@ -296,7 +303,7 @@ function convert_to_string($value) {
 	if (is_array($value)) {
 		return var_export($value,true);
 	}
-	
+
 	if ($value === true) {
 		return 'true';
 	}
@@ -304,6 +311,6 @@ function convert_to_string($value) {
 	if ($value === false) {
 		return 'false';
 	}
-	
+
 	return (string)$value;
 }
