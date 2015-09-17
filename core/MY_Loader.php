@@ -267,9 +267,17 @@ class MY_Loader extends CI_Loader {
 		new search path style
 		*/
 		$paths = add_include_path($path);
+		
+		/*
+		we need to rebuild the view path each time because the file search order is very important
+		$ROOT_PATHS + $THEME_PATH + $APPLICATION_PATH + $ADDED_PATHS
+		*/
+		$this->_ci_view_paths = [];
 
 		/* older ci style paths */
-		$this->_ci_view_paths[rtrim($path, '/').'/views/'] = $view_cascade;
+		foreach ($paths as $path) {
+			$this->_ci_view_paths[rtrim($path, '/').'/views/'] = $view_cascade;
+		}
 
 		/* get ref to config class */
 		$config = & $this->_ci_get_component('config');

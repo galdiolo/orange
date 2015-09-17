@@ -72,16 +72,7 @@ function include_if_exists($file) {
 * @param	bool		option to prepend the path default append
 */
 function add_include_path($path) {
-	static $ROOT_PATHS, $ADDED_PATHS, $THEME_PATH, $APPLICATION_PATH, $ADDED_PATHS_STR;
-
-	/* if they sent in an array handle it */
-	if (is_array($path)) {
-		foreach ($path as $path) {
-			add_include_path($path);
-		}
-
-		return;
-	}
+	static $ROOT_PATHS, $THEME_PATH, $APPLICATION_PATH, $ADDED_PATHS;
 
 	/* clean up our package path */
 	$package_path = rtrim(realpath($path), '/').'/';
@@ -97,28 +88,32 @@ function add_include_path($path) {
 	before anything already added as needed
 	*/
 	if (!isset($ROOT_PATHS)) {
+		/* get root for later */
 		$ROOT_PATHS  = get_include_path();
-		$ADDED_PATHS = [];
-		$ADDED_PATHS_STR = '';
-		/* application path is always first */
+		
+		/* what did they add? */
+		$ADDED_PATHS = '';
+
+		/* Application path is always sent in first */
 		$APPLICATION_PATH = $path;
 	} elseif (strpos($path,'theme_') !== false) { /* does it contain the theme_ package prefix? */
 		/* there can be only 1 */
 		$THEME_PATH = $path;
 	} else {
 		/* prepend to what we have */
-		$ADDED_PATHS[$package_path] = $package_path;
-		$ADDED_PATHS_STR .= PATH_SEPARATOR.$package_path;
+		$ADDED_PATHS .= PATH_SEPARATOR.$package_path;
 	}
+
+	$php_search = $ROOT_PATHS.PATH_SEPARATOR.$THEME_PATH.PATH_SEPARATOR.$APPLICATION_PATH.$ADDED_PATHS;
 
 	/*
 	set our new include search path
 	root, theme, application, packages
 	*/
-	set_include_path($ROOT_PATHS.PATH_SEPARATOR.$THEME_PATH.PATH_SEPARATOR.$APPLICATION_PATH.PATH_SEPARATOR.$ADDED_PATHS_STR);
+	set_include_path($php_search);
 	
 	/* return the entire include path array */	
-	return explode(PATH_SEPARATOR, get_include_path());
+	return explode(PATH_SEPARATOR,$php_search);
 }
 
 /**
@@ -169,7 +164,9 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 
 		/* add application, packages, base */
 		add_include_path(APPPATH);
-		add_include_path($autoload['packages']);
+		foreach ($autoload['packages'] as $package) {
+			add_include_path($package);
+		}
 		add_include_path(BASEPATH);
 	}
 
