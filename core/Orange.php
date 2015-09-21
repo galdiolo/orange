@@ -34,52 +34,43 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 		}
 	}
 
-	// Does the class exist? If so, we're done...
+	/* Does the class exist? If so, we're done... */
 	if (isset($_classes[$class])) {
 		return $_classes[$class];
 	}
 
 	$name = false;
 
-	// Look for the class first in the local application/libraries folder
-	// then in the native system/libraries folder
-	$folders = explode(':',get_include_path());
+	/* Look for the class in the native system/libraries folder */
+	if (file_exists(BASEPATH.$directory.'/'.$class.'.php')) {
+		$name = 'CI_'.$class;
 
-	foreach ($folders as $idx=>$path) {
-		$path = $folders[$idx] = rtrim($path,'/').'/';
-
-		if (file_exists($path.$directory.'/'.$class.'.php')) {
-			$name = 'CI_'.$class;
-
-			if (class_exists($name, false) === false) {
-				require $path.$directory.'/'.$class.'.php';
-			}
-
-			break;
+		if (class_exists($name, FALSE) === FALSE) {
+			require_once(BASEPATH.$directory.'/'.$class.'.php');
 		}
 	}
 
-	// Is the request a class extension? If so we load it too
-	foreach ($folders as $path) {
-		if (file_exists($path.$directory.'/'.config_item('subclass_prefix').$class.'.php')) {
-			$name = config_item('subclass_prefix').$class;
+	/* Is the request a class extension? If so we load it too */
+	if (file_exists(ROOTPATH.'/packages/orange/'.$directory.'/'.config_item('subclass_prefix').$class.'.php')) {
+		$name = config_item('subclass_prefix').$class;
 
-			if (class_exists($name, false) === false) {
-				require_once $path.$directory.'/'.$name.'.php';
-			}
+		if (class_exists($name, FALSE) === FALSE) {
+			require_once(ROOTPATH.'/packages/orange/'.$directory.'/'.config_item('subclass_prefix').$class.'.php');
 		}
 	}
 
 	// Did we find the class?
 	if ($name === false) {
-		// Note: We use exit() rather then show_error() in order to avoid a
-		// self-referencing loop with the Exceptions class
+		/*
+		Note: We use exit() rather then show_error() in order to avoid a
+		self-referencing loop with the Exceptions class
+		*/
 		set_status_header(503);
 		echo 'Unable to locate the specified class: '.$class.'.php';
 		exit;
 	}
 
-	// Keep track of what we just loaded
+	/* Keep track of what we just loaded */
 	is_loaded($class);
 
 	$_classes[$class] = isset($param) ? new $name($param) : new $name();
@@ -181,7 +172,7 @@ function add_include_path($path) {
 	/* if it the not the application path and not a theme then it's a package so add it	*/
 	if (strpos($package_path,'theme_') !== false) {
 		/* does it contain the theme_ package prefix? if so then add it to the themes package */
-		$THEME_PATHS = PATH_SEPARATOR.$package_path;
+		$THEME_PATHS  = PATH_SEPARATOR.$package_path;
 	} else {
 		$ADDED_PATHS .= PATH_SEPARATOR.$package_path;
 	}

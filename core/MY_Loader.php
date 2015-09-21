@@ -23,8 +23,7 @@ class MY_Loader extends CI_Loader {
 	public $settings = null; /* local per request storage */
 	public $cache_file = ROOTPATH.'/var/cache/settings.php';
 	public $onload_path = ROOTPATH.'/var/cache/onload.php';
-	public $packages_cache_path = ROOTPATH.'/var/cache/packages_cache.php';
-	public $cache_loaded = false;
+	public $packages_cache_path = ROOTPATH.'/var/cache/packages_cache.php'; /* work in progress */
 
 	/**
 	* Helper Loader
@@ -259,34 +258,7 @@ class MY_Loader extends CI_Loader {
 	public function add_package_path($path, $view_cascade = true) {
 		log_message('debug', 'my_loader::add_package_path '.$path);
 
-		if ($this->cache_loaded) {
-			return $this;
-		}
-
-		if (file_exists($this->packages_cache_path)) {
-			$cached = include $this->packages_cache_path;
-
-			$config = & $this->_ci_get_component('config');
-
-			/* set paths */
-			$config->_config_paths   = $cached['config'];
-
-			$this->_ci_library_paths = $cached['libraries'];
-			$this->_ci_helper_paths  = $cached['helpers'];
-			$this->_ci_model_paths   = $cached['models'];
-			$this->_ci_view_paths 	 = $cached['views'];
-
-			set_include_path($cached['php']);
-
-			$this->cache_loaded = true;
-
-			return $this;
-		}
-
-		/*
-		prepend new package in front of the others
-		new search path style
-		*/
+		/* prepend new package in front of the others new search path style */
 		$paths = add_include_path($path);
 
 		/*
@@ -368,7 +340,8 @@ class MY_Loader extends CI_Loader {
 
 		return $return;
 	}
-
+	
+	/* work in progress */
 	public function create_autoload() {
 		/* build the packages path cache file */
 
