@@ -1,146 +1,5 @@
 <?php
 /**
-* This naming works because of the naming
-* my changes put on the controller and models
-* (suffixes of Controller or _model)
-*/
-function codeigniter_autoload($class) {
-	if ($file = stream_resolve_include_path($class.'.php')) { /* is it on any of the include pathes? */
-		include_once $file;
-
-		return true;
-	} elseif ($class == 'Database_model') { /* abstract class */
-		include_once ROOTPATH.'/packages/orange/models/Database_model.php';
-
-		return true;
-	} elseif (substr($class, -6) == '_model') { /* is it a CI model? */
-		if (stream_resolve_include_path('models/'.$class.'.php')) {
-			ci()->load->model($class);
-
-			return true;
-		}
-	} elseif (substr($class, -10) == 'Controller') { /* is it a CI Controller? */
-		if ($file = stream_resolve_include_path('controllers/'.$class.'.php')) {
-			include $file;
-
-			return true;
-		}
-	} elseif ($file = stream_resolve_include_path('libraries/'.$class.'.php')) {
-		ci()->load->library($class);
-
-		return true;
-	}
-
-	/* beat's me let the next autoloader give it a shot */
-	return false;
-}
-
-/* register loader */
-spl_autoload_register('codeigniter_autoload');
-
-/* NEW - shorter syntax */
-function &ci() {
-	return CI_Controller::get_instance();
-}
-
-/**
-* Include If Exists
-* New Function
-* Include a file without throwing an error
-* this is pretty low level and "direct"
-* The more generic function is the loaders "find"
-* method. it will locate the file and autoload it if needed
-*
-* @param		string	$file	path to search the include directories for
-* @return		mixed		false on failed to locate the absolute path (string) on file located
-*/
-function include_if_exists($file) {
-	/* stream resolve will search include paths (in code) for a needed class */
-	if ($file = stream_resolve_include_path($file)) {
-		include_once $file;
-	}
-
-	return $file;
-}
-
-/**
-* Add Search Path
-* New Function
-* Low level function to add to include path
-*
-* @param	string	include search path to add
-* @param	bool		option to prepend the path default append
-*/
-function add_include_path($path) {
-	static $ROOT_PATHS, $THEME_PATH, $APPLICATION_PATH, $ADDED_PATHS;
-
-	/* clean up our package path */
-	$package_path = rtrim(realpath($path), '/').'/';
-
-	/* if the package path is empty then it's no good */
-	if ($package_path === '/' && CONFIG !== 'production') {
-		die('Setup Failed - Package Not Found: "'.$path.'". Check your ENV folders.');
-	}
-
-	/*
-	save a copy of the root paths
-	so we can append after these and
-	before anything already added as needed
-	*/
-	if (!isset($ROOT_PATHS)) {
-		/* get root for later */
-		$ROOT_PATHS  = get_include_path();
-
-		/* what did they add? */
-		$ADDED_PATHS = '';
-
-		/* Application path is always sent in first */
-		$APPLICATION_PATH = $path;
-	} elseif (strpos($path,'theme_') !== false) { /* does it contain the theme_ package prefix? */
-		/* there can be only 1 */
-		$THEME_PATH = $path;
-	} else {
-		/* prepend to what we have */
-		$ADDED_PATHS .= PATH_SEPARATOR.$package_path;
-	}
-
-	/* build our php path - set our new include search path root, theme, application, packages */
-	$php_search = $ROOT_PATHS.PATH_SEPARATOR.$THEME_PATH.PATH_SEPARATOR.$APPLICATION_PATH.$ADDED_PATHS;
-
-	/* set our new include search path */
-	set_include_path($php_search);
-
-	/* return the entire include path array */
-	return explode(PATH_SEPARATOR,$php_search);
-}
-
-/**
-* Remove Search Path
-* New Function
-* Low level function to remove already included path
-*
-* @param	string	include search path to remove
-*/
-function remove_include_path($path = '') {
-	static $ROOT_PATHS, $THEME_PATH, $APPLICATION_PATH, $ADDED_PATHS;
-
-	/* clean up our package path */
-	$package_path = rtrim(realpath($path), '/').'/';
-
-	/* build our php path */
-	$php_search = $ROOT_PATHS.PATH_SEPARATOR.$THEME_PATH.PATH_SEPARATOR.$APPLICATION_PATH.$ADDED_PATHS;
-
-	/* clean it if it's sent */
-	$php_search = str_replace(PATH_SEPARATOR.$package_path,'',$php_search);
-
-	/* set our new include search path */
-	set_include_path($php_search);
-
-	/* return the entire include path array */
-	return explode(PATH_SEPARATOR,$php_search);
-}
-
-/**
 * Class registry
 *
 * This function acts as a singleton.  If the requested class does not
@@ -170,11 +29,9 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 		}
 
 		/* add application, packages, base */
-		add_include_path(APPPATH);
 		foreach ($autoload['packages'] as $package) {
 			add_include_path($package);
 		}
-		add_include_path(BASEPATH);
 	}
 
 	// Does the class exist? If so, we're done...
@@ -230,6 +87,138 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 	return $_classes[$class];
 }
 
+/**
+* This naming works because of the naming
+* my changes put on the controller and models
+* (suffixes of Controller or _model)
+*/
+function codeigniter_autoload($class) {
+	if ($file = stream_resolve_include_path($class.'.php')) { /* is it on any of the include pathes? */
+		include_once $file;
+
+		return true;
+	} elseif ($class == 'Database_model') { /* abstract class */
+		include_once ROOTPATH.'/packages/orange/models/Database_model.php';
+
+		return true;
+	} elseif (substr($class, -6) == '_model') { /* is it a CI model? */
+		if (stream_resolve_include_path('models/'.$class.'.php')) {
+			ci()->load->model($class);
+
+			return true;
+		}
+	} elseif (substr($class, -10) == 'Controller') { /* is it a CI Controller? */
+		if ($file = stream_resolve_include_path('controllers/'.$class.'.php')) {
+			include $file;
+
+			return true;
+		}
+	} elseif ($file = stream_resolve_include_path('libraries/'.$class.'.php')) {
+		ci()->load->library($class);
+
+		return true;
+	}
+
+	/* beat's me let the next autoloader give it a shot */
+	return false;
+}
+
+/* register loader */
+spl_autoload_register('codeigniter_autoload');
+
+/* Put the current php include paths in a constant so we don't lose them or accidentally change them! */
+define('ROOT_PATHS',get_include_path());
+
+/* NEW - shorter syntax */
+function &ci() {
+	return CI_Controller::get_instance();
+}
+
+/**
+* Include If Exists
+* New Function
+* Include a file without throwing an error
+* this is pretty low level and "direct"
+* The more generic function is the loaders "find"
+* method. it will locate the file and autoload it if needed
+*
+* @param		string	$file	path to search the include directories for
+* @return		mixed		false on failed to locate the absolute path (string) on file located
+*/
+function include_if_exists($file) {
+	/* stream resolve will search include paths (in code) for a needed class */
+	if ($file = stream_resolve_include_path($file)) {
+		include_once $file;
+	}
+
+	return $file;
+}
+
+/**
+* Add Search Path
+* New Function
+* Low level function to add to include path
+*
+* @param	string	include search path to add
+* @param	bool		option to prepend the path default append
+*/
+function add_include_path($path) {
+	static $THEME_PATHS, $ADDED_PATHS;
+
+	/* clean up our package path */
+	$package_path = rtrim(realpath($path), '/').'/';
+
+	/* if the package path is empty then it's no good */
+	if ($package_path === '/' && CONFIG !== 'production') {
+		die('Setup Failed - Package Not Found: "'.$path.'". Check your ENV folders.');
+	}
+
+	/* is it already in the search path? */
+	if (strpos($ADDED_PATHS, $package_path) !== false) {
+		return explode(PATH_SEPARATOR,ROOT_PATHS.PATH_SEPARATOR.$THEME_PATHS.PATH_SEPARATOR.APPPATH.PATH_SEPARATOR.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH);
+	}
+
+	/* if it the not the application path and not a theme then it's a package so add it	*/
+	if (strpos($package_path,'theme_') !== false) {
+		/* does it contain the theme_ package prefix? if so then add it to the themes package */
+		$THEME_PATHS = PATH_SEPARATOR.$package_path;
+	} else {
+		$ADDED_PATHS .= PATH_SEPARATOR.$package_path;
+	}
+
+	/* build our php path - set our new include search path root, theme, application, packages */
+	$php_search = ROOT_PATHS.PATH_SEPARATOR.$THEME_PATHS.PATH_SEPARATOR.APPPATH.PATH_SEPARATOR.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH;
+
+	/* set our new include search path */
+	set_include_path($php_search);
+
+	/* return the entire include path array */
+	return explode(PATH_SEPARATOR,$php_search);
+}
+
+/**
+* Remove Search Path
+* New Function
+* Low level function to remove already included path
+*
+* @param	string	include search path to remove
+*/
+function remove_include_path($path = '') {
+	static $THEME_PATHS, $ADDED_PATHS;
+
+	/* clean up our package path */
+	$package_path = rtrim(realpath($path), '/').'/';
+
+	/* build our php path and remove if it's present */
+	$php_search = str_replace(PATH_SEPARATOR.$package_path,'',ROOT_PATHS.PATH_SEPARATOR.$THEME_PATHS.PATH_SEPARATOR.APPPATH.PATH_SEPARATOR.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH);
+
+	/* set our new include search path */
+	set_include_path($php_search);
+
+	/* return the entire include path array */
+	return explode(PATH_SEPARATOR,$php_search);
+}
+
 function capture($_mvc_view_file,$_mvc_view_data=[]) {
 	if (file_exists($_mvc_view_file)) {
 		extract($_mvc_view_data);
@@ -265,6 +254,11 @@ function array_cache($filename=null,$data=null) {
 		$tmpfname = tempnam(dirname($filename),'temp');
 		file_put_contents($tmpfname,'<?php return '.var_export($data,true).';');
 		rename($tmpfname,$filename); /* atomic */
+
+		/* invalidate the cached item if opcache is on */
+		if (function_exists('opcache_invalidate')) {
+			opcache_invalidate($filename,true);
+		}
 	} else {
 		/* read */
 		return (file_exists($filename)) ? include $filename : false;

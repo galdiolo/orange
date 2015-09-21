@@ -13,6 +13,7 @@
 class MY_Loader extends CI_Loader {
 	/* only one theme at a time can be assigned so we can save that here */
 	public $current_theme = ''; /* current theme */
+
 	/*
 	add helpers here to autoload these AFTER the normal helpers are loaded
 	this way our helpers can "extend" the loaded helpers
@@ -20,14 +21,10 @@ class MY_Loader extends CI_Loader {
 	*/
 	public $orange_extended_helpers = ['array','date','directory','file','string'];
 	public $settings = null; /* local per request storage */
-	protected $cache_file;
+	public $cache_file = ROOTPATH.'/var/cache/settings.php';
 	public $onload_path = ROOTPATH.'/var/cache/onload.php';
-
-	public function __construct() {
-		parent::__construct();
-
-		$this->cache_file = ROOTPATH.'/var/cache/settings.php';
-	}
+	public $packages_cache_path = ROOTPATH.'/var/cache/packages_cache.php';
+	public $cache_loaded = false;
 
 	/**
 	* Helper Loader
@@ -262,6 +259,30 @@ class MY_Loader extends CI_Loader {
 	public function add_package_path($path, $view_cascade = true) {
 		log_message('debug', 'my_loader::add_package_path '.$path);
 
+		if ($this->cache_loaded) {
+			return $this;
+		}
+
+		if (file_exists($this->packages_cache_path)) {
+			$cached = include $this->packages_cache_path;
+
+			$config = & $this->_ci_get_component('config');
+
+			/* set paths */
+			$config->_config_paths   = $cached['config'];
+
+			$this->_ci_library_paths = $cached['libraries'];
+			$this->_ci_helper_paths  = $cached['helpers'];
+			$this->_ci_model_paths   = $cached['models'];
+			$this->_ci_view_paths 	 = $cached['views'];
+
+			set_include_path($cached['php']);
+
+			$this->cache_loaded = true;
+
+			return $this;
+		}
+
 		/*
 		prepend new package in front of the others
 		new search path style
@@ -270,7 +291,7 @@ class MY_Loader extends CI_Loader {
 
 		/*
 		we need to rebuild the view path each time because the file search order is very important
-		$ROOT_PATHS + $THEME_PATH + $APPLICATION_PATH + $ADDED_PATHS
+		ROOT_PATHS + $THEME_PATH + APPPATH + $ADDED_PATHS + BASEPATH
 		*/
 		$this->_ci_view_paths = [];
 
@@ -323,25 +344,107 @@ class MY_Loader extends CI_Loader {
 			}
 		}
 
-		file_put_contents($this->onload_path,$combined);
+		$tmpfname = tempnam(dirname($this->onload_path),'temp');
+		file_put_contents($tmpfname,$combined);
+		rename($tmpfname,$this->onload_path); /* atomic */
+
+		/* force flush opcached filed if exists */
+		if (function_exists('opcache_invalidate')) {
+			opcache_invalidate($this->onload_path,true);
+		}
+	}
+
+	public function onload_flush() {
+		$return = true;
+
+		if (file_exists($this->onload_path)) {
+			$return = unlink($this->onload_path);
+		}
+
+		/* force flush opcached filed if exists */
+		if (function_exists('opcache_invalidate')) {
+			opcache_invalidate($this->onload_path,true);
+		}
+
+		return $return;
 	}
 
 	public function create_autoload() {
 		/* build the packages path cache file */
-		
+
 		/* load the database settings to determine which modules are active */
-		
-		/* glob the packages folders */
-		
+		include APPPATH.'/config/autoload.php';
+
 		/*
 			build an array of packages also load the info.json file to determine the load order
 			make this a $array[$order][$name] = $name;
 			if $order is empty make it 50 (order 1 - 100)
-		*/
+ 		*/
+		$packages_paths = [];
+		
+		/* add the root paths as level 100 (the higher = first) */
+		foreach (explode(PATH_SEPARATOR,ROOT_PATHS) as $p) {
+			$packages_paths[100][rtrim($p,'/')] = rtrim($p,'/');
+		}
+		
+		/* add the packages if they don't have a priority then set it to 50 - middle of the road in loading priority */
+		foreach ($autoload['packages'] as $p) {
+			if (file_exists($p.'/info.json')) {
+				$info = json_decode(file_get_contents($p.'/info.json'),true);
+
+				$priority = (!empty($info['priority'])) ? $info['priority'] : 50;
+
+				$packages_paths[$priority][$p] = $p;
+			}
+		}
+
+		/* the application path comes before the default packages */
+		$packages_paths[60][rtrim(APPPATH,'/')] = rtrim(APPPATH,'/');
+		
+		/* the basepath comes last after everything else */
+		$packages_paths[10][rtrim(BASEPATH,'/')] = rtrim(BASEPATH,'/');
+
+		krsort($packages_paths);
+
+		$new_packages_path = [];
+		$new_view_packages_path = [];
 
 		/* build the path cache array */
-		
+		foreach ($packages_paths as $priority_records) {
+			foreach ($priority_records as $path) {
+				$php_path .= PATH_SEPARATOR.$path;
+				$new_packages_path[$path] = $path.'/';
+				$new_view_packages_path[rtrim($path, '/').'/views/'] = true;
+			}
+		}
+
 		/* save it using array_cache($filename=null,$data=null) */
+		$data = [
+			'config'=>$new_packages_path,
+			'libraries'=>$new_packages_path,
+			'helpers'=>$new_packages_path,
+			'models'=>$new_packages_path,
+			'views'=>$new_view_packages_path,
+			'php'=>trim($php_path,PATH_SEPARATOR),
+		];
+
+		/* write it out */
+		array_cache($this->packages_cache_path,$data);
+	}
+
+	public function autoload_flush() {
+		$return = true;
+
+		if (file_exists($this->packages_cache_path)) {
+			$return = unlink($this->packages_cache_path);
+		}
+
+		/* force flush opcached filed if exists */
+		if (function_exists('opcache_invalidate')) {
+			opcache_invalidate($this->packages_cache_path,true);
+		}
+
+		return $return;
 	}
 
 } /* end class */
