@@ -19,18 +19,29 @@
 */
 function &load_class($class, $directory = 'libraries', $param = NULL) {
 	static $_classes = array();
+	static $THEME_PATHS, $ADDED_PATHS;
+	
+	$cache_file = ROOTPATH.'/var/cache/packages_cache.php';
 
 	/* is $_classes empty? if so it's the first time here add the packages to the search path */
 	if (count($_classes) == 0) {
-		include APPPATH.'config/autoload.php';
+		if (file_exists($cache_file)) {
+			$cached = include $cache_file;
 
-		if (file_exists(APPPATH.'config/'.CONFIG.'/autoload.php')) {
-			include APPPATH.'config/'.CONFIG.'/autoload.php';
-		}
-
-		/* add application, packages, base */
-		foreach ($autoload['packages'] as $package) {
-			add_include_path($package);
+			/* setup the php include search path */
+			set_include_path($cached['php']);
+			
+			/* setup the theme and added paths */
+			$THEME_PATHS = $cached['theme_paths'];
+			$ADDED_PATHS = $cached['added_paths'];
+		} else {
+			/* load the codeigniter autoload */
+			include APPPATH.'config/autoload.php';
+	
+			/* add packages */
+			foreach ($autoload['packages'] as $package) {
+				add_include_path($package);
+			}
 		}
 	}
 
@@ -164,12 +175,14 @@ function add_include_path($path) {
 		die('Setup Failed - Package Not Found: "'.$path.'". Check your ENV folders.');
 	}
 
+	$php_search = ROOT_PATHS.$THEME_PATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH;
+
 	/* is it already in the search path? */
-	if (strpos($ADDED_PATHS, $package_path) !== false) {
-		return explode(PATH_SEPARATOR,ROOT_PATHS.PATH_SEPARATOR.$THEME_PATHS.PATH_SEPARATOR.APPPATH.PATH_SEPARATOR.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH);
+	if (strpos($ADDED_PATHS,$php_search) !== false) {
+		return explode(PATH_SEPARATOR,$php_search);
 	}
 
-	/* if it the not the application path and not a theme then it's a package so add it	*/
+	/* is this a theme package or a normal package?	*/
 	if (strpos($package_path,'theme_') !== false) {
 		/* does it contain the theme_ package prefix? if so then add it to the themes package */
 		$THEME_PATHS  = PATH_SEPARATOR.$package_path;
@@ -178,7 +191,7 @@ function add_include_path($path) {
 	}
 
 	/* build our php path - set our new include search path root, theme, application, packages */
-	$php_search = ROOT_PATHS.PATH_SEPARATOR.$THEME_PATHS.PATH_SEPARATOR.APPPATH.PATH_SEPARATOR.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH;
+	$php_search = ROOT_PATHS.$THEME_PATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH;
 
 	/* set our new include search path */
 	set_include_path($php_search);
@@ -201,7 +214,7 @@ function remove_include_path($path = '') {
 	$package_path = rtrim(realpath($path), '/').'/';
 
 	/* build our php path and remove if it's present */
-	$php_search = str_replace(PATH_SEPARATOR.$package_path,'',ROOT_PATHS.PATH_SEPARATOR.$THEME_PATHS.PATH_SEPARATOR.APPPATH.PATH_SEPARATOR.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH);
+	$php_search = str_replace(PATH_SEPARATOR.$package_path,'',ROOT_PATHS.$THEME_PATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH);
 
 	/* set our new include search path */
 	set_include_path($php_search);
@@ -243,7 +256,7 @@ function array_cache($filename=null,$data=null) {
 	if (is_array($data) && $filename) {
 		/* write */
 		$tmpfname = tempnam(dirname($filename),'temp');
-		file_put_contents($tmpfname,'<?php return '.var_export($data,true).';');
+		file_put_contents($tmpfname,'<?php'.chr(10).'return '.var_export($data,true).';');
 		rename($tmpfname,$filename); /* atomic */
 
 		/* invalidate the cached item if opcache is on */

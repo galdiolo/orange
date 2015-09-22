@@ -23,7 +23,31 @@ class MY_Loader extends CI_Loader {
 	public $settings = null; /* local per request storage */
 	public $cache_file = ROOTPATH.'/var/cache/settings.php';
 	public $onload_path = ROOTPATH.'/var/cache/onload.php';
-	public $packages_cache_path = ROOTPATH.'/var/cache/packages_cache.php'; /* work in progress */
+	public $packages_cache_path = ROOTPATH.'/var/cache/packages_cache.php';
+	public $packages_config = ROOTPATH.'/application/config/packages.php';
+	
+	public function __construct() {
+		if (file_exists($this->packages_cache_path.'x')) {
+			$cached = require $this->packages_cache_path;
+
+			$config = & $this->_ci_get_component('config');
+	
+			$config->_config_paths = $cached['config'];
+			$this->_ci_library_paths = $cached['libraries'];
+			$this->_ci_helper_paths = $cached['helpers'];
+			$this->_ci_model_paths = $cached['models'];
+			$this->_ci_view_paths = $cached['views'];
+		} else {
+			/* load the package */
+			$packages = include APPPATH.'config/packages.php';
+			
+			foreach ($packages as $p) {
+				add_include_path($p);
+			}
+		}
+		
+		parent::__construct();
+	}
 
 	/**
 	* Helper Loader
@@ -307,12 +331,15 @@ class MY_Loader extends CI_Loader {
 	public function create_onload() {
 		$combined = '<?php'.chr(10);
 
-		/* let the packages do there start up thing */
-		include APPPATH.'/config/autoload.php';
+		$this->model('o_packages_model');
+		
+		$records = ci()->o_packages_model->get_many_by(['is_active'=>1]);
 
-		foreach ((array)$autoload['packages'] as $package_onload_file) {
-			if (file_exists($package_onload_file.'/support/onload.php')) {
-				$combined .= str_replace('<?php','',file_get_contents($package_onload_file.'/support/onload.php')).chr(10);
+		foreach ($records as $p) {
+			$package_folder = ROOTPATH.'/packages/'.$p->folder_name;
+			
+			if (file_exists($package_folder.'/support/onload.php')) {
+				$combined .= str_replace('<?php','/* --> '.$p->folder_name.' <-- */'.chr(10),file_get_contents($package_folder.'/support/onload.php')).chr(10);
 			}
 		}
 
@@ -324,6 +351,8 @@ class MY_Loader extends CI_Loader {
 		if (function_exists('opcache_invalidate')) {
 			opcache_invalidate($this->onload_path,true);
 		}
+
+		return $this;
 	}
 
 	public function onload_flush() {
@@ -340,13 +369,10 @@ class MY_Loader extends CI_Loader {
 
 		return $return;
 	}
-	
+
 	/* work in progress */
 	public function create_autoload() {
 		/* build the packages path cache file */
-
-		/* load the database settings to determine which modules are active */
-		include APPPATH.'/config/autoload.php';
 
 		/*
 			build an array of packages also load the info.json file to determine the load order
@@ -354,44 +380,67 @@ class MY_Loader extends CI_Loader {
 			if $order is empty make it 50 (order 1 - 100)
  		*/
 		$packages_paths = [];
-		
+		$packages_config = [];
+
 		/* add the root paths as level 100 (the higher = first) */
 		foreach (explode(PATH_SEPARATOR,ROOT_PATHS) as $p) {
-			$packages_paths[100][rtrim($p,'/')] = rtrim($p,'/');
+			$packages_paths[100][rtrim($p,'/')] = ['type'=>'root','path'=>rtrim($p,'/')];
 		}
-		
+
 		/* add the packages if they don't have a priority then set it to 50 - middle of the road in loading priority */
-		foreach ($autoload['packages'] as $p) {
-			if (file_exists($p.'/info.json')) {
-				$info = json_decode(file_get_contents($p.'/info.json'),true);
+
+		/* this needs to load from the database to know which are enabled */
+		$this->model('o_packages_model');
+		
+		$records = ci()->o_packages_model->get_many_by(['is_active'=>1]);
+
+		foreach ($records as $p) {
+			$package_folder = ROOTPATH.'/packages/'.$p->folder_name;
+
+			if (file_exists($package_folder.'/info.json')) {
+				$info = json_decode(file_get_contents($package_folder.'/info.json'),true);
 
 				$priority = (!empty($info['priority'])) ? $info['priority'] : 50;
 
-				$packages_paths[$priority][$p] = $p;
+				$type = (strpos($p->folder_name,'theme_') === false) ? 'added_path' : 'theme_path';
+
+				$packages_paths[$priority][$package_folder] = ['type'=>$type,'path'=>$package_folder];
+
+				$packages_config[] = $package_folder;
 			}
 		}
 
 		/* the application path comes before the default packages */
-		$packages_paths[60][rtrim(APPPATH,'/')] = rtrim(APPPATH,'/');
-		
+		$packages_paths[60][rtrim(APPPATH,'/')] = ['type'=>'apppath','path'=>rtrim(APPPATH,'/')];
+
 		/* the basepath comes last after everything else */
-		$packages_paths[10][rtrim(BASEPATH,'/')] = rtrim(BASEPATH,'/');
+		$packages_paths[10][rtrim(BASEPATH,'/')] = ['type'=>'basepath','path'=>rtrim(BASEPATH,'/')];
 
 		krsort($packages_paths);
 
 		$new_packages_path = [];
 		$new_view_packages_path = [];
+		$theme_paths = [];
+		$added_paths = [];
 
 		/* build the path cache array */
 		foreach ($packages_paths as $priority_records) {
 			foreach ($priority_records as $path) {
-				$php_path .= PATH_SEPARATOR.$path;
-				$new_packages_path[$path] = $path.'/';
-				$new_view_packages_path[rtrim($path, '/').'/views/'] = true;
+				$php_path .= PATH_SEPARATOR.$path['path'];
+				$new_packages_path[$path['path']] = $path['path'].'/';
+				$new_view_packages_path[rtrim($path['path'], '/').'/views/'] = true;
+				switch ($path['type']) {
+					case 'added_path':
+						$added_paths[$path['path']] = $path['path'].'/';
+					break;
+					case 'theme_path':
+						$theme_paths[$path['path']] = $path['path'].'/';
+					break;
+				}
 			}
 		}
 
-		/* save it using array_cache($filename=null,$data=null) */
+		/* save it */
 		$data = [
 			'config'=>$new_packages_path,
 			'libraries'=>$new_packages_path,
@@ -399,12 +448,27 @@ class MY_Loader extends CI_Loader {
 			'models'=>$new_packages_path,
 			'views'=>$new_view_packages_path,
 			'php'=>trim($php_path,PATH_SEPARATOR),
+			'theme_paths'=>$theme_paths,
+			'added_paths'=>$added_paths,
 		];
 
-		/* write it out */
+		/* write out the cache file */
 		array_cache($this->packages_cache_path,$data);
+		
+		/* config file */
+		$tmpfname = tempnam(dirname($this->packages_config),'temp');
+		file_put_contents($tmpfname,'<?php'.chr(10).'return '.var_export($packages_config,true).';');
+		rename($tmpfname,$this->packages_config); /* atomic */
+
+		/* invalidate the cached item if opcache is on */
+		if (function_exists('opcache_invalidate')) {
+			opcache_invalidate($this->packages_config,true);
+		}
+
+		return $this;
 	}
 
+	/* work in progress */
 	public function autoload_flush() {
 		$return = true;
 
