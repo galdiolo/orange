@@ -22,9 +22,6 @@ class packagesController extends APP_AdminController {
 
 	public function indexAction($filter=null) {
 		if ($filter) $this->input->is_valid('alpha',$filter);
-		
-		/* refresh the config and cache files on index load */
-		$this->load->create_onload();
 
 		$this->page
 			->data([

@@ -1,81 +1,5 @@
 <?php
 /**
-* Class registry
-*
-* This function acts as a singleton.  If the requested class does not
-* exist it is instantiated and set to a static variable.  If it has
-* previously been instantiated the variable is returned.
-* only use for app, orange, base files
-*
-* @access	public
-* @param	string	the class name being requested
-* @param	string	the directory where the class should be found
-* @param	string	the class name prefix
-* @return	object
-*
-* OVERRIDDEN because the include_if_exists will search all of our include paths
-* Not just APPPATH and BASEPATH
-*
-*/
-function &load_class($class, $directory = 'libraries', $param = NULL) {
-	static $_classes = array();
-	static $THEME_PATHS, $ADDED_PATHS;
-	
-	$cache_file = ROOTPATH.'/var/cache/packages_cache.php';
-
-	/* load the codeigniter autoload */
-	include APPPATH.'config/autoload.php';
-
-	/* add packages - this loads the default packages */
-	foreach ($autoload['packages'] as $package) {
-		add_include_path($package);
-	}
-
-	/* Does the class exist? If so, we're done... */
-	if (isset($_classes[$class])) {
-		return $_classes[$class];
-	}
-
-	$name = false;
-
-	/* Look for the class in the native system/libraries folder */
-	if (file_exists(BASEPATH.$directory.'/'.$class.'.php')) {
-		$name = 'CI_'.$class;
-
-		if (class_exists($name, FALSE) === FALSE) {
-			require_once(BASEPATH.$directory.'/'.$class.'.php');
-		}
-	}
-
-	/* Is the request a class extension? If so we load it too */
-	if (file_exists(ROOTPATH.'/packages/orange/'.$directory.'/'.config_item('subclass_prefix').$class.'.php')) {
-		$name = config_item('subclass_prefix').$class;
-
-		if (class_exists($name, FALSE) === FALSE) {
-			require_once(ROOTPATH.'/packages/orange/'.$directory.'/'.config_item('subclass_prefix').$class.'.php');
-		}
-	}
-
-	// Did we find the class?
-	if ($name === false) {
-		/*
-		Note: We use exit() rather then show_error() in order to avoid a
-		self-referencing loop with the Exceptions class
-		*/
-		set_status_header(503);
-		echo 'Unable to locate the specified class: '.$class.'.php';
-		exit;
-	}
-
-	/* Keep track of what we just loaded */
-	is_loaded($class);
-
-	$_classes[$class] = isset($param) ? new $name($param) : new $name();
-
-	return $_classes[$class];
-}
-
-/**
 * This naming works because of the naming
 * my changes put on the controller and models
 * (suffixes of Controller or _model)
@@ -114,9 +38,6 @@ function codeigniter_autoload($class) {
 /* register loader */
 spl_autoload_register('codeigniter_autoload');
 
-/* Put the current php include paths in a constant so we don't lose them or accidentally change them! */
-define('ROOT_PATHS',get_include_path());
-
 /* NEW - shorter syntax */
 function &ci() {
 	return CI_Controller::get_instance();
@@ -150,8 +71,17 @@ function include_if_exists($file) {
 * @param	string	include search path to add
 * @param	bool		option to prepend the path default append
 */
-function add_include_path($path) {
-	static $THEME_PATHS, $ADDED_PATHS;
+function add_include_path($path, $prepend = false) {
+	static $ROOT_PATHS, $ADDED_PATHS, $THEME_PATH, $APPLICATION_PATH;
+
+	/* if they sent in an array handle it */
+	if (is_array($path)) {
+		foreach ($path as $path) {
+			add_include_path($path, $prepend);
+		}
+
+		return;
+	}
 
 	/* clean up our package path */
 	$package_path = rtrim(realpath($path), '/').'/';
@@ -161,29 +91,34 @@ function add_include_path($path) {
 		die('Setup Failed - Package Not Found: "'.$path.'". Check your ENV folders.');
 	}
 
-	$php_search = ROOT_PATHS.$THEME_PATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH;
-
-	/* is it already in the search path? */
-	if (strpos($ADDED_PATHS,$php_search) !== false) {
-		return explode(PATH_SEPARATOR,$php_search);
-	}
-
-	/* is this a theme package or a normal package?	*/
-	if (strpos($package_path,'theme_') !== false) {
-		/* does it contain the theme_ package prefix? if so then add it to the themes package */
-		$THEME_PATHS  = PATH_SEPARATOR.$package_path;
+	/*
+	save a copy of the root paths
+	so we can append after these and
+	before anything already added as needed
+	*/
+	if (!isset($ROOT_PATHS)) {
+		$ROOT_PATHS  = get_include_path();
+		$ADDED_PATHS = [];
+		/* application path is always first */
+		$APPLICATION_PATH = $path;
+	} elseif (strpos($path,'theme_') !== false) { /* does it contain the theme_ package prefix? */
+		/* there can be only 1 */
+		$THEME_PATH = $path;
 	} else {
-		$ADDED_PATHS .= PATH_SEPARATOR.$package_path;
+		if ($prepend) {
+			/* append before what we currently have */
+			$ADDED_PATHS = [$package_path => $package_path] + $ADDED_PATHS;
+		} else {
+			/* prepend to what we have */
+			$ADDED_PATHS[$package_path] = $package_path;
+		}
 	}
 
-	/* build our php path - set our new include search path root, theme, application, packages */
-	$php_search = ROOT_PATHS.$THEME_PATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH;
-
-	/* set our new include search path */
-	set_include_path($php_search);
-
-	/* return the entire include path array */
-	return explode(PATH_SEPARATOR,$php_search);
+	/*
+	set our new include search path
+	root, theme, application, packages
+	*/
+	set_include_path($ROOT_PATHS.PATH_SEPARATOR.$THEME_PATH.PATH_SEPARATOR.$APPLICATION_PATH.PATH_SEPARATOR.implode(PATH_SEPARATOR, $ADDED_PATHS));
 }
 
 /**
@@ -194,19 +129,101 @@ function add_include_path($path) {
 * @param	string	include search path to remove
 */
 function remove_include_path($path = '') {
-	static $THEME_PATHS, $ADDED_PATHS;
+	static $ROOT_PATHS, $ADDED_PATHS;
 
-	/* clean up our package path */
-	$package_path = rtrim(realpath($path), '/').'/';
-
-	/* build our php path and remove if it's present */
-	$php_search = str_replace(PATH_SEPARATOR.$package_path,'',ROOT_PATHS.$THEME_PATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH);
+	/* clean it if it's sent */
+	unset($ADDED_PATHS[rtrim(realpath($path), '/').'/']);
 
 	/* set our new include search path */
-	set_include_path($php_search);
+	set_include_path($ROOT_PATHS.PATH_SEPARATOR.implode(PATH_SEPARATOR, (array) $ADDED_PATHS));
+}
 
-	/* return the entire include path array */
-	return explode(PATH_SEPARATOR,$php_search);
+/**
+* Class registry
+*
+* This function acts as a singleton.  If the requested class does not
+* exist it is instantiated and set to a static variable.  If it has
+* previously been instantiated the variable is returned.
+* only use for app, orange, base files
+*
+* @access	public
+* @param	string	the class name being requested
+* @param	string	the directory where the class should be found
+* @param	string	the class name prefix
+* @return	object
+*
+* OVERRIDDEN because the include_if_exists will search all of our include paths
+* Not just APPPATH and BASEPATH
+*
+*/
+function &load_class($class, $directory = 'libraries', $param = NULL) {
+	static $_classes = array();
+
+	/* is $_classes empty? if so it's the first time here add the packages to the search path */
+	if (count($_classes) == 0) {
+		include APPPATH.'config/autoload.php';
+
+		if (file_exists(APPPATH.'config/'.CONFIG.'/autoload.php')) {
+			include APPPATH.'config/'.CONFIG.'/autoload.php';
+		}
+
+		/* add application, packages, base */
+		add_include_path(APPPATH);
+		add_include_path($autoload['packages']);
+		add_include_path(BASEPATH);
+	}
+
+	// Does the class exist? If so, we're done...
+	if (isset($_classes[$class])) {
+		return $_classes[$class];
+	}
+
+	$name = false;
+
+	// Look for the class first in the local application/libraries folder
+	// then in the native system/libraries folder
+	$folders = explode(':',get_include_path());
+
+	foreach ($folders as $idx=>$path) {
+		$path = $folders[$idx] = rtrim($path,'/').'/';
+
+		if (file_exists($path.$directory.'/'.$class.'.php')) {
+			$name = 'CI_'.$class;
+
+			if (class_exists($name, false) === false) {
+				require $path.$directory.'/'.$class.'.php';
+			}
+
+			break;
+		}
+	}
+
+	// Is the request a class extension? If so we load it too
+	foreach ($folders as $path) {
+		if (file_exists($path.$directory.'/'.config_item('subclass_prefix').$class.'.php')) {
+			$name = config_item('subclass_prefix').$class;
+
+			if (class_exists($name, false) === false) {
+				require_once $path.$directory.'/'.$name.'.php';
+			}
+		}
+	}
+
+	// Did we find the class?
+	if ($name === false) {
+		// Note: We use exit() rather then show_error() in order to avoid a
+		// self-referencing loop with the Exceptions class
+		set_status_header(503);
+		echo 'Unable to locate the specified class: '.$class.'.php';
+		exit;
+	}
+
+	// Keep track of what we just loaded
+	is_loaded($class);
+
+	$_classes[$class] = isset($param) ? new $name($param) : new $name();
+
+	return $_classes[$class];
 }
 
 function capture($_mvc_view_file,$_mvc_view_data=[]) {
@@ -242,13 +259,8 @@ function array_cache($filename=null,$data=null) {
 	if (is_array($data) && $filename) {
 		/* write */
 		$tmpfname = tempnam(dirname($filename),'temp');
-		file_put_contents($tmpfname,'<?php'.chr(10).'return '.var_export($data,true).';');
+		file_put_contents($tmpfname,'<?php return '.var_export($data,true).';');
 		rename($tmpfname,$filename); /* atomic */
-
-		/* invalidate the cached item if opcache is on */
-		if (function_exists('opcache_invalidate')) {
-			opcache_invalidate($filename,true);
-		}
 	} else {
 		/* read */
 		return (file_exists($filename)) ? include $filename : false;
@@ -259,7 +271,7 @@ function array_cache($filename=null,$data=null) {
 function convert_to_real($value) {
 	/* is it JSON? if not this will return null */
 	$is_json = @json_decode($value, true);
-
+	
 	if ($is_json !== null) {
 		$value = $is_json;
 	} else {
@@ -279,7 +291,7 @@ function convert_to_real($value) {
 				}
 		}
 	}
-
+	
 	return $value;
 }
 
@@ -287,7 +299,7 @@ function convert_to_string($value) {
 	if (is_array($value)) {
 		return var_export($value,true);
 	}
-
+	
 	if ($value === true) {
 		return 'true';
 	}
@@ -295,6 +307,6 @@ function convert_to_string($value) {
 	if ($value === false) {
 		return 'false';
 	}
-
+	
 	return (string)$value;
 }

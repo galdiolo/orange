@@ -13,7 +13,6 @@
 class MY_Loader extends CI_Loader {
 	/* only one theme at a time can be assigned so we can save that here */
 	public $current_theme = ''; /* current theme */
-
 	/*
 	add helpers here to autoload these AFTER the normal helpers are loaded
 	this way our helpers can "extend" the loaded helpers
@@ -21,11 +20,8 @@ class MY_Loader extends CI_Loader {
 	*/
 	public $orange_extended_helpers = ['array','date','directory','file','string'];
 	public $settings = null; /* local per request storage */
-	public $cache_file = ROOTPATH.'/var/cache/settings.php';
 	public $onload_path = ROOTPATH.'/var/cache/onload.php';
-	public $packages_cache_path = ROOTPATH.'/var/cache/packages_cache.php';
-	public $packages_config = ROOTPATH.'/application/config/packages.php';
-	public $packages_loaded = false;
+	public $cache_file = ROOTPATH.'/var/cache/settings.php';
 
 	/**
 	* Helper Loader
@@ -257,40 +253,28 @@ class MY_Loader extends CI_Loader {
 	* @param	string	package path to add
 	* @param	bool		weither to also add it to the view cascading
 	*/
-	public function add_package_path($path, $view_cascade = true) {
-		log_message('debug', 'my_loader::add_package_path '.$path);
-
-		if (!$this->packages_loaded) {
-			$this->packages_loaded = true;
-			
-			/* This adds the packages */
-			$packages = include APPPATH.'config/packages.php';
-
-			foreach ($packages as $p) {
-				$this->add_package_path($p);
-			}
-		}
-
-		/* prepend new package in front of the others new search path style */
-		$paths = add_include_path($path);
+	public function add_package_path($path, $append = true) {
+		log_message('debug', 'my_loader::add_package_path '.$path.' '.(boolean)$append);
 
 		/*
-		we need to rebuild the view path each time because the file search order is very important
-		ROOT_PATHS + $THEME_PATH + APPPATH + $ADDED_PATHS + BASEPATH
+		prepend new package in front of the others
+		new search path style
 		*/
-		$this->_ci_view_paths = [];
-
-		/* older ci style paths */
-		foreach ($paths as $path) {
-			$this->_ci_view_paths[rtrim($path, '/').'/views/'] = $view_cascade;
-		}
+		add_include_path($path, $append);
 
 		/* get ref to config class */
 		$config = & $this->_ci_get_component('config');
 
-		/* set paths */
-		$config->_config_paths   = $paths;
+		$paths = explode(PATH_SEPARATOR, get_include_path());
 
+		/* older ci style */
+		$this->_ci_view_paths = [];
+
+		foreach ($paths as $p) {
+			$this->_ci_view_paths[rtrim($p, '/').'/views/'] = true;
+		}
+
+		$config->_config_paths   = $paths;
 		$this->_ci_library_paths = $paths;
 		$this->_ci_helper_paths  = $paths;
 		$this->_ci_model_paths   = $paths;
@@ -354,120 +338,6 @@ class MY_Loader extends CI_Loader {
 		/* force flush opcached filed if exists */
 		if (function_exists('opcache_invalidate')) {
 			opcache_invalidate($this->onload_path,true);
-		}
-
-		return $return;
-	}
-
-	/* work in progress */
-	public function create_autoload() {
-		/* build the packages path cache file */
-
-		/*
-			build an array of packages also load the info.json file to determine the load order
-			make this a $array[$order][$name] = $name;
-			if $order is empty make it 50 (order 1 - 100)
- 		*/
-		$packages_paths = [];
-		$packages_config = [];
-
-		/* add the root paths as level 100 (the higher = first) */
-		foreach (explode(PATH_SEPARATOR,ROOT_PATHS) as $p) {
-			$packages_paths[100][rtrim($p,'/')] = ['type'=>'root','path'=>rtrim($p,'/')];
-		}
-
-		/* add the packages if they don't have a priority then set it to 50 - middle of the road in loading priority */
-
-		/* this needs to load from the database to know which are enabled */
-		$this->model('o_packages_model');
-
-		$records = ci()->o_packages_model->get_many_by(['is_active'=>1]);
-
-		foreach ($records as $p) {
-			$package_folder = ROOTPATH.'/packages/'.$p->folder_name;
-
-			if (file_exists($package_folder.'/info.json')) {
-				$info = json_decode(file_get_contents($package_folder.'/info.json'),true);
-
-				$priority = (!empty($info['priority'])) ? $info['priority'] : 50;
-
-				$type = (strpos($p->folder_name,'theme_') === false) ? 'added_path' : 'theme_path';
-
-				$packages_paths[$priority][$package_folder] = ['type'=>$type,'path'=>rtrim($package_folder,'/')];
-
-				$packages_config[] = $package_folder;
-			}
-		}
-
-		/* the application path comes before the default packages */
-		$packages_paths[60][rtrim(APPPATH,'/')] = ['type'=>'apppath','path'=>rtrim(APPPATH,'/')];
-
-		/* the basepath comes last after everything else */
-		$packages_paths[10][rtrim(BASEPATH,'/')] = ['type'=>'basepath','path'=>rtrim(BASEPATH,'/')];
-
-		krsort($packages_paths);
-
-		$new_packages_path = [];
-		$new_view_packages_path = [];
-		$theme_paths = [];
-		$added_paths = [];
-
-		/* build the path cache array */
-		foreach ($packages_paths as $priority_records) {
-			foreach ($priority_records as $path) {
-				$php_path .= PATH_SEPARATOR.$path['path'];
-				$new_packages_path[] = $path['path'].'/';
-				$new_view_packages_path[rtrim($path['path'], '/').'/views'] = true;
-				switch ($path['type']) {
-					case 'added_path':
-						$added_paths[$path['path']] = $path['path'];
-					break;
-					case 'theme_path':
-						$theme_paths[$path['path']] = $path['path'];
-					break;
-				}
-			}
-		}
-
-		/* save it */
-		$data = [
-			'config'=>$new_packages_path,
-			'libraries'=>$new_packages_path,
-			'helpers'=>$new_packages_path,
-			'models'=>$new_packages_path,
-			'views'=>$new_view_packages_path,
-			'php'=>trim($php_path,PATH_SEPARATOR),
-			'theme_paths'=>$theme_paths,
-			'added_paths'=>$added_paths,
-		];
-
-		/* write out the cache file */
-		array_cache($this->packages_cache_path,$data);
-
-		/* write out the config file */
-		$tmpfname = tempnam(dirname($this->packages_config),'temp');
-		file_put_contents($tmpfname,'<?php'.chr(10).'return '.var_export($packages_config,true).';');
-		rename($tmpfname,$this->packages_config); /* atomic */
-
-		/* invalidate the cached item if opcache is on */
-		if (function_exists('opcache_invalidate')) {
-			opcache_invalidate($this->packages_config,true);
-		}
-
-		return $this;
-	}
-
-	/* work in progress */
-	public function autoload_flush() {
-		$return = true;
-
-		if (file_exists($this->packages_cache_path)) {
-			$return = unlink($this->packages_cache_path);
-		}
-
-		/* force flush opcached filed if exists */
-		if (function_exists('opcache_invalidate')) {
-			opcache_invalidate($this->packages_cache_path,true);
 		}
 
 		return $return;
