@@ -173,32 +173,21 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 
 	$name = false;
 
-	// Look for the class first in the local application/libraries folder
-	// then in the native system/libraries folder
-	$folders = explode(':',get_include_path());
+	/* is this a core CI_ class? */
+	if (file_exists(BASEPATH.$directory.'/'.$class.'.php')) {
+		$name = 'CI_'.$class;
 
-	foreach ($folders as $idx=>$path) {
-		$path = $folders[$idx] = rtrim($path,'/').'/';
-
-		if (file_exists($path.$directory.'/'.$class.'.php')) {
-			$name = 'CI_'.$class;
-
-			if (class_exists($name, false) === false) {
-				require $path.$directory.'/'.$class.'.php';
-			}
-
-			break;
+		if (class_exists($name, false) === false) {
+			require BASEPATH.$directory.'/'.$class.'.php';
 		}
 	}
 
-	// Is the request a class extension? If so we load it too
-	foreach ($folders as $path) {
-		if (file_exists($path.$directory.'/'.config_item('subclass_prefix').$class.'.php')) {
-			$name = config_item('subclass_prefix').$class;
+	/* is this a orange class? */
+	if (file_exists(ROOTPATH.'/packages/orange/'.$directory.'/'.config_item('subclass_prefix').$class.'.php')) {
+		$name = config_item('subclass_prefix').$class;
 
-			if (class_exists($name, false) === false) {
-				require_once $path.$directory.'/'.$name.'.php';
-			}
+		if (class_exists($name, false) === false) {
+			require_once ROOTPATH.'/packages/orange/'.$directory.'/'.$name.'.php';
 		}
 	}
 
