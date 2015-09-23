@@ -74,15 +74,6 @@ function include_if_exists($file) {
 function add_include_path($path, $prepend = false) {
 	static $ROOT_PATHS, $ADDED_PATHS, $THEME_PATH, $APPLICATION_PATH;
 
-	/* if they sent in an array handle it */
-	if (is_array($path)) {
-		foreach ($path as $path) {
-			add_include_path($path, $prepend);
-		}
-
-		return;
-	}
-
 	/* clean up our package path */
 	$package_path = rtrim(realpath($path), '/').'/';
 
@@ -169,7 +160,9 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 
 		/* add application, packages, base */
 		add_include_path(APPPATH);
-		add_include_path($autoload['packages']);
+		foreach ($autoload['packages'] as $package) {
+			add_include_path($package);
+		}
 		add_include_path(BASEPATH);
 	}
 
