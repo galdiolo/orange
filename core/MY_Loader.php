@@ -256,15 +256,10 @@ class MY_Loader extends CI_Loader {
 	public function add_package_path($path, $view_cascade = TRUE) {
 		log_message('debug', 'my_loader::add_package_path '.$path.' '.(boolean)$append);
 
-		/*
-		prepend new package in front of the others
-		new search path style
-		*/
-		add_include_path($path);
+		/* prepend new package in front of the others new search path style */
+		$paths = add_include_path($path);
 
-		$paths = explode(PATH_SEPARATOR, get_include_path());
-
-		/* older ci style */
+		/* older ci style  loading */
 
 		/* get ref to config class */
 		$config = & $this->_ci_get_component('config');

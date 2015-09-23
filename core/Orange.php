@@ -91,7 +91,7 @@ function add_include_path($path) {
 	/* is it already in the search path? */
 	if (strpos($ADDED_PATHS, $package_path) === false) {
 
-		/* if it the not the application path and not a theme then it's a package so add it	*/
+		/* add as a package or theme path	*/
 		if (strpos($package_path,'theme_') !== false) {
 			/* does it contain the theme_ package prefix? if so then add it to the themes package */
 			$THEME_PATHS .= PATH_SEPARATOR.$package_path;
@@ -99,12 +99,15 @@ function add_include_path($path) {
 			$ADDED_PATHS .= PATH_SEPARATOR.$package_path;
 		}
 
+		$paths = ROOTPATHS.$THEME_PATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH;
+
 		/* set our new include search path */
-		set_include_path(ROOTPATHS.$THEME_PATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH);
+		set_include_path($paths);
+	} else {
+		$paths = ROOTPATHS.$THEME_PATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH;
 	}
 
-	/* return the entire include path array */
-	return;
+	return explode(PATH_SEPARATOR,$paths);
 }
 
 /**
@@ -156,7 +159,7 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 			include APPPATH.'config/'.CONFIG.'/autoload.php';
 		}
 
-		/* add application, packages, base */
+		/* add packages */
 		foreach ($autoload['packages'] as $package) {
 			add_include_path($package);
 		}
