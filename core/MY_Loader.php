@@ -253,31 +253,33 @@ class MY_Loader extends CI_Loader {
 	* @param	string	package path to add
 	* @param	bool		weither to also add it to the view cascading
 	*/
-	public function add_package_path($path, $append = true) {
+	public function add_package_path($path, $view_cascade = TRUE) {
 		log_message('debug', 'my_loader::add_package_path '.$path.' '.(boolean)$append);
 
 		/*
 		prepend new package in front of the others
 		new search path style
 		*/
-		add_include_path($path, $append);
-
-		/* get ref to config class */
-		$config = & $this->_ci_get_component('config');
+		add_include_path($path);
 
 		$paths = explode(PATH_SEPARATOR, get_include_path());
 
 		/* older ci style */
-		$this->_ci_view_paths = [];
 
-		foreach ($paths as $p) {
-			$this->_ci_view_paths[rtrim($p, '/').'/views/'] = true;
-		}
+		/* get ref to config class */
+		$config = & $this->_ci_get_component('config');
 
 		$config->_config_paths   = $paths;
+
 		$this->_ci_library_paths = $paths;
 		$this->_ci_helper_paths  = $paths;
 		$this->_ci_model_paths   = $paths;
+
+		$this->_ci_view_paths = [];
+
+		foreach ($paths as $p) {
+			$this->_ci_view_paths[rtrim($p, '/').'/views/'] = $view_cascade;
+		}
 
 		return $this;
 	}

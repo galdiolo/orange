@@ -38,6 +38,9 @@ function codeigniter_autoload($class) {
 /* register loader */
 spl_autoload_register('codeigniter_autoload');
 
+/* save these for later before we modify it */
+define(ROOTPATHS,get_include_path());
+
 /* NEW - shorter syntax */
 function &ci() {
 	return CI_Controller::get_instance();
@@ -71,45 +74,37 @@ function include_if_exists($file) {
 * @param	string	include search path to add
 * @param	bool		option to prepend the path default append
 */
-function add_include_path($path, $prepend = false) {
-	static $ROOT_PATHS, $ADDED_PATHS, $THEME_PATH, $APPLICATION_PATH;
+function add_include_path($path) {
+	static $THEME_PATHS, $ADDED_PATHS;
 
 	/* clean up our package path */
-	$package_path = rtrim(realpath($path), '/').'/';
+	$package_path = rtrim(realpath($path), '/');
 
 	/* if the package path is empty then it's no good */
-	if ($package_path === '/' && CONFIG !== 'production') {
-		die('Setup Failed - Package Not Found: "'.$path.'". Check your ENV folders.');
+	if ($package_path === false) {
+		echo 'Setup Failed - Package Not Found: "'.$path.'".';
+		exit;
 	}
 
-	/*
-	save a copy of the root paths
-	so we can append after these and
-	before anything already added as needed
-	*/
-	if (!isset($ROOT_PATHS)) {
-		$ROOT_PATHS  = get_include_path();
-		$ADDED_PATHS = [];
-		/* application path is always first */
-		$APPLICATION_PATH = $path;
-	} elseif (strpos($path,'theme_') !== false) { /* does it contain the theme_ package prefix? */
-		/* there can be only 1 */
-		$THEME_PATH = $path;
-	} else {
-		if ($prepend) {
-			/* append before what we currently have */
-			$ADDED_PATHS = [$package_path => $package_path] + $ADDED_PATHS;
+	$package_path .= '/';
+
+	/* is it already in the search path? */
+	if (strpos($ADDED_PATHS, $package_path) === false) {
+
+		/* if it the not the application path and not a theme then it's a package so add it	*/
+		if (strpos($package_path,'theme_') !== false) {
+			/* does it contain the theme_ package prefix? if so then add it to the themes package */
+			$THEME_PATHS .= PATH_SEPARATOR.$package_path;
 		} else {
-			/* prepend to what we have */
-			$ADDED_PATHS[$package_path] = $package_path;
+			$ADDED_PATHS .= PATH_SEPARATOR.$package_path;
 		}
+
+		/* set our new include search path */
+		set_include_path(ROOTPATHS.$THEME_PATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH);
 	}
 
-	/*
-	set our new include search path
-	root, theme, application, packages
-	*/
-	set_include_path($ROOT_PATHS.PATH_SEPARATOR.$THEME_PATH.PATH_SEPARATOR.$APPLICATION_PATH.PATH_SEPARATOR.implode(PATH_SEPARATOR, $ADDED_PATHS));
+	/* return the entire include path array */
+	return;
 }
 
 /**
@@ -120,13 +115,16 @@ function add_include_path($path, $prepend = false) {
 * @param	string	include search path to remove
 */
 function remove_include_path($path = '') {
-	static $ROOT_PATHS, $ADDED_PATHS;
+	static $THEME_PATHS, $ADDED_PATHS;
+
+	$package_path = rtrim(realpath($path), '/').'/';
 
 	/* clean it if it's sent */
-	unset($ADDED_PATHS[rtrim(realpath($path), '/').'/']);
+	$ADDED_PATHS = str_replace(PATH_SEPARATOR.$package_path,'',$ADDED_PATHS);
+	$THEME_PATHS = str_replace(PATH_SEPARATOR.$package_path,'',$THEME_PATHS);
 
 	/* set our new include search path */
-	set_include_path($ROOT_PATHS.PATH_SEPARATOR.implode(PATH_SEPARATOR, (array) $ADDED_PATHS));
+	set_include_path(ROOTPATHS.$THEME_PATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH);
 }
 
 /**
@@ -159,11 +157,9 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 		}
 
 		/* add application, packages, base */
-		add_include_path(APPPATH);
 		foreach ($autoload['packages'] as $package) {
 			add_include_path($package);
 		}
-		add_include_path(BASEPATH);
 	}
 
 	// Does the class exist? If so, we're done...
@@ -253,7 +249,7 @@ function array_cache($filename=null,$data=null) {
 function convert_to_real($value) {
 	/* is it JSON? if not this will return null */
 	$is_json = @json_decode($value, true);
-	
+
 	if ($is_json !== null) {
 		$value = $is_json;
 	} else {
@@ -273,7 +269,7 @@ function convert_to_real($value) {
 				}
 		}
 	}
-	
+
 	return $value;
 }
 
@@ -281,7 +277,7 @@ function convert_to_string($value) {
 	if (is_array($value)) {
 		return var_export($value,true);
 	}
-	
+
 	if ($value === true) {
 		return 'true';
 	}
@@ -289,6 +285,6 @@ function convert_to_string($value) {
 	if ($value === false) {
 		return 'false';
 	}
-	
+
 	return (string)$value;
 }
