@@ -25,29 +25,7 @@ class MY_Loader extends CI_Loader {
 	public $onload_path = ROOTPATH.'/var/cache/onload.php';
 	public $packages_cache_path = ROOTPATH.'/var/cache/packages_cache.php';
 	public $packages_config = ROOTPATH.'/application/config/packages.php';
-	
-	public function __construct() {
-		if (file_exists($this->packages_cache_path.'x')) {
-			$cached = require $this->packages_cache_path;
-
-			$config = & $this->_ci_get_component('config');
-	
-			$config->_config_paths = $cached['config'];
-			$this->_ci_library_paths = $cached['libraries'];
-			$this->_ci_helper_paths = $cached['helpers'];
-			$this->_ci_model_paths = $cached['models'];
-			$this->_ci_view_paths = $cached['views'];
-		} else {
-			/* load the package */
-			$packages = include APPPATH.'config/packages.php';
-			
-			foreach ($packages as $p) {
-				add_include_path($p);
-			}
-		}
-		
-		parent::__construct();
-	}
+	public $packages_loaded = false;
 
 	/**
 	* Helper Loader
@@ -282,6 +260,17 @@ class MY_Loader extends CI_Loader {
 	public function add_package_path($path, $view_cascade = true) {
 		log_message('debug', 'my_loader::add_package_path '.$path);
 
+		if (!$this->packages_loaded) {
+			$this->packages_loaded = true;
+			
+			/* This adds the packages */
+			$packages = include APPPATH.'config/packages.php';
+
+			foreach ($packages as $p) {
+				$this->add_package_path($p);
+			}
+		}
+
 		/* prepend new package in front of the others new search path style */
 		$paths = add_include_path($path);
 
@@ -332,12 +321,12 @@ class MY_Loader extends CI_Loader {
 		$combined = '<?php'.chr(10);
 
 		$this->model('o_packages_model');
-		
+
 		$records = ci()->o_packages_model->get_many_by(['is_active'=>1]);
 
 		foreach ($records as $p) {
 			$package_folder = ROOTPATH.'/packages/'.$p->folder_name;
-			
+
 			if (file_exists($package_folder.'/support/onload.php')) {
 				$combined .= str_replace('<?php','/* --> '.$p->folder_name.' <-- */'.chr(10),file_get_contents($package_folder.'/support/onload.php')).chr(10);
 			}
@@ -391,7 +380,7 @@ class MY_Loader extends CI_Loader {
 
 		/* this needs to load from the database to know which are enabled */
 		$this->model('o_packages_model');
-		
+
 		$records = ci()->o_packages_model->get_many_by(['is_active'=>1]);
 
 		foreach ($records as $p) {
@@ -404,7 +393,7 @@ class MY_Loader extends CI_Loader {
 
 				$type = (strpos($p->folder_name,'theme_') === false) ? 'added_path' : 'theme_path';
 
-				$packages_paths[$priority][$package_folder] = ['type'=>$type,'path'=>$package_folder];
+				$packages_paths[$priority][$package_folder] = ['type'=>$type,'path'=>rtrim($package_folder,'/')];
 
 				$packages_config[] = $package_folder;
 			}
@@ -427,14 +416,14 @@ class MY_Loader extends CI_Loader {
 		foreach ($packages_paths as $priority_records) {
 			foreach ($priority_records as $path) {
 				$php_path .= PATH_SEPARATOR.$path['path'];
-				$new_packages_path[$path['path']] = $path['path'].'/';
-				$new_view_packages_path[rtrim($path['path'], '/').'/views/'] = true;
+				$new_packages_path[] = $path['path'].'/';
+				$new_view_packages_path[rtrim($path['path'], '/').'/views'] = true;
 				switch ($path['type']) {
 					case 'added_path':
-						$added_paths[$path['path']] = $path['path'].'/';
+						$added_paths[$path['path']] = $path['path'];
 					break;
 					case 'theme_path':
-						$theme_paths[$path['path']] = $path['path'].'/';
+						$theme_paths[$path['path']] = $path['path'];
 					break;
 				}
 			}
@@ -454,8 +443,8 @@ class MY_Loader extends CI_Loader {
 
 		/* write out the cache file */
 		array_cache($this->packages_cache_path,$data);
-		
-		/* config file */
+
+		/* write out the config file */
 		$tmpfname = tempnam(dirname($this->packages_config),'temp');
 		file_put_contents($tmpfname,'<?php'.chr(10).'return '.var_export($packages_config,true).';');
 		rename($tmpfname,$this->packages_config); /* atomic */

@@ -23,26 +23,12 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 	
 	$cache_file = ROOTPATH.'/var/cache/packages_cache.php';
 
-	/* is $_classes empty? if so it's the first time here add the packages to the search path */
-	if (count($_classes) == 0) {
-		if (file_exists($cache_file)) {
-			$cached = include $cache_file;
+	/* load the codeigniter autoload */
+	include APPPATH.'config/autoload.php';
 
-			/* setup the php include search path */
-			set_include_path($cached['php']);
-			
-			/* setup the theme and added paths */
-			$THEME_PATHS = $cached['theme_paths'];
-			$ADDED_PATHS = $cached['added_paths'];
-		} else {
-			/* load the codeigniter autoload */
-			include APPPATH.'config/autoload.php';
-	
-			/* add packages */
-			foreach ($autoload['packages'] as $package) {
-				add_include_path($package);
-			}
-		}
+	/* add packages - this loads the default packages */
+	foreach ($autoload['packages'] as $package) {
+		add_include_path($package);
 	}
 
 	/* Does the class exist? If so, we're done... */
