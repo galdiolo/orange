@@ -22,6 +22,13 @@ class MY_Loader extends CI_Loader {
 	public $settings = null; /* local per request storage */
 	public $onload_path = ROOTPATH.'/var/cache/onload.php';
 	public $cache_file = ROOTPATH.'/var/cache/settings.php';
+	public $themes = '';
+	
+	public $theme_paths = [];
+	public $added_paths = [];
+	public $added_paths_view = [];
+	public $theme_paths_view = [];
+	public $attached_packages = null;
 
 	/**
 	* Helper Loader
@@ -254,26 +261,46 @@ class MY_Loader extends CI_Loader {
 	* @param	bool		weither to also add it to the view cascading
 	*/
 	public function add_package_path($path, $view_cascade = TRUE) {
-		log_message('debug', 'my_loader::add_package_path '.$path.' '.(boolean)$append);
+		log_message('debug', 'my_loader::add_package_path '.$path);
 
-		/* prepend new package in front of the others new search path style */
-		$paths = add_include_path($path);
+		$package_path = realpath($path);
 
-		/* older ci style  loading */
+		/* if the package path is empty then it's no good */
+		if ($package_path === false) {
+			echo 'Setup Failed - Package Not Found: "'.$path.'".';
+			exit;
+		}
 
-		/* get ref to config class */
-		$config = & $this->_ci_get_component('config');
+		$package_path = $package_path.'/';
 
-		$config->_config_paths   = $paths;
+		if (!in_array($package_path,$this->attached_packages)) {
+			$this->attached_packages[] = $package_path;
+	
+			/* prepend new package in front of the others new search path style */
+			add_include_path($path);	
+			
+			/* add as a package or theme path	*/
+			if (strpos($package_path,'theme_') !== false) {
+				/* does it contain the theme_ package prefix? if so then add it to the themes package */
+				$this->theme_paths[$package_path] = $package_path;
+				$this->theme_paths_view[$package_path.'views/'] = $view_cascade;
+			} else {
+				$this->added_paths[$package_path] = $package_path;
+				$this->added_paths_view[$package_path.'views/'] = $view_cascade;
+			}
+	
+			/* get ref to config class */
+			$config = & $this->_ci_get_component('config');
+	
+			$paths = array_merge($this->theme_paths,(array)APPPATH,$this->added_paths,(array)BASEPATH);
+	
+			$config->_config_paths   = $paths;
+	
+			$this->_ci_library_paths = $paths;
+			$this->_ci_helper_paths  = $paths;
+			$this->_ci_model_paths   = $paths;
 
-		$this->_ci_library_paths = $paths;
-		$this->_ci_helper_paths  = $paths;
-		$this->_ci_model_paths   = $paths;
-
-		$this->_ci_view_paths = [];
-
-		foreach ($paths as $p) {
-			$this->_ci_view_paths[rtrim($p, '/').'/views/'] = $view_cascade;
+			$this->_ci_view_paths    = array_merge($this->theme_paths_view,[APPPATH.'views/'=>true],$this->added_paths_view,[BASEPATH.'views/'=>true]);
 		}
 
 		return $this;

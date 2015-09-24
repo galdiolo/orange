@@ -75,10 +75,9 @@ function include_if_exists($file) {
 * @param	bool		option to prepend the path default append
 */
 function add_include_path($path) {
-	static $THEME_PATHS, $ADDED_PATHS;
+	static $THEME_PATHS, $ADDED_PATHS, $ATTACHED_PACKAGES;
 
-	/* clean up our package path */
-	$package_path = rtrim(realpath($path), '/');
+	$package_path = realpath($path);
 
 	/* if the package path is empty then it's no good */
 	if ($package_path === false) {
@@ -86,11 +85,12 @@ function add_include_path($path) {
 		exit;
 	}
 
-	$package_path .= '/';
+	$package_path = $package_path.'/';
 
 	/* is it already in the search path? */
-	if (strpos($ADDED_PATHS, $package_path) === false) {
-
+	if (!in_array($package_path,$ATTACHED_PACKAGES)) {
+		$ATTACHED_PACKAGES[] = $package_path;
+				
 		/* add as a package or theme path	*/
 		if (strpos($package_path,'theme_') !== false) {
 			/* does it contain the theme_ package prefix? if so then add it to the themes package */
@@ -99,15 +99,9 @@ function add_include_path($path) {
 			$ADDED_PATHS .= PATH_SEPARATOR.$package_path;
 		}
 
-		$paths = ROOTPATHS.$THEME_PATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH;
-
 		/* set our new include search path */
-		set_include_path($paths);
-	} else {
-		$paths = ROOTPATHS.$THEME_PATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH;
+		set_include_path(ROOTPATHS.$THEME_PATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.SYSDIR);
 	}
-
-	return explode(PATH_SEPARATOR,$paths);
 }
 
 /**
