@@ -128,6 +128,7 @@ class package_manager {
 		/* deactive package autoload */
 		$this->model->activate($package,false);
 
+		/* update config */
 		$this->packages_config();
 
 		return true;
@@ -136,6 +137,7 @@ class package_manager {
 	public function delete($package) {
 		$this->model->remove($package);
 
+		/* update config */
 		$this->packages_config();
 
 		/* delete the entire folder */
@@ -198,17 +200,19 @@ class package_manager {
 				}
 			}
 		}
-
+		
+		/* sort them on there priority keys first */
 		ksort($packages_paths);
 
-		/* build the path cache array */
+		/* build the path autoload array */
 		foreach ($packages_paths as $priority_records) {
 			foreach ($priority_records as $path) {
 				$autoload_packages[] = $path;
 			}
 		}
-
-		$packages_paths = array_reverse($packages_paths);
+		
+		/* flip it */
+		$autoload_packages = array_reverse($autoload_packages);
 
 		return $autoload_packages;
 	}
@@ -220,7 +224,7 @@ class package_manager {
 
 		$package_text = '$autoload[\'packages\'] = array('.chr(10);
 		
-		$package_text .= chr(9).'/* '.date('Y-m-d-H:i:s').' */'.chr(10);
+		$package_text .= chr(9).'/* updated: '.date('Y-m-d-H:i:s').' */'.chr(10);
 		
 		foreach ($autoload_packages as $ap) {
 			$package_text .= chr(9).str_replace(ROOTPATH,'ROOTPATH.\'',$ap)."',".chr(10);
@@ -235,12 +239,12 @@ class package_manager {
 		preg_match_all($re,$current_content,$matches);
 
 		if (!isset($matches[0][0])) {
-			show_error('Regular Expression Error: autoload.php');
+			show_error('Regular Expression Error: packages_config->autoload.php');
 		}
 
 		$content = str_replace($matches[0][0],$package_text,$current_content);
 
-		return file_put_contents($filepath,$content);
+		return atomic_file_put_contents($filepath,$content);
 	}
 
 	public function route_config($from,$to,$mode) {

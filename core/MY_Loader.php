@@ -24,11 +24,8 @@ class MY_Loader extends CI_Loader {
 	public $cache_file = ROOTPATH.'/var/cache/settings.php';
 	public $themes = '';
 	
-	public $theme_paths = [];
 	public $added_paths = [];
 	public $added_paths_view = [];
-	public $theme_paths_view = [];
-	public $attached_packages = null;
 
 	/**
 	* Helper Loader
@@ -233,9 +230,6 @@ class MY_Loader extends CI_Loader {
 	public function theme($path) {
 		log_message('debug', 'my_loader::theme '.$path);
 
-		/* remove the current theme if any */
-		remove_include_path($this->current_theme);
-
 		$raw_path = $path;
 
 		$path = realpath(rtrim($path,'/'));
@@ -245,9 +239,6 @@ class MY_Loader extends CI_Loader {
 		}
 
 		$this->current_theme = $path.'/';
-
-		/* prepend the new theme it's always first in the load order & update our paths */
-		$this->add_package_path($this->current_theme);
 
 		return $this;
 	}
@@ -273,26 +264,17 @@ class MY_Loader extends CI_Loader {
 
 		$package_path = $package_path.'/';
 
-		if (!in_array($package_path,$this->attached_packages)) {
-			$this->attached_packages[] = $package_path;
-	
+		if (!in_array($package_path,$this->added_paths)) {
 			/* prepend new package in front of the others new search path style */
 			add_include_path($path);	
 			
-			/* add as a package or theme path	*/
-			if (strpos($package_path,'theme_') !== false) {
-				/* does it contain the theme_ package prefix? if so then add it to the themes package */
-				$this->theme_paths[$package_path] = $package_path;
-				$this->theme_paths_view[$package_path.'views/'] = $view_cascade;
-			} else {
-				$this->added_paths[$package_path] = $package_path;
-				$this->added_paths_view[$package_path.'views/'] = $view_cascade;
-			}
+			$this->added_paths[$package_path] = $package_path;
+			$this->added_paths_view[$package_path.'views/'] = $view_cascade;
 	
 			/* get ref to config class */
 			$config = & $this->_ci_get_component('config');
 	
-			$paths = array_merge($this->theme_paths,(array)APPPATH,$this->added_paths,(array)BASEPATH);
+			$paths = array_merge((array)APPPATH,$this->added_paths,(array)BASEPATH);
 	
 			$config->_config_paths   = $paths;
 	
@@ -300,7 +282,7 @@ class MY_Loader extends CI_Loader {
 			$this->_ci_helper_paths  = $paths;
 			$this->_ci_model_paths   = $paths;
 
-			$this->_ci_view_paths    = array_merge($this->theme_paths_view,[APPPATH.'views/'=>true],$this->added_paths_view,[BASEPATH.'views/'=>true]);
+			$this->_ci_view_paths    = array_merge([APPPATH.'views/'=>true],$this->added_paths_view,[BASEPATH.'views/'=>true]);
 		}
 
 		return $this;
@@ -340,9 +322,7 @@ class MY_Loader extends CI_Loader {
 			}
 		}
 
-		$tmpfname = tempnam(dirname($this->onload_path),'temp');
-		file_put_contents($tmpfname,$combined);
-		rename($tmpfname,$this->onload_path); /* atomic */
+		atomic_file_put_contents($this->onload_path,$combined);
 
 		/* force flush opcached filed if exists */
 		if (function_exists('opcache_invalidate')) {
