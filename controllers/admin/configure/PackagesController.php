@@ -23,6 +23,8 @@ class packagesController extends APP_AdminController {
 	public function indexAction($filter=null) {
 		if ($filter) $this->input->is_valid('alpha',$filter);
 
+$this->package_manager->packages_config();
+
 		$this->page
 			->data([
 				'type_map'=>$this->type_map,
