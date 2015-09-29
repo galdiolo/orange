@@ -229,6 +229,10 @@ abstract class Database_model extends MY_Model {
 			/* passed by ref */
 			parent::protect_attributes($data);
 
+			if ($primary_value === null) {
+				$primary_value = $data[$this->primary_key];
+			}
+
 			$result = $this->_database->where($this->primary_key, $primary_value)->set($data)->update($this->table);
 
 			$this->log_last_query();

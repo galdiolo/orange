@@ -215,9 +215,9 @@ class O_AdminController extends APP_GuiController {
 		if (is_object($model_name)) {
 			$model = $model_name;
 		} elseif (is_string($model_name)) {
-			$this->$model_name;
+			$model = $this->$model_name;
 		} elseif (isset($this->controller_model)) {
-			$this->{$this->controller_model};
+			$model = $this->{$this->controller_model};
 		} else {
 			show_error('Could not get input from model.');
 		}
