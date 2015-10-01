@@ -100,7 +100,7 @@ class package_manager {
 		$this->model->write($config['version'],$package,true);
 
 		/* update config */
-		$this->packages_config(ROOTPATH.'/packages/'.$package,'add');
+		$this->packages_config();
 
 		/* create onload */
 		ci()->load->create_onload();
@@ -128,7 +128,8 @@ class package_manager {
 		/* deactive package autoload */
 		$this->model->activate($package,false);
 
-		$this->packages_config(ROOTPATH.'/packages/'.$package,'remove');
+		/* update config */
+		$this->packages_config();
 
 		return true;
 	}
@@ -136,7 +137,8 @@ class package_manager {
 	public function delete($package) {
 		$this->model->remove($package);
 
-		$this->packages_config(ROOTPATH.'/packages/'.$package,'remove');
+		/* update config */
+		$this->packages_config();
 
 		/* delete the entire folder */
 		ci()->load->helper('directory');
@@ -173,42 +175,76 @@ class package_manager {
 		return $config;
 	}
 
-	public function packages_config($new_value,$mode='add') {
-		$filepath = ROOTPATH.'/application/config/autoload.php';
-
-		include $filepath;
-
-		$packages_array = $autoload['packages'];
-
-		$new_value = str_replace('\''.ROOTPATH,'ROOTPATH.\'',$new_value);
-
-		foreach ($packages_array as $k=>$v) {
-			if ($new_value == $v) {
-				unset($packages_array[$k]);
+	public function build_load_order() {
+		/*
+			build an array of packages also load the info.json file to determine the load order
+			make this a $array[$order][$name] = $name;
+			if $order is empty make it 50 (order 1 - 100)
+ 		*/
+		$packages_paths = [];
+		$autoload_packages = [];
+		$is_active = ci()->o_packages_model->catalog('folder_name','is_active');
+		$all_packages = glob(ROOTPATH.'/packages/*',GLOB_ONLYDIR);
+		
+		/* add the packages if they don't have a priority then set it to 50 - middle of the road in loading priority */
+		foreach ($all_packages as $p) {
+		
+			/* is this package enabled? */
+			if ($is_active[basename($p)] == 1) {		
+				if (file_exists($p.'/info.json')) {
+					$info = json_decode(file_get_contents($p.'/info.json'),true);
+	
+					$priority = (!empty($info['priority'])) ? $info['priority'] : 50;
+	
+					$packages_paths[$priority][$p] = $p;
+				}
 			}
 		}
+		
+		/* sort them on there priority keys first */
+		ksort($packages_paths);
 
-		if ($mode == 'add') {
-			$packages_array[] = $new_value;
+		/* build the path autoload array */
+		foreach ($packages_paths as $priority_records) {
+			foreach ($priority_records as $path) {
+				$autoload_packages[] = $path;
+			}
 		}
+		
+		/* flip it */
+		$autoload_packages = array_reverse($autoload_packages);
 
-		$packages_array = preg_replace("/[0-9]+ \=\>/i", '', var_export($packages_array,true));
+		return $autoload_packages;
+	}
 
-		$packages_array = '$autoload[\'packages\'] = '.str_replace('\''.ROOTPATH,'ROOTPATH.\'',$packages_array).';';
+	public function packages_config() {
+		$filepath = ROOTPATH.'/application/config/autoload.php';
+		
+		$autoload_packages = $this->build_load_order();
 
-		$content = file_get_contents(ROOTPATH.'/application/config/autoload.php');
+		$package_text = '$autoload[\'packages\'] = array('.chr(10);
+		
+		$package_text .= chr(9).'/* updated: '.date('Y-m-d-H:i:s').' */'.chr(10);
+		
+		foreach ($autoload_packages as $ap) {
+			$package_text .= chr(9).str_replace(ROOTPATH,'ROOTPATH.\'',$ap)."',".chr(10);
+		}
+		
+		$package_text .= ');';
+		
+		$current_content = file_get_contents($filepath);
 
 		$re = "/^\\s*\\\$autoload\\['packages']\\s*=\\s*array\\s*\\((.+?)\\);/ms";
 
-		preg_match_all($re,$content,$matches);
+		preg_match_all($re,$current_content,$matches);
 
 		if (!isset($matches[0][0])) {
-			show_error('Regular Expression Error: autoload.php');
+			show_error('Regular Expression Error: packages_config->autoload.php');
 		}
 
-		$content = str_replace($matches[0][0],$packages_array,$content);
+		$content = str_replace($matches[0][0],$package_text,$current_content);
 
-		return file_put_contents($filepath,$content);
+		return atomic_file_put_contents($filepath,$content);
 	}
 
 	public function route_config($from,$to,$mode) {

@@ -22,6 +22,10 @@ class MY_Loader extends CI_Loader {
 	public $settings = null; /* local per request storage */
 	public $onload_path = ROOTPATH.'/var/cache/onload.php';
 	public $cache_file = ROOTPATH.'/var/cache/settings.php';
+	public $themes = '';
+	
+	public $added_paths = [];
+	public $added_paths_view = [];
 
 	/**
 	* Helper Loader
@@ -226,9 +230,6 @@ class MY_Loader extends CI_Loader {
 	public function theme($path) {
 		log_message('debug', 'my_loader::theme '.$path);
 
-		/* remove the current theme if any */
-		remove_include_path($this->current_theme);
-
 		$raw_path = $path;
 
 		$path = realpath(rtrim($path,'/'));
@@ -238,9 +239,6 @@ class MY_Loader extends CI_Loader {
 		}
 
 		$this->current_theme = $path.'/';
-
-		/* prepend the new theme it's always first in the load order & update our paths */
-		$this->add_package_path($this->current_theme);
 
 		return $this;
 	}
@@ -253,31 +251,39 @@ class MY_Loader extends CI_Loader {
 	* @param	string	package path to add
 	* @param	bool		weither to also add it to the view cascading
 	*/
-	public function add_package_path($path, $append = true) {
-		log_message('debug', 'my_loader::add_package_path '.$path.' '.(boolean)$append);
+	public function add_package_path($path, $view_cascade = TRUE) {
+		log_message('debug', 'my_loader::add_package_path '.$path);
 
-		/*
-		prepend new package in front of the others
-		new search path style
-		*/
-		add_include_path($path, $append);
+		$package_path = realpath($path);
 
-		/* get ref to config class */
-		$config = & $this->_ci_get_component('config');
-
-		$paths = explode(PATH_SEPARATOR, get_include_path());
-
-		/* older ci style */
-		$this->_ci_view_paths = [];
-
-		foreach ($paths as $p) {
-			$this->_ci_view_paths[rtrim($p, '/').'/views/'] = true;
+		/* if the package path is empty then it's no good */
+		if ($package_path === false) {
+			echo 'Setup Failed - Package Not Found: "'.$path.'".';
+			exit;
 		}
 
-		$config->_config_paths   = $paths;
-		$this->_ci_library_paths = $paths;
-		$this->_ci_helper_paths  = $paths;
-		$this->_ci_model_paths   = $paths;
+		$package_path = $package_path.'/';
+
+		if (!in_array($package_path,$this->added_paths)) {
+			/* prepend new package in front of the others new search path style */
+			add_include_path($path);	
+			
+			$this->added_paths[$package_path] = $package_path;
+			$this->added_paths_view[$package_path.'views/'] = $view_cascade;
+	
+			/* get ref to config class */
+			$config = & $this->_ci_get_component('config');
+	
+			$paths = array_merge((array)APPPATH,$this->added_paths,(array)BASEPATH);
+	
+			$config->_config_paths   = $paths;
+	
+			$this->_ci_library_paths = $paths;
+			$this->_ci_helper_paths  = $paths;
+			$this->_ci_model_paths   = $paths;
+
+			$this->_ci_view_paths    = array_merge([APPPATH.'views/'=>true],$this->added_paths_view,[BASEPATH.'views/'=>true]);
+		}
 
 		return $this;
 	}
@@ -316,9 +322,7 @@ class MY_Loader extends CI_Loader {
 			}
 		}
 
-		$tmpfname = tempnam(dirname($this->onload_path),'temp');
-		file_put_contents($tmpfname,$combined);
-		rename($tmpfname,$this->onload_path); /* atomic */
+		atomic_file_put_contents($this->onload_path,$combined);
 
 		/* force flush opcached filed if exists */
 		if (function_exists('opcache_invalidate')) {
