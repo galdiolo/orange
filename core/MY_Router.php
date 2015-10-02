@@ -59,7 +59,7 @@ class MY_Router extends CI_Router {
 		/* only a file cache is supported because the normal CI cache isn't even loaded yet */
 		$cache_file = ROOTPATH.'/var/cache/uri_'.md5(implode('',$segments).$request).'.php';
 
-		/* get it from the cache? cache for a hour */
+		/* get it from the cache? */
 		if ($cached = array_cache($cache_file)) {
 			$this->directory = $cached['directory'];
 			$this->package = $cached['package'];

@@ -268,6 +268,7 @@ class MY_Loader extends CI_Loader {
 			/* prepend new package in front of the others new search path style */
 			add_include_path($path);	
 			
+			/* add it to the array of installed packages */
 			$this->added_paths[$package_path] = $package_path;
 			$this->added_paths_view[$package_path.'views/'] = $view_cascade;
 	
@@ -282,7 +283,7 @@ class MY_Loader extends CI_Loader {
 			$this->_ci_helper_paths  = $paths;
 			$this->_ci_model_paths   = $paths;
 
-			$this->_ci_view_paths    = array_merge([APPPATH.'views/'=>true],$this->added_paths_view,[BASEPATH.'views/'=>true]);
+			$this->_ci_view_paths    = array_merge([APPPATH.'views/'=>true],$this->added_paths_view);
 		}
 
 		return $this;
@@ -308,11 +309,14 @@ class MY_Loader extends CI_Loader {
 	}
 
 	public function create_onload() {
-		$combined = '<?php'.chr(10);
-
+		/* we need the packages model to figure out which are active */
 		$this->model('o_packages_model');
-
+		
+		/* let's load the active packages */
 		$records = ci()->o_packages_model->get_many_by(['is_active'=>1]);
+		
+		/* our cache files starts with */
+		$combined = '<?php'.chr(10);
 
 		foreach ($records as $p) {
 			$package_folder = ROOTPATH.'/packages/'.$p->folder_name;

@@ -41,7 +41,7 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 
 	$name = false;
 
-	/* is this a core CI_ class? */
+	/* is this a core CI_ class? these are only in the system "basepath" folder */
 	if (file_exists(BASEPATH.$directory.'/'.$class.'.php')) {
 		$name = 'CI_'.$class;
 
@@ -50,7 +50,7 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 		}
 	}
 
-	/* is this a orange class? */
+	/* is this a orange extended class? these are only in the orange package folder */
 	if (file_exists(ROOTPATH.'/packages/orange/'.$directory.'/'.config_item('subclass_prefix').$class.'.php')) {
 		$name = config_item('subclass_prefix').$class;
 
