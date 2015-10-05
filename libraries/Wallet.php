@@ -257,14 +257,33 @@ class Wallet {
 	public function msg($msg = '', $type = 'yellow', $sticky = false, $redirect = null) {
 		ci()->event->trigger('wallet.msg',$msg,$type,$sticky,$redirect);
 
-		$this->messages[] = ['msg' => trim($msg),'type' => $type,'sticky' => $sticky];
-		$this->ci_session->set_flashdata($this->msg_key, $this->messages);
+		/* show it on this page? */
+		if ($redirect === true) {
+			/* are there any messages set via session or other? */
+			$wallet_messages = $this->ci_load->get_var('wallet_messages');
+			
+			$current_msgs = (array)$wallet_messages['messages'];
 
-		/* redirect to another page immediately */
-		if ($redirect) {
-			redirect($redirect);
+			/* add to them */
+			$current_msgs[] = ['msg' => trim($msg),'type' => $type,'sticky' => $sticky];
+			
+			/* put it back in the page variables */
+			$this->ci_load->vars(['wallet_messages' => [
+				'messages'       => $current_msgs,
+				'initial_pause'  => $this->ci_load->setting('wallet','initial_pause',3),
+				'pause_for_each' => $this->ci_load->setting('wallet','pause_for_each',1000),
+			]]);
+		} else {
+			/* show it on the next page (flash msg style) */
+			$this->messages[] = ['msg' => trim($msg),'type' => $type,'sticky' => $sticky];
+			$this->ci_session->set_flashdata($this->msg_key, $this->messages);
 
-			exit; /* shouldn't be needed but just incase */
+			/* redirect to another page immediately */
+			if ($redirect) {
+				redirect($redirect);
+
+				exit; /* shouldn't be needed but just incase */
+			}
 		}
 
 		return $this;

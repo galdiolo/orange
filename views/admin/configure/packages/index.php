@@ -38,7 +38,7 @@ foreach ($records as $name=>$record) {
 
 	/* type */
 	theme::table_row('text-center');
-	echo '<a href="'.$controller_path.'/index/'.$record['type'].'">';
+	echo '<a href="'.$controller_path.'/search/'.$record['type'].'">';
 	echo '<span class="label label-'.$type_map[$record['type']].'">'.$record['type'].'</span>';
 	echo '</a>';
 

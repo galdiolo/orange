@@ -23,7 +23,7 @@ class MY_Loader extends CI_Loader {
 	public $onload_path = ROOTPATH.'/var/cache/onload.php';
 	public $cache_file = ROOTPATH.'/var/cache/settings.php';
 	public $themes = '';
-	
+
 	public $added_paths = [];
 	public $added_paths_view = [];
 
@@ -266,19 +266,19 @@ class MY_Loader extends CI_Loader {
 
 		if (!in_array($package_path,$this->added_paths)) {
 			/* prepend new package in front of the others new search path style */
-			add_include_path($path);	
-			
+			add_include_path($path);
+
 			/* add it to the array of installed packages */
 			$this->added_paths[$package_path] = $package_path;
 			$this->added_paths_view[$package_path.'views/'] = $view_cascade;
-	
+
 			/* get ref to config class */
 			$config = & $this->_ci_get_component('config');
-	
+
 			$paths = array_merge((array)APPPATH,$this->added_paths,(array)BASEPATH);
-	
+
 			$config->_config_paths   = $paths;
-	
+
 			$this->_ci_library_paths = $paths;
 			$this->_ci_helper_paths  = $paths;
 			$this->_ci_model_paths   = $paths;
@@ -311,10 +311,10 @@ class MY_Loader extends CI_Loader {
 	public function create_onload() {
 		/* we need the packages model to figure out which are active */
 		$this->model('o_packages_model');
-		
+
 		/* let's load the active packages */
-		$records = ci()->o_packages_model->get_many_by(['is_active'=>1]);
-		
+		$records = ci()->o_packages_model->active();
+
 		/* our cache files starts with */
 		$combined = '<?php'.chr(10);
 
@@ -330,7 +330,7 @@ class MY_Loader extends CI_Loader {
 
 		/* force flush opcached filed if exists */
 		if (function_exists('opcache_invalidate')) {
-			opcache_invalidate($this->onload_path,true);
+			opcache_invalidate($this->onload_path,true); /* this blow up sessions? */
 		}
 
 		return $this;

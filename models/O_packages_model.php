@@ -17,12 +17,17 @@ class o_packages_model extends Database_model {
 		return ($results->num_rows()) ? (array)$results->result()[0] : [];
 	}
 
-	public function write($migration_version,$folder_name,$is_active) {
-		return $this->_database->replace($this->table,['folder_name'=>$folder_name,'migration_version'=>$migration_version,'is_active'=>(int)$is_active]);
+	public function write($migration_version,$folder_name,$is_active,$priority=50) {
+		return $this->_database->replace($this->table,['folder_name'=>$folder_name,'migration_version'=>$migration_version,'is_active'=>(int)$is_active,'priority'=>$priority]);
 	}
 
-	public function write_new_version($folder_name,$migration_version) {
-		return $this->_database->update($this->table,['migration_version'=>$migration_version],['folder_name'=>$folder_name]);
+	public function write_new_version($folder_name,$migration_version,$priority=50) {
+		return $this->_database->update($this->table,['migration_version'=>$migration_version,'priority'=>$priority],['folder_name'=>$folder_name]);
+	}
+	
+	/* get active in order */
+	public function active() {
+		return $this->_database->order_by('priority','asc')->where(['is_active'=>1])->get($this->table)->result();
 	}
 
 } /* end class */

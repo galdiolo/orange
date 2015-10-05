@@ -21,7 +21,10 @@ class packagesController extends APP_AdminController {
 	public $type_map = [''=>'default','?'=>'danger','core'=>'warning','library'=>'success','libraries'=>'success','theme'=>'warning','package'=>'primary','plugin'=>'info','assets'=>'warning'];
 
 	public function indexAction($filter=null) {
-		if ($filter) $this->input->is_valid('alpha',$filter);
+		/* check if it's coming from search */
+		if ($filter) {
+			$this->input->is_valid('alpha',$filter);
+		}
 
 		$this->page
 			->data([
@@ -30,7 +33,29 @@ class packagesController extends APP_AdminController {
 				'filter'=>$filter,
 				'errors'=>$this->package_manager->messages,
 			])
-			->build();
+			->build($this->controller_path.'/index');
+	}
+
+	public function searchAction($filter=null) {
+		$this->input->is_valid('alpha',$filter);
+
+		$this->indexAction($filter);
+	}
+
+	public function configAction() {
+		$this->package_manager->packages_config();
+
+		$this->wallet->updated('Config',true);
+		
+		$this->indexAction();
+	}
+
+	public function onloadAction() {
+		$this->load->create_onload();
+
+		$this->wallet->updated('Onload',true);
+
+		$this->indexAction();
 	}
 
 	public function installAction($package=null) {
@@ -72,7 +97,7 @@ class packagesController extends APP_AdminController {
 
 	public function helpAction($package) {
 		$folder = hex2bin($package);
-		
+
 		echo file_get_contents(ROOTPATH.'/packages/'.$folder.'/support/help/index.html');
 	}
 

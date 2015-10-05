@@ -29,6 +29,10 @@ theme::header_end();
 		<td><span class="label label-<?=$type_map[$record['type']]?>"><?=$record['type'] ?></span></td>
 	</tr>
 	<tr>
+		<td>Priority</td>
+		<td><?=$record['priority'] ?> - <?=($record['priority'] > 49) ? 'low' : 'high' ?></td>
+	</tr>
+	<tr>
 		<td>Package Requires</td>
 		<td>
 			<?

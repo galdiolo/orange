@@ -8,6 +8,7 @@ class package_manager {
 	public $migration_manager;
 	public $messages;
 	public $requirements;
+	public $default_load_priority = 50;
 
 	public function __construct() {
 		ci()->load->library(['package/package_migration','package/package_migration_manager','package/package_requirements']);
@@ -97,7 +98,7 @@ class package_manager {
 		$this->migration_manager->run_migrations($config,'up');
 
 		/* add to db */
-		$this->model->write($config['version'],$package,true);
+		$this->model->write($config['version'],$package,true,$config['priority']);
 
 		/* update config */
 		$this->packages_config();
@@ -114,7 +115,7 @@ class package_manager {
 		/* migrations up */
 		$this->migration_manager->run_migrations($config,'up');
 
-		$this->model->write_new_version($package,$config['version']);
+		$this->model->write_new_version($package,$config['version'],$config['priority']);
 
 		return true;
 	}
@@ -170,64 +171,27 @@ class package_manager {
 			$config['is_active'] = false;
 		} else {
 			$config['type'] = (isset($config['type'])) ? $config['type'] : 'package';
+			$config['priority'] = (!empty($config['priority'])) ? (int)$config['priority'] : $this->default_load_priority;
 		}
 
 		return $config;
 	}
 
-	public function build_load_order() {
-		/*
-			build an array of packages also load the info.json file to determine the load order
-			make this a $array[$order][$name] = $name;
-			if $order is empty make it 50 (order 1 - 100)
- 		*/
-		$packages_paths = [];
-		$autoload_packages = [];
-		$is_active = ci()->o_packages_model->catalog('folder_name','is_active');
-		$all_packages = glob(ROOTPATH.'/packages/*',GLOB_ONLYDIR);
-		
-		/* add the packages if they don't have a priority then set it to 50 - middle of the road in loading priority */
-		foreach ($all_packages as $p) {
-		
-			/* is this package enabled? */
-			if ($is_active[basename($p)] == 1) {		
-				if (file_exists($p.'/info.json')) {
-					$info = json_decode(file_get_contents($p.'/info.json'),true);
-	
-					$priority = (!empty($info['priority'])) ? $info['priority'] : 50;
-	
-					$packages_paths[$priority][$p] = $p;
-				}
-			}
-		}
-		
-		/* sort them on there priority keys first */
-		ksort($packages_paths);
-
-		/* build the path autoload array */
-		foreach ($packages_paths as $priority_records) {
-			foreach ($priority_records as $path) {
-				$autoload_packages[] = $path;
-			}
-		}
-		
-		/* flip it */
-		$autoload_packages = array_reverse($autoload_packages);
-
-		return $autoload_packages;
-	}
-
 	public function packages_config() {
 		$filepath = ROOTPATH.'/application/config/autoload.php';
 		
-		$autoload_packages = $this->build_load_order();
+		$autoload_packages = ci()->o_packages_model->active();
 
 		$package_text = '$autoload[\'packages\'] = array('.chr(10);
 		
 		$package_text .= chr(9).'/* updated: '.date('Y-m-d-H:i:s').' */'.chr(10);
 		
+		// 	ROOTPATH.'/packages/theme_zerotype',
 		foreach ($autoload_packages as $ap) {
-			$package_text .= chr(9).str_replace(ROOTPATH,'ROOTPATH.\'',$ap)."',".chr(10);
+			/* let's make sure the packages is still there! */
+			if (is_dir(ROOTPATH.'/packages/'.$ap->folder_name)) {
+				$package_text .= chr(9).'ROOTPATH.\'/packages/'.$ap->folder_name."',".chr(10);
+			}
 		}
 		
 		$package_text .= ');';
