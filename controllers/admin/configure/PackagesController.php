@@ -32,6 +32,7 @@ class packagesController extends APP_AdminController {
 				'records'=>$this->package_manager->records(),
 				'filter'=>$filter,
 				'errors'=>$this->package_manager->messages,
+				'package_load_order_controller'=>'/admin/configure/package_load_order',
 			])
 			->build($this->controller_path.'/index');
 	}
@@ -49,7 +50,7 @@ class packagesController extends APP_AdminController {
 		
 		$this->indexAction();
 	}
-
+	
 	public function onloadAction() {
 		$this->load->create_onload();
 

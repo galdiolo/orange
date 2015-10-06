@@ -3,6 +3,9 @@ theme::header_start('Packages','Interface to manage packages.');
 if ($filter) {
 	theme::header_button('Show All',$controller_path,'filter');
 }
+theme::header_button('Customize Load Order',$package_load_order_controller,'sort-amount-asc');
+theme::header_button('Regenerate Onload',$controller_path.'/onload','cog');
+theme::header_button('Regenerate Autoload',$controller_path.'/config','cog');
 o::view_event($controller_path,'header.buttons');
 theme::header_end();
 

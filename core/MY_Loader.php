@@ -312,7 +312,7 @@ class MY_Loader extends CI_Loader {
 		/* we need the packages model to figure out which are active */
 		$this->model('o_packages_model');
 
-		/* let's load the active packages */
+		/* let's load the active packages in order */
 		$records = ci()->o_packages_model->active();
 
 		/* our cache files starts with */
@@ -345,7 +345,7 @@ class MY_Loader extends CI_Loader {
 
 		/* force flush opcached filed if exists */
 		if (function_exists('opcache_invalidate')) {
-			opcache_invalidate($this->onload_path,true);
+			opcache_invalidate($this->onload_path,true); /* this blow up sessions? */
 		}
 
 		return $return;

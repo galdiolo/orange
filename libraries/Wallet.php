@@ -257,7 +257,7 @@ class Wallet {
 	public function msg($msg = '', $type = 'yellow', $sticky = false, $redirect = null) {
 		ci()->event->trigger('wallet.msg',$msg,$type,$sticky,$redirect);
 
-		/* show it on this page? */
+		/* show it on this page? if redirect is true */
 		if ($redirect === true) {
 			/* are there any messages set via session or other? */
 			$wallet_messages = $this->ci_load->get_var('wallet_messages');

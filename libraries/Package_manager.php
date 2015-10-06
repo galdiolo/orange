@@ -79,6 +79,10 @@ class package_manager {
 		$this->messages = ($msgs === false) ? false : implode('<br>',$msgs);
 	}
 
+	public function db_records() {
+		return $this->model->active();
+	}
+
 	public function records() {
 		return $this->packages;
 	}
@@ -115,9 +119,14 @@ class package_manager {
 		/* migrations up */
 		$this->migration_manager->run_migrations($config,'up');
 
-		$this->model->write_new_version($package,$config['version'],$config['priority']);
+		$this->model->write_new_version($package,$config['version']);
+		$this->model->write_new_priority($package,$config['priority'],null,false);
 
 		return true;
+	}
+
+	public function write_new_priority($folder_name,$priority,$overridden=1,$force=false) {
+		return $this->model->write_new_priority($folder_name,$priority,$overridden,$force);
 	}
 
 	public function uninstall($package) {
