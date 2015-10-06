@@ -18,7 +18,7 @@ class packagesController extends APP_AdminController {
 	public $controller_titles = 'Packages';
 	public $libraries = 'package_manager';
 	public $has_access = 'Orange::Manage Packages';
-	public $type_map = [''=>'default','?'=>'danger','core'=>'warning','library'=>'success','libraries'=>'success','theme'=>'warning','package'=>'primary','plugin'=>'info','assets'=>'warning'];
+	public $type_map = [''=>'default','?'=>'danger','core_required'=>'warning','core'=>'warning','library'=>'success','libraries'=>'success','theme'=>'danger','package'=>'primary','plugin'=>'info','assets'=>'danger'];
 
 	public function indexAction($filter=null) {
 		/* check if it's coming from search */
@@ -94,16 +94,16 @@ class packagesController extends APP_AdminController {
 		/* dump all caches */
 		$this->cache->clean();
 
-		if ($reply = $this->package_manager->$method($package) !== true) {
-			$this->wallet->failed($reply);
+		/* also refresh the user data */
+		$this->auth->refresh_userdata();
+
+		if ($this->package_manager->$method($package) !== true) {
+			$this->wallet->failed(ucfirst($method).' Error');
 
 			return false;
 		}
 
 		$this->wallet->success('Package "'.$package.'" '.$map[$method].'.');
-
-		/* also refresh the user data */
-		$this->auth->refresh_userdata();
 
 		return true;
 	}

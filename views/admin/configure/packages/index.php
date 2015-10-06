@@ -45,14 +45,12 @@ foreach ($records as $name=>$record) {
 
 	/* Description */
 	theme::table_row();
-	if ($record['name'] == 'Orange') {
-		echo '<span style="font-weight: 700;color: #DF521B">Orange</span>';
-	} elseif($record['json_error']) {
-		echo '<span style="font-weight: 700;color: #A90018">info.json error</span>';
+	if($record['json_error']) {
+		echo '<span style="font-weight: 700;color: #A90018">'.$record['json_error_txt'].'</span>';
 	} else {
 		o::e($record['name']);
 	}
-	
+
 	if (!$record['json_error']) {
 		/* (i) for more information */
 		echo ' - ';
@@ -67,7 +65,7 @@ foreach ($records as $name=>$record) {
 		if ($is_active) {
 			switch ($record['version_check']) {
 				case 1: /* less than */
-					/* <i class="fa fa-arrow-up"></i> */ 
+					/* <i class="fa fa-arrow-up"></i> */
 					echo '<span class="label label-info"><i class="fa fa-exclamation-triangle"></i> '.$record['version'].'</span>&nbsp;';
 				break;
 				case 2:
@@ -81,7 +79,7 @@ foreach ($records as $name=>$record) {
 					$record['upgrade'] = true;
 				break;
 			}
-	
+
 			echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
 		} else {
 			echo '<span class="label label-default">'.$record['version'].'</span> ';
@@ -91,23 +89,23 @@ foreach ($records as $name=>$record) {
 	/* Actions */
 	theme::table_row('text-center');
 	echo '<nobr>';
-	
+
 	/*
 	(array)$record['required_error']
 	(array)$record['package_error']
 	(array)$record['composer_error']
 	*/
-	
+
 	/* show error icon /!\ */
 	$errors = array_merge_recursive((array)$record['package_error'],(array)$record['composer_error']);
 	$has_errors = (count($errors) > 0);
-	
+
 	$is_required = (count((array)$record['required_error']) > 0);
 
 	if ($has_errors) {
 		echo '<a href="'.$controller_path.'/details/'.$url_name.'" class="btn btn-xs btn-primary"><i class="fa fa-question-circle"></i></a> ';
 	}
-	
+
 	/* show install */
 	if (!$is_active && !$record['json_error'] && !$has_errors) {
 		echo '<a href="'.$this->controller_path.'/install/'.$url_name.'" class="btn btn-xs btn-default">install</a> ';

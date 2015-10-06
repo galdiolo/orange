@@ -66,34 +66,50 @@ class package_migration_manager {
 	}
 
 	public function run_migrations($config,$dir) {
-		/* if it's down then we need a complete set of migrations */
-		$migration_files = ($dir == 'up') ? $config['migrations'] : $this->get_migrations_between($config['folder']);
+		switch ($dir) {
+			case 'up':
+			case 'install':
+				/* if it's down then we need a complete set of migrations */
+				$migration_files = $this->get_migrations_between($config['folder'],$config['migration_version'],'999.999.999');
+			break;
+			case 'down':
+			case 'uninstall':
+				/* if it's down then we need a complete set of migrations */
+				$migration_files = $this->get_migrations_between($config['folder'],'0.0.0',$config['migration_version']);
+				$migration_files = array_reverse($migration_files,true);
+			break;
+			case 'upgrade':
+				$migration_files = $this->get_migrations_between($config['folder'],$config['migration_version'],'999.999.999');
+			break;
+		}
 
-		foreach ($migration_files as $migration_file) {
-			$migration_filename = basename($migration_file,'.php');
+		if (is_array($migration_files)) {
+			foreach ($migration_files as $migration_file) {
+				$migration_filename = basename($migration_file,'.php');
 
-			$class_name = str_replace(['.','-'],['','_'],$migration_filename);
+				$class_name = str_replace(['.','-'],['','_'],$migration_filename);
 
-			include $migration_file;
+				include $migration_file;
 
-			if (!class_exists($class_name,false)) {
-				show_error('Error: migration class named "'.$class_name.'" not found in "'.$migration_file.'"');
-			}
+				if (!class_exists($class_name,false)) {
+					show_error('Error: migration class named "'.$class_name.'" not found in "'.$migration_file.'"');
+				}
 
-			$migration = new $class_name($config);
+				$migration = new $class_name($config);
 
-			$success = true;
+				$success = true;
 
-			if (method_exists($migration,$dir)) {
-				$success = $migration->$dir();
-			}
+				if (method_exists($migration,$dir)) {
+					$success = $migration->$dir();
+				}
 
-			if ($success !== true) {
-				return $success;
+				if ($success !== true) {
+					break;
+				}
 			}
 		}
 
-		return true;
+		return $success;
 	}
 
 } /* end class */

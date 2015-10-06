@@ -97,7 +97,7 @@ class package_manager {
 		$config = $this->packages[$package];
 
 		/* migrations up */
-		$this->migration_manager->run_migrations($config,'up');
+		$this->migration_manager->run_migrations($config,'install');
 
 		/* add to db */
 		$this->model->write($config['version'],$package,true,$config['priority']);
@@ -115,7 +115,7 @@ class package_manager {
 		$config = $this->packages[$package];
 
 		/* migrations up */
-		$this->migration_manager->run_migrations($config,'up');
+		$this->migration_manager->run_migrations($config,'upgrade');
 
 		$this->model->write_new_version($package,$config['version']);
 		$this->model->write_new_priority($package,$config['priority'],null,false);
@@ -159,7 +159,7 @@ class package_manager {
 		$config = $this->packages[$package];
 
 		/* migrations down */
-		$this->migration_manager->run_migrations($config,'down');
+		$this->migration_manager->run_migrations($config,'uninstall');
 
 		/* deactive package autoload */
 		$this->model->activate($package,false);
@@ -193,16 +193,19 @@ class package_manager {
 
 		if (!file_exists($json_file)) {
 			$error = true;
+			$error_txt = '<i class="fa fa-exclamation-triangle"></i> info.json file not found';
 		} else {
 			$config = json_decode(file_get_contents($json_file),true);
 
 			if ($config === null) {
 				$error = true;
+				$error_txt = '<i class="fa fa-exclamation-triangle"></i> info.json is not valid json';
 			}
 		}
 
 		if ($error) {
 			$config['json_error'] = true;
+			$config['json_error_txt'] = $error_txt;
 			$config['is_active'] = false;
 		} else {
 			$config['type'] = (isset($config['type'])) ? $config['type'] : 'package';

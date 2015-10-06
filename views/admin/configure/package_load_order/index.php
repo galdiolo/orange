@@ -1,5 +1,5 @@
 <?php
-theme::header_start('Package Load Order','If you need to customize the load order of packages beyond the set priority.');
+theme::header_start('Package Load Order','Customize package load order.');
 theme::header_button('Return to Packages',$back_url,'reply');
 theme::header_button('Regenerate Onload',$controller_path.'/onload','cog');
 theme::header_button('Regenerate Autoload',$controller_path.'/config','cog');
