@@ -279,7 +279,7 @@ class Wallet {
 			$this->ci_session->set_flashdata($this->msg_key, $this->messages);
 
 			/* redirect to another page immediately */
-			if ($redirect) {
+			if (is_string($redirect)) {
 				redirect($redirect);
 
 				exit; /* shouldn't be needed but just incase */
