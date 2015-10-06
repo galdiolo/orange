@@ -33,7 +33,7 @@ class O_AjackController extends MY_Controller {
 
 		/* Ajax only requests - show a error */
 		if (!$this->input->is_ajax_request()) {
-			show_404('Sorry, we can\'t find that resource! It might be an old link or maybe it moved.');
+			show_404();
 		}		
 	}
 } /* end parent ajack controller */
