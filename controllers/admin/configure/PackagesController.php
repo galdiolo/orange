@@ -32,7 +32,7 @@ class packagesController extends APP_AdminController {
 				'records'=>$this->package_manager->records(),
 				'filter'=>$filter,
 				'errors'=>$this->package_manager->messages,
-				'package_load_order_controller'=>'/admin/configure/package_load_order',
+				'package_load_order_controller'=>'/admin/configure/package-load-order',
 			])
 			->build($this->controller_path.'/index');
 	}
@@ -41,22 +41,6 @@ class packagesController extends APP_AdminController {
 		$this->input->is_valid('alpha',$filter);
 
 		$this->indexAction($filter);
-	}
-
-	public function configAction() {
-		$this->package_manager->packages_config();
-
-		$this->wallet->updated('Config',true);
-		
-		$this->indexAction();
-	}
-	
-	public function onloadAction() {
-		$this->load->create_onload();
-
-		$this->wallet->updated('Onload',true);
-
-		$this->indexAction();
 	}
 
 	public function installAction($package=null) {

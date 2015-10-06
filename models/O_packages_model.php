@@ -32,7 +32,7 @@ class o_packages_model extends Database_model {
 		$record = $record->result()[0]; /* get the single record */
 
 		$priority_overridden = (int)$record->priority_overridden;
-		
+
 		if ($overridden == 1) {
 			$priority_overridden = 1;
 		}
@@ -47,6 +47,16 @@ class o_packages_model extends Database_model {
 		}
 
 		return $reply;
+	}
+
+	public function write_package_priority($folder_name,$priority) {
+		return $this->_database->update($this->table,['package_priority'=>$priority],['folder_name'=>$folder_name]);
+	}
+
+	public function write_package_overridden($folder_name,$overridden) {
+		$overridden = ($overridden) ? 1 : 0;
+
+		return $this->_database->update($this->table,['priority_overridden'=>$overridden],['folder_name'=>$folder_name]);
 	}
 
 	/* get active in order */

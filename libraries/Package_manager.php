@@ -37,6 +37,8 @@ class package_manager {
 			$json_config = $this->load_info_json($package);
 
 			$db_config = $this->model->read($dir_name);
+			
+			$db_config['db_priority'] = $db_config['priority'];
 
 			$starting_version = ($db_config['migration_version']) ? $db_config['migration_version'] : '0.0.0';
 
@@ -50,7 +52,7 @@ class package_manager {
 				'version_check'=>$this->migration_manager->version_check($db_config['migration_version'],$json_config['version'])
 			];
 
-			$config = $json_config + $db_config + $extra;
+			$config = array_merge($json_config,$db_config,$extra);
 
 			/* update packages that don't have migrations */
 			if ($config['has_migrations'] == false && $config['version_check'] == 3) {
@@ -77,10 +79,6 @@ class package_manager {
 		}
 
 		$this->messages = ($msgs === false) ? false : implode('<br>',$msgs);
-	}
-
-	public function db_records() {
-		return $this->model->active();
 	}
 
 	public function records() {
@@ -125,6 +123,34 @@ class package_manager {
 		return true;
 	}
 
+	public function refresh_package_priority() {
+		/* update the database records first to reflect the info.json file */
+		foreach ($this->packages as $folder_name=>$record) {
+			if (!empty($record['priority'])) {
+				$this->model->write_package_priority($folder_name,$record['priority']);
+			}
+		}
+
+		/* reload */
+		$this->prepare();
+
+		/* now double check the override - if the json and current value match then it's not overridden so turn it off */
+		foreach ($this->packages as $folder_name=>$record) {
+			$jp = (int)$record['json_priority'];
+			$dp = (int)$record['db_priority'];
+			
+			if ($jp > 0 && $dp > 0) {
+				$override = ($jp == $dp) ? 0 : 1;
+			
+				$this->model->write_package_overridden($folder_name,$override);
+			}
+		}
+
+		/* reload */
+		$this->prepare();
+	}
+	
+	/* wrapper */
 	public function write_new_priority($folder_name,$priority,$overridden=1,$force=false) {
 		return $this->model->write_new_priority($folder_name,$priority,$overridden,$force);
 	}
@@ -180,21 +206,37 @@ class package_manager {
 			$config['is_active'] = false;
 		} else {
 			$config['type'] = (isset($config['type'])) ? $config['type'] : 'package';
+			$config['json_priority'] = (!empty($config['priority'])) ? (int)$config['priority'] : $this->default_load_priority;
 			$config['priority'] = (!empty($config['priority'])) ? (int)$config['priority'] : $this->default_load_priority;
 		}
 
 		return $config;
 	}
+	
+	/* do a complete reset on load order */
+	public function reset() {
+		/* update the database records first to reflect the info.json file */
+		foreach ($this->packages as $folder_name=>$record) {
+			if (!empty($record['json_priority'])) {
+				$this->model->write_new_priority($folder_name,$record['json_priority'],0,true);
+				$this->model->write_package_overridden($folder_name,0);
+			}
+		}
 
+		/* reload */
+		$this->prepare();
+	}
+	
+	/* write autoload.php */
 	public function packages_config() {
 		$filepath = ROOTPATH.'/application/config/autoload.php';
-		
+
 		$autoload_packages = ci()->o_packages_model->active();
 
 		$package_text = '$autoload[\'packages\'] = array('.chr(10);
-		
+
 		$package_text .= chr(9).'/* updated: '.date('Y-m-d-H:i:s').' */'.chr(10);
-		
+
 		// 	ROOTPATH.'/packages/theme_zerotype',
 		foreach ($autoload_packages as $ap) {
 			/* let's make sure the packages is still there! */
@@ -202,9 +244,9 @@ class package_manager {
 				$package_text .= chr(9).'ROOTPATH.\'/packages/'.$ap->folder_name."',".chr(10);
 			}
 		}
-		
+
 		$package_text .= ');';
-		
+
 		$current_content = file_get_contents($filepath);
 
 		$re = "/^\\s*\\\$autoload\\['packages']\\s*=\\s*array\\s*\\((.+?)\\);/ms";
@@ -219,7 +261,8 @@ class package_manager {
 
 		return atomic_file_put_contents($filepath,$content);
 	}
-
+	
+	/* change route file */
 	public function route_config($from,$to,$mode) {
 		$filepath = ROOTPATH.'/application/config/routes.php';
 
