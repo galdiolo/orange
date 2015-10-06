@@ -81,6 +81,15 @@ class package_manager {
 		$this->messages = ($msgs === false) ? false : implode('<br>',$msgs);
 	}
 
+	/* update both onload and autoload */
+	public function reset() {
+		/* update config */
+		$this->packages_config();
+
+		/* create onload */
+		ci()->load->create_onload();
+	}	
+
 	public function records() {
 		return $this->packages;
 	}
@@ -102,11 +111,7 @@ class package_manager {
 		/* add to db */
 		$this->model->write($config['version'],$package,true,$config['priority']);
 
-		/* update config */
-		$this->packages_config();
-
-		/* create onload */
-		ci()->load->create_onload();
+		$this->reset();
 
 		return true;
 	}
@@ -120,7 +125,38 @@ class package_manager {
 		$this->model->write_new_version($package,$config['version']);
 		$this->model->write_new_priority($package,$config['priority'],null,false);
 
+		$this->reset();
+
 		return true;
+	}
+
+	public function uninstall($package) {
+		$config = $this->packages[$package];
+
+		/* migrations down */
+		$this->migration_manager->run_migrations($config,'uninstall');
+
+		/* deactive package autoload */
+		$this->model->activate($package,false);
+
+		$this->reset();
+
+		return true;
+	}
+
+	public function delete($package) {
+		/* delete the entire folder */
+		ci()->load->helper('directory');
+
+		$this->model->remove($package);
+
+		$path = ROOTPATH.'/packages/'.$package;
+
+		show_error($path);
+
+		$this->reset();
+
+		return true; #rmdirr($path);
 	}
 
 	public function refresh_package_priority() {
@@ -155,37 +191,6 @@ class package_manager {
 		return $this->model->write_new_priority($folder_name,$priority,$overridden,$force);
 	}
 
-	public function uninstall($package) {
-		$config = $this->packages[$package];
-
-		/* migrations down */
-		$this->migration_manager->run_migrations($config,'uninstall');
-
-		/* deactive package autoload */
-		$this->model->activate($package,false);
-
-		/* update config */
-		$this->packages_config();
-
-		return true;
-	}
-
-	public function delete($package) {
-		$this->model->remove($package);
-
-		/* update config */
-		$this->packages_config();
-
-		/* delete the entire folder */
-		ci()->load->helper('directory');
-
-		$path = ROOTPATH.'/packages/'.$package;
-
-		show_error($path);
-
-		return true; #rmdirr($path);
-	}
-
 	public function load_info_json($folder) {
 		$json_file = $folder.'/info.json';
 
@@ -217,7 +222,7 @@ class package_manager {
 	}
 	
 	/* do a complete reset on load order */
-	public function reset() {
+	public function reset_priorities() {
 		/* update the database records first to reflect the info.json file */
 		foreach ($this->packages as $folder_name=>$record) {
 			if (!empty($record['json_priority'])) {

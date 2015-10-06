@@ -43,7 +43,7 @@ class package_load_orderController extends APP_AdminController {
 	}
 
 	public function resetAction() {
-		$this->package_manager->reset();
+		$this->package_manager->reset_priorities();
 
 		$this->package_manager->packages_config();
 		$this->load->create_onload();
