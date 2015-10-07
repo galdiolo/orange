@@ -4,19 +4,12 @@ class package_manager {
 	public $packages = [];
 	public $config_header = "/*\nWARNING!\nThis file is directly modified by the framework\ndo not modify it unless you know what you are doing\n*/\n\n";
 	public $config_packages;
-	public $model;
-	public $migration_manager;
 	public $messages;
-	public $requirements;
 	public $default_load_priority = 50;
 
 	public function __construct() {
 		ci()->load->library(['package/package_migration','package/package_migration_manager','package/package_requirements']);
 		ci()->load->model('o_packages_model');
-
-		$this->model = ci()->o_packages_model;
-		$this->migration_manager = ci()->package_migration_manager;
-		$this->requirements = ci()->package_requirements;
 
 		$this->prepare();
 	}
@@ -36,20 +29,20 @@ class package_manager {
 
 			$json_config = $this->load_info_json($package);
 
-			$db_config = $this->model->read($dir_name);
+			$db_config = ci()->o_packages_model->read($dir_name);
 			
 			$db_config['db_priority'] = $db_config['priority'];
 
 			$starting_version = ($db_config['migration_version']) ? $db_config['migration_version'] : '0.0.0';
 
-			$migration_files = $this->migration_manager->get_migrations_between($dir_name,$starting_version,$json_config['version']);
+			$migration_files = ci()->package_migration_manager->get_migrations_between($dir_name,$starting_version,$json_config['version']);
 
 			$extra = [
 				'migrations'=>$migration_files,
 				'has_migrations'=>(count($migration_files) > 0),
 				'folder'=>$dir_name,
 				'is_active'=>isset($db_config['folder_name']),
-				'version_check'=>$this->migration_manager->version_check($db_config['migration_version'],$json_config['version'])
+				'version_check'=>ci()->package_migration_manager->version_check($db_config['migration_version'],$json_config['version'])
 			];
 
 			$config = array_merge($json_config,$db_config,$extra);
@@ -60,13 +53,13 @@ class package_manager {
 				$config['migration_version'] = $config['version'];
 				$config['version_check'] = 2;
 
-				$this->model->write_new_version($config['folder'],$config['version']);
+				ci()->o_packages_model->write_new_version($config['folder'],$config['version']);
 			}
 
 			$this->packages[$dir_name] = $config;
 		}
 
-		$this->requirements->process($this->packages);
+		ci()->package_requirements->process($this->packages);
 
 		$msgs = false;
 
@@ -80,15 +73,6 @@ class package_manager {
 
 		$this->messages = ($msgs === false) ? false : implode('<br>',$msgs);
 	}
-
-	/* update both onload and autoload */
-	public function reset() {
-		/* update config */
-		$this->packages_config();
-
-		/* create onload */
-		ci()->load->create_onload();
-	}	
 
 	public function records() {
 		return $this->packages;
@@ -106,12 +90,13 @@ class package_manager {
 		$config = $this->packages[$package];
 
 		/* migrations up */
-		$this->migration_manager->run_migrations($config,'install');
+		ci()->package_migration_manager->run_migrations($config,'install');
 
 		/* add to db */
-		$this->model->write($config['version'],$package,true,$config['priority']);
+		ci()->o_packages_model->write($config['version'],$package,true,$config['priority']);
 
-		$this->reset();
+		$this->packages_config();
+		$this->create_onload();
 
 		return true;
 	}
@@ -120,12 +105,13 @@ class package_manager {
 		$config = $this->packages[$package];
 
 		/* migrations up */
-		$this->migration_manager->run_migrations($config,'upgrade');
+		ci()->package_migration_manager->run_migrations($config,'upgrade');
 
-		$this->model->write_new_version($package,$config['version']);
-		$this->model->write_new_priority($package,$config['priority'],null,false);
+		ci()->o_packages_model->write_new_version($package,$config['version']);
+		ci()->o_packages_model->write_new_priority($package,$config['priority'],null,false);
 
-		$this->reset();
+		$this->packages_config();
+		$this->create_onload();
 
 		return true;
 	}
@@ -134,12 +120,13 @@ class package_manager {
 		$config = $this->packages[$package];
 
 		/* migrations down */
-		$this->migration_manager->run_migrations($config,'uninstall');
+		ci()->package_migration_manager->run_migrations($config,'uninstall');
 
 		/* deactive package autoload */
-		$this->model->activate($package,false);
+		ci()->o_packages_model->activate($package,false);
 
-		$this->reset();
+		$this->packages_config();
+		$this->create_onload();
 
 		return true;
 	}
@@ -148,22 +135,21 @@ class package_manager {
 		/* delete the entire folder */
 		ci()->load->helper('directory');
 
-		$this->model->remove($package);
+		ci()->o_packages_model->remove($package);
 
 		$path = ROOTPATH.'/packages/'.$package;
 
-		show_error($path);
+		$this->packages_config();
+		$this->create_onload();
 
-		$this->reset();
-
-		return true; #rmdirr($path);
+		return rmdirr($path);
 	}
 
 	public function refresh_package_priority() {
 		/* update the database records first to reflect the info.json file */
 		foreach ($this->packages as $folder_name=>$record) {
 			if (!empty($record['priority'])) {
-				$this->model->write_package_priority($folder_name,$record['priority']);
+				ci()->o_packages_model->write_package_priority($folder_name,$record['priority']);
 			}
 		}
 
@@ -178,7 +164,7 @@ class package_manager {
 			if ($jp > 0 && $dp > 0) {
 				$override = ($jp == $dp) ? 0 : 1;
 			
-				$this->model->write_package_overridden($folder_name,$override);
+				ci()->o_packages_model->write_package_overridden($folder_name,$override);
 			}
 		}
 
@@ -188,7 +174,7 @@ class package_manager {
 	
 	/* wrapper */
 	public function write_new_priority($folder_name,$priority,$overridden=1,$force=false) {
-		return $this->model->write_new_priority($folder_name,$priority,$overridden,$force);
+		return ci()->o_packages_model->write_new_priority($folder_name,$priority,$overridden,$force);
 	}
 
 	public function load_info_json($folder) {
@@ -226,13 +212,18 @@ class package_manager {
 		/* update the database records first to reflect the info.json file */
 		foreach ($this->packages as $folder_name=>$record) {
 			if (!empty($record['json_priority'])) {
-				$this->model->write_new_priority($folder_name,$record['json_priority'],0,true);
-				$this->model->write_package_overridden($folder_name,0);
+				ci()->o_packages_model->write_new_priority($folder_name,$record['json_priority'],0,true);
+				ci()->o_packages_model->write_package_overridden($folder_name,0);
 			}
 		}
 
 		/* reload */
 		$this->prepare();
+	}
+	
+	/* wrapper */
+	public function create_onload() {
+		ci()->load->create_onload();
 	}
 	
 	/* write autoload.php */

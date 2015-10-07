@@ -32,7 +32,6 @@ class packagesController extends APP_AdminController {
 				'records'=>$this->package_manager->records(),
 				'filter'=>$filter,
 				'errors'=>$this->package_manager->messages,
-				'package_load_order_controller'=>'/admin/configure/package-load-order',
 			])
 			->build($this->controller_path.'/index');
 	}
@@ -106,6 +105,74 @@ class packagesController extends APP_AdminController {
 		$this->wallet->success('Package "'.$package.'" '.$map[$method].'.');
 
 		return true;
+	}
+
+	/*
+	* All change load order methods
+	*/
+	public function load_orderAction() {
+		$this->package_manager->refresh_package_priority();
+
+		$records = $this->package_manager->records();
+
+		uasort($records,function($a,$b) {
+			if ($a['priority'] == $b['priority']) {
+				return 0;
+			}
+			return ($a['priority'] < $b['priority']) ? -1 : 1;
+		});
+
+		$this->page
+			->js('/themes/orange/assets/js/packages.js')
+			->data([
+				'type_map'=>$this->type_map,
+				'records'=>$records,
+				'back_url'=>'/admin/configure/packages',
+			])
+			->build($this->controller_path.'/order_index');
+	}
+
+	public function resetAction() {
+		/* reset priorities to package defaults */
+		$this->package_manager->reset_priorities();
+
+		$this->package_manager->packages_config();
+		$this->package_manager->create_onload();
+
+		$this->wallet->success('Load Order Reset',$this->controller_path.'/load-order');
+	}
+
+	public function configAction() {
+		$this->package_manager->packages_config();
+
+		$this->wallet->updated('Config',$this->controller_path);
+	}
+
+	public function onloadAction() {
+		$this->package_manager->create_onload();
+
+		$this->wallet->updated('Onload',$this->controller_path);
+	}
+
+	public function load_order_savePostAction() {
+		$order = $this->input->post('order');
+
+		foreach ($order as $folder_hex=>$order) {
+			$folder = hex2bin($folder_hex);
+
+			if (!empty($order)) {
+				/* tag as overridden / override if it's already overridden */
+				$this->package_manager->write_new_priority($folder,(int)$order,true,true);
+			}
+		}
+
+		$this->wallet->updated('Order');
+
+		/* force update of onload and autoload */
+		$this->package_manager->packages_config();
+		$this->package_manager->create_onload();
+
+		$this->output->json('err',false);
 	}
 
 } /* end class */
