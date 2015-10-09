@@ -12,11 +12,14 @@
 *
 * Single record
 * $record = $this->c_snippet_model->get(2);
-* $record = ci()->presenter->create('role',$record);
+* $record = $this->load->presenter($record,'role),
+* $record = ci()->presenter->create($record,'role');
 *
 * Multiple records in a array
 * $records = $this->c_snippet_model->index();
-* $records = ci()->presenter->create('role',$records);
+* $records = $this->load->presenter($records,'role');
+*
+*	inside the methods $this->object represents the current rows data
 *
 * While this is a neat idea unfortunately,
 * using this will slow down your views
@@ -71,9 +74,10 @@ class Presenter {
 		/* then just return an empty string */
 		return $return;
 	}
-
+	
+	/* i_ internal */
 	public function i_human_date($value) {
-		$format = settings('presenter','date','l jS \of F Y h:i:s A');
+		$format = setting('presenter','date','l jS \of F Y h:i:s A');
 	
 		return date($format,strtotime($this->object->$value));
 	}
@@ -86,13 +90,13 @@ class Presenter {
 		return strtolower($this->object->$value);
 	}
 	
-	public function i_enum($value) {
-		$enum = settings('presenter','enum',[0=>'False',1=>'True']);
+	public function i_enum_bol_string($value) {
+		$enum = setting('presenter','enum',[0=>'False',1=>'True']);
 	
 		return $enum[$this->object->value];
 	}
 
-	public function i_enum_icon($value) {
+	public function i_enum_circle($value) {
 		$enum = [0=>'circle-o',1=>'check-circle-o'];
 	
 		return $enum[$this->object->value];

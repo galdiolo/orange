@@ -19,26 +19,11 @@
 * @link		http://www.getfuelcms.com
 */
 
-if (!function_exists('format_size_units')) {
-	function format_size_units($bytes) {
-		if ($bytes >= 1073741824) {
-			$bytes = number_format($bytes / 1073741824, 2).' GB';
-		} elseif ($bytes >= 1048576) {
-			$bytes = number_format($bytes / 1048576, 2).' MB';
-		} elseif ($bytes >= 1024) {
-			$bytes = number_format($bytes / 1024, 2).' KB';
-		} elseif ($bytes > 1) {
-			$bytes = $bytes.' bytes';
-		} elseif ($bytes == 1) {
-			$bytes = $bytes.' byte';
-		} else {
-			$bytes = '0 bytes';
-		}
-
-		return $bytes;
-	}
-}
-
+/*
+Convert 23gb to bytes for example 
+The opposite to this is in the numbers helper
+http://www.codeigniter.com/user_guide/helpers/number_helper.html#byte_format
+*/
 if (!function_exists('format_size_to_bytes')) {
 	function format_size_to_bytes($format) {
 		$units = array('B'=>0, 'K'=>1, 'KB'=>1, 'M'=>2, 'MB'=>2, 'GB'=>3, 'G'=>3, 'TB'=>4, 'T'=>4);

@@ -50,7 +50,10 @@ class MY_Controller extends CI_Controller {
 			}
 		}
 				
-		/* does the cached onload exist? */
+		/*
+		does the cached onload exist? 
+		if this is a multi box system it might not
+		*/
 		if (!file_exists($this->load->onload_path)) {
 			/* no create it */
 			ci()->load->create_onload($this->load->onload_path);

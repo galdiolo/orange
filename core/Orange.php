@@ -239,6 +239,18 @@ function atomic_file_put_contents($filepath,$content) {
 	return rename($tmpfname,$filepath); /* atomic */
 }
 
+function opcache_flush($filename) {
+	$success = true;
+
+	/* force flush opcached filed if exists */
+	if (function_exists('opcache_invalidate')) {
+		//opcache_invalidate($filename,true); /* this seems to blow up the session / http request? */
+		$success = opcache_compile_file($filename); /* so let's try this! */
+	}
+	
+	return $success;
+}
+
 /* convet to real value from string */
 function convert_to_real($value) {
 	/* is it JSON? if not this will return null */

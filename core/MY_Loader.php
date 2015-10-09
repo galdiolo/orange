@@ -20,8 +20,8 @@ class MY_Loader extends CI_Loader {
 	*/
 	public $orange_extended_helpers = ['array','date','directory','file','string'];
 	public $settings = null; /* local per request storage */
-	public $onload_path = ROOTPATH.'/var/cache/onload.php';
-	public $cache_file = ROOTPATH.'/var/cache/settings.php';
+	public $onload_path = ROOTPATH.'/var/local_file_cache/onload.php';
+	public $cache_file = ROOTPATH.'/var/local_file_cache/settings.php';
 	public $themes = '';
 
 	public $added_paths = [];
@@ -73,7 +73,7 @@ class MY_Loader extends CI_Loader {
 
 			/* nope couldn't find it raise a fatal error */
 			if (!$presenter_file) {
-				show_error('Presenter Not Found "'.$presenter.'"');
+				show_error('Presenter Not Found "'.$classname.'"');
 			}
 
 			/* load this for later on each row */
@@ -172,9 +172,7 @@ class MY_Loader extends CI_Loader {
 		}
 
 		/* force flush opcached filed if exists */
-		if (function_exists('opcache_invalidate')) {
-			opcache_invalidate($this->cache_file,true);
-		}
+		opcache_flush($this->cache_file);
 
 		return $return;
 	}
@@ -329,9 +327,7 @@ class MY_Loader extends CI_Loader {
 		atomic_file_put_contents($this->onload_path,$combined);
 
 		/* force flush opcached filed if exists */
-		if (function_exists('opcache_invalidate')) {
-			opcache_invalidate($this->onload_path,true); /* this blow up sessions? */
-		}
+		opcache_flush($this->onload_path);
 
 		return $this;
 	}
@@ -344,9 +340,7 @@ class MY_Loader extends CI_Loader {
 		}
 
 		/* force flush opcached filed if exists */
-		if (function_exists('opcache_invalidate')) {
-			opcache_invalidate($this->onload_path,true); /* this blow up sessions? */
-		}
+		opcache_flush($this->onload_path);
 
 		return $return;
 	}

@@ -221,7 +221,7 @@ class package_manager {
 		$this->prepare();
 	}
 	
-	/* wrapper */
+	/* wrapper for loader function */
 	public function create_onload() {
 		ci()->load->create_onload();
 	}
