@@ -3,7 +3,7 @@
 * Orange Framework Extension
 *
 * This content is released under the MIT License (MIT)
-*	Original idea for a CI presenter class by Jamie Rumbelow
+*	Original idea for a creating a CI presenter by Jamie Rumbelow
 *
 * @package	CodeIgniter / Orange
 * @author	Don Myers
