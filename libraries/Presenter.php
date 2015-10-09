@@ -5,15 +5,14 @@
 * This content is released under the MIT License (MIT)
 *	Original idea for a creating a CI presenter by Jamie Rumbelow
 *
-* @package	CodeIgniter / Orange
+* @package CodeIgniter / Orange
 * @author	Don Myers
-* @license	http://opensource.org/licenses/MIT	MIT License
+* @license http://opensource.org/licenses/MIT	MIT License
 * @link	https://github.com/dmyers2004
 *
 * Single record
 * $record = $this->c_snippet_model->get(2);
 * $record = $this->load->presenter($record,'role),
-* $record = ci()->presenter->create($record,'role');
 *
 * Multiple records in a array
 * $records = $this->c_snippet_model->index();
@@ -27,7 +26,7 @@
 * thou it is faster than looping over the array to prepare it
 * 1 or more times before giving it to the view
 * since these transformations are only applied at the time
-* the are called in the view
+* they are called in the view
 *
 */
 class Presenter {
