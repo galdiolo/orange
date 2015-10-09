@@ -90,7 +90,7 @@ class package_manager {
 		$config = $this->packages[$package];
 
 		/* migrations up */
-		ci()->package_migration_manager->run_migrations($config,'install');
+		ci()->package_migration_manager->run_migrations($config,'up');
 
 		/* add to db */
 		ci()->o_packages_model->write($config['version'],$package,true,$config['priority']);
@@ -105,7 +105,7 @@ class package_manager {
 		$config = $this->packages[$package];
 
 		/* migrations up */
-		ci()->package_migration_manager->run_migrations($config,'upgrade');
+		ci()->package_migration_manager->run_migrations($config,'up');
 
 		ci()->o_packages_model->write_new_version($package,$config['version']);
 		ci()->o_packages_model->write_new_priority($package,$config['priority'],null,false);
@@ -120,7 +120,7 @@ class package_manager {
 		$config = $this->packages[$package];
 
 		/* migrations down */
-		ci()->package_migration_manager->run_migrations($config,'uninstall');
+		ci()->package_migration_manager->run_migrations($config,'down');
 
 		/* deactive package autoload */
 		ci()->o_packages_model->activate($package,false);

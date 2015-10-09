@@ -66,20 +66,25 @@ class package_migration_manager {
 	}
 
 	public function run_migrations($config,$dir) {
+		log_message('debug', 'run migrations '.$dir.' '.$config['folder'].' '.$config['migration_version']);
+
+		if ($dir != 'up' && $dir != 'down') {
+			log_message('debug', 'migrations direction '.$dir.' not valid.');
+
+			return false;
+		}
+
 		switch ($dir) {
 			case 'up':
-			case 'install':
 				/* if it's down then we need a complete set of migrations */
 				$migration_files = $this->get_migrations_between($config['folder'],$config['migration_version'],'999.999.999');
 			break;
 			case 'down':
-			case 'uninstall':
 				/* if it's down then we need a complete set of migrations */
 				$migration_files = $this->get_migrations_between($config['folder'],'0.0.0',$config['migration_version']);
+
+				/* ok now run it backwards */
 				$migration_files = array_reverse($migration_files,true);
-			break;
-			case 'upgrade':
-				$migration_files = $this->get_migrations_between($config['folder'],$config['migration_version'],'999.999.999');
 			break;
 		}
 
@@ -100,7 +105,11 @@ class package_migration_manager {
 				$success = true;
 
 				if (method_exists($migration,$dir)) {
+					log_message('debug', 'migrations running '.$class_name.'::'.$dir);
+
 					$success = $migration->$dir();
+				} else {
+					log_message('debug', 'migrations could not find '.$class_name.'::'.$dir);
 				}
 
 				if ($success !== true) {
