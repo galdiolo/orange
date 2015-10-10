@@ -395,7 +395,7 @@ class O {
 		echo(($link) ? '<a href="'.$link.'">' : '').((strlen($text) > $length) ? self::e(substr($text, 0, $length)).'&hellip;' : self::e($text)).(($link) ? '</a>' : '');
 	}
 
-	static public function extract_data_uri($html,$just_path=false) {
+	static public function extract_data_uri($folder,$html,$just_path=false) {
 		$map = [
 			'data:image/png;base64'=>'png',
 			'data:image/jpg;base64'=>'jpg',
@@ -413,7 +413,7 @@ class O {
 
 				$parts = explode(',',$raw_image);
 
-				$abs_image_path = ROOTPATH.'/public'.setting('paths','WWW Image','/images').'/'.md5($raw_image).'.'.$map[$parts[0]];
+				$abs_image_path = ROOTPATH.'/public/'.trim($folder,'/').'/'.md5($raw_image).'.'.$map[$parts[0]];
 
 				$ifp = fopen($abs_image_path,'wb');
 				fwrite($ifp,base64_decode($parts[1]));
@@ -426,7 +426,7 @@ class O {
 		}
 
 		/*
-		Just path only works if your $html is a single data:image
+		Just path only works if your $html is a single data:image image (not HTML with multiple images)
 		<img src="/images/d908b4c369197c494e18f11ff37f8041.png">
 		*/
 
