@@ -1,11 +1,11 @@
 <?php
 
 class O_CliController extends MY_Controller {
-	
+
 	/* safety check - this can only be called via command line */
 	public function __construct() {
 		parent::__construct();
-		
+
 		if (php_sapi_name() !== 'cli') {
 			show_error('This controller can only be called from the command line.',404);
 			exit;
@@ -15,7 +15,7 @@ class O_CliController extends MY_Controller {
 	public function indexCliAction() {
 		$methods = get_class_methods(get_called_class());
 
-		$skip = ['index','__construct','get_instance','output'];
+		$skip = ['index','__construct','get_instance','output','input'];
 
 		$this->output('<blue>Available Methods:');
 
@@ -28,7 +28,7 @@ class O_CliController extends MY_Controller {
 			}
 		}
 	}
-	
+
 	protected function output($text='') {
 		$ansi_codes = [
 			"off"        => 0,
@@ -55,12 +55,18 @@ class O_CliController extends MY_Controller {
 			"cyan_bg"    => 46,
 			"white_bg"   => 47
 		];
-    
+
 		foreach ($ansi_codes as $color=>$val) {
 			$text = str_replace('<'.$color.'>',"\033[".$val."m",$text);
 		}
-		
+
 		echo $text."\033[0m".chr(10);
+	}
+
+	protected function input($prompt='') {
+		echo $prompt;
+
+		return rtrim( fgets( STDIN ),chr(10));
 	}
 
 } /* end class */
