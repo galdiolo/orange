@@ -342,6 +342,7 @@ abstract class Database_model extends MY_Model {
 		ci()->event->trigger('database.'.$this->object.'.before.exists',$method,$column,$field);
 
 		$row = $this->_database->query("SELECT COUNT(`".$column."`) AS `exists` FROM `".$this->table."` WHERE `".$column."` = ".$this->_database->escape($field)."")->row()->exists;
+		
 		$this->log_last_query();
 
 		return ($row > 0) ? true : false;

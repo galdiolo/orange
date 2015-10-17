@@ -332,7 +332,7 @@ class MY_Loader extends CI_Loader {
 		return $this;
 	}
 
-	public function onload_flush() {
+	public function delete_onload() {
 		$return = true;
 
 		if (file_exists($this->onload_path)) {

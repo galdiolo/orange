@@ -15,15 +15,12 @@ class O_CliController extends MY_Controller {
 	public function indexCliAction() {
 		$methods = get_class_methods(get_called_class());
 
-		$skip = ['index','__construct','get_instance','output','input'];
-
 		$this->output('<blue>Available Methods:');
 
 		foreach ($methods as $name) {
-			/* chop off CliAction */
-			$name = str_replace('CliAction','',$name);
-
-			if (!in_array($name,$skip)) {
+			if (substr($name,-9) == 'CliAction' && $name{0} != '_' && $name != 'indexCliAction') {
+				$name = str_replace('CliAction','',$name);
+				
 				$this->output('<yellow>'.$name);
 			}
 		}
