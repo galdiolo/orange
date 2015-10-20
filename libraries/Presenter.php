@@ -41,7 +41,11 @@ class Presenter {
 	public function __get($property) {
 		$return = '';
 
-		/* built in function? */
+		/*
+		built in function?
+		
+		$record->field__date;
+		*/
 		if (strpos($property,'__') !== false) {
 			list($property,$built_in) = explode('__', $property,2);
 
@@ -50,7 +54,11 @@ class Presenter {
 
 			$return = (property_exists($this->object, $property) && method_exists($this,$built_in)) ? $this->$built_in($property) : '';
 		} else {
-			/* is it a raw value request? */
+			/*
+			is it a raw value request?
+			
+			$record->field_raw
+			*/
 			$is_raw = (strtolower(substr($property,-4)) === '_raw');
 	
 			/* if so remove "raw" from the property */
@@ -62,7 +70,12 @@ class Presenter {
 				$return = $this->object->$property;
 			}
 	
-			/* is there a matching method and they aren't asking for a raw value? */
+			/*
+			is there a matching method and they aren't asking for a raw value?
+			
+			$record->method;
+			*/
+
 			if (method_exists($this,$property) && !$is_raw) {
 				/* yep! */
 				$return = $this->$property();
