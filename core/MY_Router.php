@@ -56,6 +56,9 @@ class MY_Router extends CI_Router {
 		/* http request method - this make the CI 3 method invalid */
 		$request = isset($_SERVER['REQUEST_METHOD']) ? ucfirst(strtolower($_SERVER['REQUEST_METHOD'])) : 'Cli';
 
+		/* append this to the Controller Name */
+		$append = ($request == 'Cli') ? 'Cli' : '';
+
 		/* only a file cache is supported because the normal CI cache isn't even loaded yet */
 		$cache_file = ROOTPATH.'/var/local_file_cache/uri_'.md5(implode('',$segments).$request).'.php';
 
@@ -85,10 +88,10 @@ class MY_Router extends CI_Router {
 
 				$segments[1] = ((isset($segments[1])) ? str_replace('-', '_', $segments[1]) : 'index');
 
-				if (file_exists($path.'controllers/'.$this->directory.ucfirst($segments[0]).'Controller.php')) {
-					if (!file_exists($path.'controllers/'.$this->directory.$segments[0].'/'.ucfirst($segments[1]).'Controller.php')) {
+				if (file_exists($path.'controllers/'.$this->directory.ucfirst($segments[0]).$append.'Controller.php')) {
+					if (!file_exists($path.'controllers/'.$this->directory.$segments[0].'/'.ucfirst($segments[1]).$append.'Controller.php')) {
 						/* yes! then segment 0 is the controller */
-						$segments[0] = ucfirst($segments[0]).'Controller';
+						$segments[0] = ucfirst($segments[0]).$append.'Controller';
 
 						/* make sure we have a method and add Action (along with the REST stuff) */
 						$segments[1] .= (($request == 'Get') ? '' : $request).'Action';
