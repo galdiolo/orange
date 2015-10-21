@@ -11,7 +11,7 @@ echo '<div class="panel panel-success"><div class="panel-heading"><h3 class="pan
 settingController::looper($all,'db');
 echo '</div></div>';
 
-echo '<div class="panel panel-info"><div class="panel-heading"><h3 class="panel-title">Environment ../config/'.CONFIG.'/'.$which.'.php</h3></div><div class="panel-body" style="padding: 0">';
+echo '<div class="panel panel-info"><div class="panel-heading"><h3 class="panel-title">Environment ../config/'.ENVIRONMENT.'/'.$which.'.php</h3></div><div class="panel-body" style="padding: 0">';
 settingController::looper($all,'env');
 echo '</div></div>';
 
