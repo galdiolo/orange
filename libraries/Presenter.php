@@ -32,9 +32,11 @@
 class Presenter {
 	/* current object or row */
 	protected $object;
+	protected $injected;
 
-	public function __construct($object = null) {
+	public function __construct($object = null,$inject = null) {
 		$this->object = $object;
+		$this->injected = $inject;
 	}
 
 	/* my magic function! */
