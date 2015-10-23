@@ -342,7 +342,7 @@ abstract class Database_model extends MY_Model {
 		ci()->event->trigger('database.'.$this->object.'.before.exists',$method,$column,$field);
 
 		$row = $this->_database->query("SELECT COUNT(`".$column."`) AS `exists` FROM `".$this->table."` WHERE `".$column."` = ".$this->_database->escape($field)."")->row()->exists;
-		
+
 		$this->log_last_query();
 
 		return ($row > 0) ? true : false;
@@ -535,7 +535,7 @@ abstract class Database_model extends MY_Model {
 		if ($key == null || $name == null) {
 			$key = ($key) ? $key : $this->primary_key;
 			$name = '*';
-			$order_by = 'id';
+			$order_by = $this->primary_key;
 		}
 
 		$cache_key = $this->cache_prefix.'.'.$key.'.'.$name.'.catalog';
@@ -582,7 +582,7 @@ abstract class Database_model extends MY_Model {
 
 			$this->order_by($orderby, $direction);
 		}
-		
+
 		return $this->get_many_by((array)$where);
 	}
 

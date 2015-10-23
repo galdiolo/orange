@@ -62,7 +62,7 @@ class MY_Loader extends CI_Loader {
 		}
 	}
 
-	public function presenter($object=null,$presenter='',$inject=null) {
+	public function presenter(&$object=null,$presenter='',$inject=null) {
 		/* what is the presenter classes name */
 		$classname = ucfirst($presenter).'_presenter';
 
@@ -86,7 +86,9 @@ class MY_Loader extends CI_Loader {
 		if it's a array of objects return it as part of a Iterator
 		if it's not then return it as the presenter classes only record
 		*/
-		return (is_array($object)) ? new Presenter_iterator($object,$classname,$inject) : new $classname($object,$inject);
+		$object = (is_array($object)) ? new Presenter_iterator($object,$classname,$inject) : new $classname($object,$inject);
+		
+		return $object;
 	}
 
 
