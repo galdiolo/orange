@@ -125,7 +125,7 @@ foreach ($records as $name=>$record) {
 
 	/* show delete */
 	if (!$is_active && !$record['json_error'] && !$is_required) {
-		echo '<a href="'.$this->controller_path.'/delete/'.$url_name.'" data-name="'.$record['name'].'" class="btn btn-xs btn-danger js-remove"><i class="fa fa-trash"></i></a> ';
+		echo '<a href="'.$this->controller_path.'/delete/'.$url_name.'" data-name="'.$record['name'].'" data-redirect="true" data-icon="trash" data-text="Are you sure you want to delete this record?" data-heading="Delete Record" class="btn btn-xs btn-danger js-o_dialog"><i class="fa fa-trash"></i></a> ';
 	}
 
 	echo '</nobr>';

@@ -20,11 +20,18 @@
   },
   "tables":"orange_access,orange_nav,orange_role_access,orange_roles,orange_settings,orange_users",
 	"cli": {
+		"help": "Show detailed help on all command line interface commands exposed in all packages.",
 		"package details": "Show package details.",
 		"package details complete": "Show complete package details.",
 		"package up {package name}": "Migrate up (install/upgrade).",
 		"package down {package name}": "Migrate down (uninstall).",
-		"cache info": "Show cache info.",
-		"cache clear": "Clear caches."
+		"cache clear": "Clear the Codeigniter cache and local file cache folder.",
+		"cache info": "show the cache information.",
+		"migration current": "This works much the same way as current() but instead of looking for the $config['migration_version'] the Migration class will use the very newest migration found in the filesystem.",
+		"migration find": "Show migration files.",
+		"migration latest": "Migrates up to the current version (whatever is set for $config['migration_version'] in application/config/migration.php).",
+		"migration version {#}": "Version can be used to roll back changes or step forwards programmatically to specific versions."
 	}  
 }
+
+

@@ -13,16 +13,21 @@ class O_CliController extends MY_Controller {
 	}
 
 	public function indexCliAction() {
-		$methods = get_class_methods(get_called_class());
+		$class = get_called_class();
+
+		//$methods = get_class_methods($class);
+
+		$this->output($class);
+
+		$match = str_replace('CliController','',$class);
+
+		$matching = $this->_get_matching($match);
 
 		$this->output('<blue>Available Methods:');
 
-		foreach ($methods as $name) {
-			if (substr($name,-9) == 'CliAction' && $name{0} != '_' && $name != 'indexCliAction') {
-				$name = str_replace('CliAction','',$name);
-				
-				$this->output('<yellow>'.$name);
-			}
+		foreach ($matching as $command=>$desc) {
+			$this->output('<yellow>'.str_replace($match.' ','',$command));
+			$this->output('  <white>'.$desc);
 		}
 	}
 
@@ -58,7 +63,7 @@ class O_CliController extends MY_Controller {
 		}
 
 		echo $text."\033[0m".chr(10);
-		
+
 		if ($die) {
 			die();
 		}
@@ -69,5 +74,41 @@ class O_CliController extends MY_Controller {
 
 		return rtrim( fgets( STDIN ),chr(10));
 	}
+
+	protected function _rglob($path='',$pattern='*',$flags=0) {
+		$paths = glob($path.'*', GLOB_MARK|GLOB_ONLYDIR|GLOB_NOSORT);
+		$files = glob($path.$pattern, $flags);
+
+		foreach ($paths as $path) {
+			$files = array_merge($files,$this->_rglob($path, $pattern, $flags));
+		}
+
+		return $files;
+	}
+
+	public function _get_matching($match) {
+		/* find all info.json */
+		$infos = $this->_rglob(ROOTPATH.'/packages','info.json');
+		$matches = [];
+
+		foreach ($infos as $i) {
+			$json = json_decode(file_get_contents($i));
+
+			if ($json !== null) {
+				if (isset($json->cli)) {
+					$entries = (array)$json->cli;
+					foreach ($entries as $k=>$c) {
+						$parts = explode(' ',$k);
+						if ($parts[0] == $match) {
+							$matches[$k] = $c;
+						}
+					}
+				}
+			}
+		}
+
+		return $matches;
+	}
+
 
 } /* end class */
