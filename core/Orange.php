@@ -194,6 +194,30 @@ function remove_include_path($path = '') {
 	set_include_path(ROOTPATHS.PATH_SEPARATOR.APPPATH.$ADDED_PATHS.PATH_SEPARATOR.BASEPATH);
 }
 
+function split_dsn($dsntxt) {
+	/* $dsn = "<driver>://<username>:<password>@<host>:<port>/<database>"; */
+
+	$parts = explode(':',$dsntxt);
+
+	$dsn['driver'] = $parts[0];
+	$dsn['username'] = substr($parts[1],2);
+	$dsn['user'] = $dsn['username'];
+	
+	$parts2 = explode('@',$parts[2]);
+
+	$dsn['password'] = $parts2[0];
+	$dsn['host'] = $parts2[1];
+	$dsn['server'] = $dsn['host'];
+
+	$parts3 = explode('/',$parts[3]);
+	$dsn['post'] = $parts3[0];
+	$dsn['database'] = $parts3[1];
+	
+	$dsn['short'] = $dsn['driver'].':dbname='.$dsn['database'].';host='.$dsn['host'].';port='.$dsn['post'];
+
+	return $dsn;
+}
+
 function capture($_mvc_view_file,$_mvc_view_data=[]) {
 	if (file_exists($_mvc_view_file)) {
 		extract($_mvc_view_data);
