@@ -126,12 +126,12 @@ class O_AdminController extends APP_GuiController {
 		$this->_get_data('insert');
 
 		if ($id = $this->{$this->controller_model}->insert($this->data, false)) {
-			$this->wallet->created($this->content_title, $this->controller_path);
+			$this->wallet->created(null, $this->controller_path);
 		}
 
 		log_message('debug', $this->{$this->controller_model}->errors);
 
-		$this->wallet->failed($this->content_title, $this->controller_path);
+		$this->wallet->failed(null, $this->controller_path);
 	}
 
 	/* update */
@@ -173,12 +173,12 @@ class O_AdminController extends APP_GuiController {
 		$this->_get_data('update');
 
 		if ($this->{$this->controller_model}->update($this->data['id'], $this->data, false)) {
-			$this->wallet->updated($this->content_title, $this->controller_path);
+			$this->wallet->updated(null, $this->controller_path);
 		}
 
 		log_message('debug', $this->{$this->controller_model}->errors);
 
-		$this->wallet->failed($this->content_title, $this->controller_path);
+		$this->wallet->failed(null, $this->controller_path);
 	}
 
 	/* delete record */
