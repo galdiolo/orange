@@ -27,6 +27,21 @@ trait validate_string {
 		return true;
 	}
 
+	/* combined[field1,field2,field3,...] */
+	public function combined(&$inp, $options = null) {
+		$options = explode(',',$options);
+
+		$combined = '';
+
+		foreach ($options as $o) {
+			$combined .= ci()->input->post($o);
+		}
+
+		$inp = $combined;
+
+		return true;
+	}
+
 	public function hexcolor($field, $options = null) {
 		$this->set_message('hexcolor', '%s is not a hex value.');
 
@@ -35,7 +50,7 @@ trait validate_string {
 
 	public function md5($field, $options = null) {
 		$options = ($options) ? $options : 32;
-	
+
 		$this->set_message(); /* default message */
 
 		return (bool) preg_match('/^([a-fA-F0-9]{'.(int)$options.'})$/', $field);
