@@ -125,4 +125,18 @@ theme::header_end();
 			<?php } ?>
 		</td>
 	</tr>
+
+	<tr>
+		<td>Command Line</td>
+		<td>
+			<?php
+			if ($record['cli']) {
+				foreach ($record['cli'] as $a=>$b) {
+					echo '<code>'.$a.'</code> '.$b.'<br>';
+				}
+			}
+			?>
+		</td>
+	</tr>
+
 </table>

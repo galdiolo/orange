@@ -26,7 +26,7 @@ class O_CliController extends MY_Controller {
 		}
 	}
 
-	protected function output($text='') {
+	protected function output($text='',$die=false) {
 		$ansi_codes = [
 			"off"        => 0,
 			"bold"       => 1,
@@ -58,6 +58,10 @@ class O_CliController extends MY_Controller {
 		}
 
 		echo $text."\033[0m".chr(10);
+		
+		if ($die) {
+			die();
+		}
 	}
 
 	protected function input($prompt='') {
