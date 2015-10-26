@@ -397,16 +397,24 @@ abstract class Database_model extends MY_Model {
 			->select($column.','.$this->primary_key)
 			->from($this->table)
 			->where($column, $field)
-			->limit(1)
+			->limit(3) /* more than 1 but less than 4 */
 			->get();
 
-		if ($query->num_rows() > 0) {
-			if ($query->row()->{$this->primary_key} != $this->input->post($postkey)) {
-				return false;
-			}
+		/* how many did we find? */
+		$rows_found = $query->num_rows();
+		
+		if ($rows_found == 0) {
+			/* nothing else named this exists */
+			return true;
 		}
 
-		return true;
+		if ($rows_found > 1) {
+			/* we found more than 1 so that is for sure a error! */
+			return false;
+		}		
+		
+		/* does id on the record match the current record from a previous save? */
+		return ($query->row()->{$this->primary_key} == $this->input->post($postkey));
 	}
 
 	public function build_sql_where_in($array) {
