@@ -221,5 +221,17 @@ class package_migration {
 	public function drop_table($tablename) {
 		return $this->query("DROP TABLE IF EXISTS `".$tablename."`");
 	}
+	
+	public function describe_table($tablename,$database_config='default') {
+		$db = ci()->load->database($database_config,true);
 
+		return $db->list_fields($tablename);
+	}
+	
+	protected function db_column_exists($tablename,$columnname,$database_config='default') {
+		$columns = $this->describe_table($tablename,$database_config);
+		
+		return in_array($columnname,$columns);
+	}		
+		
 } /* end class */
