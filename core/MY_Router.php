@@ -100,8 +100,11 @@ class MY_Router extends CI_Router {
 						if ($this->package != 'application') {
 							$this->directory = '../../'.$this->package.'controllers/'.$this->directory;
 						}
-
-						array_cache($cache_file,['segments'=>$segments,'directory'=>$this->directory,'package'=>$this->package]);
+						
+						/* if the last seg is a integer it's prob a record so don't cache it */
+						if (substr(end($segments),-6) == 'Action') {
+							array_cache($cache_file,['segments'=>$segments,'directory'=>$this->directory,'package'=>$this->package]);
+						}
 
 						/* return the controller, method and anything else */
 						return $segments;

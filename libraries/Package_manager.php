@@ -64,7 +64,7 @@ class package_manager {
 		$msgs = false;
 
 		if (!is_writable(ROOTPATH.'/application/config/autoload.php')) {
-			$msgs[] = 'package config is not writable';
+			$msgs[] = 'autoload config is not writable';
 		}
 
 		if (!is_writable(ROOTPATH.'/application/config/routes.php')) {
