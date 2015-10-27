@@ -271,6 +271,14 @@ class MY_Model extends CI_Model {
 		return $this;
 	}
 
+	public function add_rules($rules) {
+		foreach ((array)$rules as $rule_name=>$r) {
+			$this->rules[$rule_name] = $r;
+		}
+		
+		return $this;	
+	}
+
 	/* get a single rule by field name */
 	public function get_rule($name = null,$which=null) {
 		$rule = ($name === null) ? $this->rules : $this->rules[$name];

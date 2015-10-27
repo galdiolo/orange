@@ -428,6 +428,7 @@ class Validate {
 	*
 	* @param	array	array of rules in CodeIgniter Format
 	* @param	array	mixed variables to be tested passed by reference so it can be modified by the method if needed
+	* @param	boolean strip any field which doesn't have a rule
 	* @return	boolean true on success false on failure
 	*/
 	public function multiple($rules, &$fields, $strip = false) {
