@@ -7,7 +7,7 @@ class O_CliController extends MY_Controller {
 		parent::__construct();
 
 		if (php_sapi_name() !== 'cli') {
-			show_error('This controller can only be called from the command line.',404);
+			show_404();
 			exit;
 		}
 	}
