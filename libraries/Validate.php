@@ -227,7 +227,7 @@ class Validate {
 	public function errors_json($options = null) {
 		$options = ($options)  ? $options : $this->json_options;
 
-		return json_encode(['err' => true, 'errors' => $this->error_string('', '<br>'), 'errors_array' => $this->error_array()], $options);
+		return json_encode(['err' => (count($this->_error_array) > 0), 'errors' => $this->error_string('', '<br>'), 'errors_array' => $this->error_array()], $options);
 	}
 
 	/**
