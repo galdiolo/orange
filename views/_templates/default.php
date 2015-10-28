@@ -9,10 +9,7 @@
 		<?=$page_meta ?>
 		<link rel="icon" type="image/x-icon" href="<?=$theme_path ?>/assets/images/box.png">
 		<link rel="apple-touch-icon" href="<?=$theme_path ?>/assets/images/box.png">
-		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
-		<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
 		<?=$page_css ?>
-		<link href="//fonts.googleapis.com/css?family=Roboto:400,700,700italic,400italic" rel="stylesheet" type="text/css">
 		<style><?=$page_style ?></style>
 		<?=$page_head ?>
 	</head>
@@ -23,8 +20,6 @@
 		<?=$page_center ?>
 		</div>
 		<?=$page_footer ?>
-		<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
-		<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 		<script><?=$javascript_variables ?></script>
 		<?=$page_js ?>
 		<script><?=$page_script ?></script>
