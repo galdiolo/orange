@@ -290,37 +290,37 @@ class Wallet {
 	}
 
 	public function success($msg,$redirect=null) {
-		$msg = ($msg) ? $msg : $this->default_msgs['success'];
+		$msg = (!empty($msg)) ? $msg : $this->default_msgs['success'];
 
 		return $this->msg($msg,'blue',false,$redirect);
 	}
 
 	public function failed($msg=null,$redirect=null) {
-		$msg = ($msg) ? $msg : $this->default_msgs['failed'];
+		$msg = (!empty($msg)) ? $msg : $this->default_msgs['failed'];
 
 		return $this->msg($msg,'red',true,$redirect);
 	}
 
 	public function denied($msg=null,$redirect=null) {
-		$msg = ($msg) ? $msg : $this->default_msgs['denied'];
+		$msg = (!empty($msg)) ? $msg : $this->default_msgs['denied'];
 
 		return $this->msg($msg,'red',true,$redirect);
 	}
 
 	public function created($title=null,$redirect=null) {
-		$msg = ($title) ? $title.' Created' : $this->default_msgs['created'];
+		$msg = (!empty($title)) ? $title.' Created' : $this->default_msgs['created'];
 
 		return $this->msg($msg,'blue',false,$redirect);
 	}
 
 	public function updated($title=null,$redirect=null) {
-		$msg = ($title) ? $title.' Updated' : $this->default_msgs['updated'];
+		$msg = (!empty($title)) ? $title.' Updated' : $this->default_msgs['updated'];
 
 		return $this->msg($msg,'blue',false,$redirect);
 	}
 
 	public function deleted($title=null,$redirect=null) {
-		$msg = ($title) ? $title.' Deleted' : $this->default_msgs['deleted'];
+		$msg = (!empty($title)) ? $title.' Deleted' : $this->default_msgs['deleted'];
 
 		return $this->msg($msg,'blue',false,$redirect);
 	}
