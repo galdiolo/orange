@@ -29,7 +29,7 @@
 * they are called in the view
 *
 */
-class Presenter {
+class Presenter implements ArrayAccess {
 	/* current object or row */
 	protected $object;
 	protected $injected;
@@ -40,6 +40,23 @@ class Presenter {
 	}
 
 	/* my magic function! */
+
+	public function offsetSet($offset, $value) {
+		/* you can't set */
+	}
+	
+	public function offsetExists($offset) {
+	  return isset($this->object->$offset);
+	}
+	
+	public function offsetUnset($offset) {
+		/* you can't unset */
+	}
+	
+	public function offsetGet($offset) {
+		return $this->__get($offset);
+	}
+    
 	public function __get($property) {
 		$return = '';
 
