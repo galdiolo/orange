@@ -19,6 +19,8 @@ class userController extends APP_AdminController {
 	public $has_access 				= 'Orange::Manage Users';
 
 	public function indexAction() {
+		$this->load->library('plugin_search_sort');
+
 		$records = $this->o_user_model->index('username');
 
 		$this->page

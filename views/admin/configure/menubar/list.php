@@ -1,9 +1,10 @@
 <?php
 theme::header_start('Menubar','manage menubars using the list view.');
+Plugin_search_sort::field();
 theme::header_button('Back',$controller_path,'reply');
 theme::header_end();
 
-theme::table_start(['Text','URL','Access','Parent','Active'=>'text-center','Actions'=>'text-center']);
+theme::table_start(['Text','URL','Access','Parent','Active'=>'text-center','Actions'=>'text-center'],['tbody_class'=>'searchable','class'=>'sortable']);
 
 foreach ($records as $record) {
 	theme::table_start_tr();

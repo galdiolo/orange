@@ -11,6 +11,7 @@
 		"plugin_o_dialog": "1.*.*",
 		"plugin_o_validate_form": "1.*.*",
 		"plugin_select3": "1.*.*",
+		"plugin_search_sort": "1.*.*",
 		"theme_orange": "1.*.*"
   },
   "requires-composer": {

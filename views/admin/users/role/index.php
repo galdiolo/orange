@@ -3,10 +3,11 @@
 $role_name = o::smart_model('o_role_model',setting('auth','Default Role Id'),'name',true);
 
 theme::header_start('Roles','manage user roles.');
+Plugin_search_sort::field();
 theme::header_button_new();
 theme::header_end();
 
-theme::table_start(['Name','Description','Actions'=>'text-center']);
+theme::table_start(['Name','Description','Actions'=>'text-center'],['tbody_class'=>'searchable','class'=>'sortable']);
 
 foreach ($records as $record) {
 	theme::table_start_tr();
