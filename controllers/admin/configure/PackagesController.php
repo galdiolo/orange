@@ -20,26 +20,16 @@ class packagesController extends APP_AdminController {
 	public $has_access = 'Orange::Manage Packages';
 	public $type_map = [''=>'default','?'=>'danger','core_required'=>'warning','core'=>'warning','library'=>'success','libraries'=>'success','theme'=>'danger','package'=>'primary','plugin'=>'info','assets'=>'danger'];
 
-	public function indexAction($filter=null) {
-		/* check if it's coming from search */
-		if ($filter) {
-			$this->input->is_valid('alpha',$filter);
-		}
+	public function indexAction() {
+		$this->load->library('plugin_search_sort');
 
 		$this->page
 			->data([
 				'type_map'=>$this->type_map,
 				'records'=>$this->package_manager->records(),
-				'filter'=>$filter,
 				'errors'=>$this->package_manager->messages,
 			])
 			->build($this->controller_path.'/index');
-	}
-
-	public function searchAction($filter=null) {
-		$this->input->is_valid('alpha',$filter);
-
-		$this->indexAction($filter);
 	}
 
 	public function installAction($package=null) {

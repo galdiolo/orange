@@ -1,8 +1,6 @@
 <?php
 theme::header_start('Packages','Interface to manage packages.');
-if ($filter) {
-	theme::header_button('Show All',$controller_path,'filter');
-}
+Plugin_search_sort::field();
 theme::header_button('Customize Load Order',$controller_path.'/load-order','sort-amount-asc');
 o::view_event($controller_path,'header.buttons');
 theme::header_end();
@@ -16,7 +14,7 @@ if ($errors) {
 	echo '</div>';
 }
 
-theme::table_start(['Name','Type'=>'text-center','Description','Version'=>'text-center','Actions'=>'text-center'],null,$records);
+theme::table_start(['Name','Type'=>'text-center','Description','Version'=>'text-center','Actions'=>'text-center'],['tbody_class'=>'searchable','class'=>'sortable'],$records);
 
 foreach ($records as $name=>$record) {
 	//k($record);
