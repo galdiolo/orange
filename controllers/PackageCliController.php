@@ -12,7 +12,50 @@ class packageCliController extends O_CliController {
 		$this->packages = ci()->package_manager->records();
 	}
 
-	public function detailsCliAction($complete=null) {
+	public function dumpCliAction($package_name=null) {
+		if ($package_name) {
+			if (!$record = $this->package_exist($package_name)) {
+				$this->output('<red>Package doesn\'t exist.',true);
+			}
+		} else {
+			$record = $this->packages;
+		}
+
+		var_export($record);
+	}
+
+	public function detailsCliAction($package_name=null) {
+		if (!$package_name) {
+			$this->output('<red>Please include package name.',true);
+		}
+
+		if (!$record = $this->package_exist($package_name)) {
+			$this->output('<red>Package doesn\'t exist.',true);
+		}
+		
+		$this->output('<blue>Name: <off>'.$record['name']);
+		$this->output('<blue>Internal Name: <off>'.$record['folder']);
+		$this->output('<blue>Is Active: <off>'.(($record['is_active'] == 1) ? 'true' : 'false'));
+		$this->output('<blue>Description: <off>'.$record['info']);
+		$this->output('<blue>Version: <off>'.$record['version']);
+		$this->output('<blue>Type: <off>'.$record['type']);
+		$this->output('<blue>Priority: <off>'.$record['priority']);
+		$map = [1=>'Less Than',2=>'Equal To',3=>'Greater Than'];
+		$this->output('<blue>Migration Status: <off>'.$map[$record['version_check']].' Migration Version');
+		$this->output('<blue>Total Migrations: <off>'.count($record['migrations']));
+		$this->output('<green>Requirements:');
+		$this->output('<blue>Missing Required Packages: <off>'.implode(chr(10),$record['package_error_raw']));
+		$this->output('<blue>Missing Required Composer Packages: <off>'.implode(chr(10),$record['composer_error_raw']));
+		if (count($record['cli']) > 0) {
+			$this->output('<green>Command Line Methods:');
+			foreach ($record['cli'] as $a=>$b) {
+				$this->output('<blue>'.$a.'<off>'.$b);
+			}
+		}
+		
+	}
+
+	public function listCliAction() {
 		/*
 		1 = less than
 		2 = exact
@@ -20,22 +63,33 @@ class packageCliController extends O_CliController {
 
 		http://www.orange.dev/admin/configure/packages/upgrade/6578616d706c655f706572736f6e
 		*/
-
-		if ($complete) {
-			var_dump($this->packages);
-		}
+		$spacers = chr(9);
+		$spacer2 = $spacers.'-'.$spacers;
 
 		foreach ($this->packages as $package) {
-			$has_migration = ($package['version_check'] == 3) ? true : false;
+			$options = [];
 
-			$m = ($has_migration) ? '<green>Has Migration.' : '';
+			if ($package['button']['install']) {
+				$options[] = '<green>install';
+			}
 
-			$this->output($package['folder'].' - '.$package['name'].' '.$package['version'].' '.$m);
+			if ($package['button']['upgrade']) {
+				$options[] = '<blue>upgrade';
+			}
 
-			if ($has_migration && count($package['required_error_raw']) > 0) {
-				$this->output('             requires:');
-				foreach ($package['required_error_raw'] as $rer) {
-					$this->output('          '.$rer);
+			if ($package['button']['uninstall']) {
+				$options[] = '<magenta>uninstall';
+			}
+				
+			if (!$package['json_error']) {
+				$this->output(str_pad($package['folder'],32).' '.str_pad($package['name'],32).' '.str_pad($package['version'],8).' '.implode(' ',$options));
+	
+				$errors = array_merge_recursive((array)$package['required_error'],(array)$package['composer_error']);
+	
+				if ($package['has_errors']) {
+					foreach ($errors as $err) {
+						$this->output($spacers.'<red>'.$err);
+					}
 				}
 			}
 
@@ -43,6 +97,14 @@ class packageCliController extends O_CliController {
 	}
 
 	/* install / upgrade */
+	public function installCliAction($package=null) {
+		$this->upCliAction($package);
+	}
+
+	public function upgradeCliAction($package=null) {
+		$this->upCliAction($package);
+	}
+	
 	public function upCliAction($package=null) {
 		if (!$package) {
 			$this->output('<red>Please include package name.',true);
@@ -52,7 +114,7 @@ class packageCliController extends O_CliController {
 			$this->output('<red>Package doesn\'t exist.',true);
 		}
 
-		if ($this->packages[$package]['version_check'] !== 3) {
+		if (!$this->packages[$package]['button']['install'] && !$this->packages[$package]['button']['upgrade']) {
 			$this->output('<red>Package doesn\'t need upgrading.',true);
 		}
 
@@ -72,6 +134,11 @@ class packageCliController extends O_CliController {
 	}
 
 	/* uninstall */
+	
+	public function uninstallCliAction($package=null) {
+		$this->downCliAction($package);
+	}
+	
 	public function downCliAction($package=null) {
 		if (!$package) {
 			$this->output('<red>Please include package name.',true);
@@ -97,7 +164,7 @@ class packageCliController extends O_CliController {
 	protected function package_exist($package_name) {
 		foreach ($this->packages as $p) {
 			if ($p['folder'] == $package_name) {
-				return true;
+				return $p;
 			}
 		}
 
