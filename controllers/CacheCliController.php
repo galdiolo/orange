@@ -6,7 +6,7 @@ class cacheCliController extends O_CliController {
 		$success = $this->cache->clean();
 		
 		$local_files = glob(ROOTPATH.'/var/local_file_cache/*');
-		
+
 		foreach ($local_files as $lf) {
 			@unlink($lf);
 		}

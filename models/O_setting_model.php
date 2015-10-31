@@ -32,6 +32,7 @@ class o_setting_model extends Database_model {
 	protected $rule_sets = [
 		'insert' => 'created_on,created_by,updated_on,updated_by,is_editable,is_deletable,name,value,group,enabled,help,internal,managed,show_as,options,',
 		'update' => 'id,updated_on,updated_by,name,value,group,enabled,help,internal,managed,show_as,options,is_deletable',
+		'update_value' => 'value',
 	];
 
 	/* does this compound key exist? */
@@ -58,6 +59,15 @@ class o_setting_model extends Database_model {
 
 			return $this->_database->insert($this->table, $data);
 		}
+	}
+	
+	/* special deleter since local array cache is faster than anything else out there */
+	public function flush_caches() {
+		log_message('debug', 'Local Array Cache Flush: settings.php');
+
+		unlink(ROOTPATH.'/var/local_file_cache/settings.php');
+
+		return $this;
 	}
 
 } /* end class */

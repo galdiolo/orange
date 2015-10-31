@@ -30,6 +30,7 @@
 		"package down {package name}": "Migrate down (uninstall).",
 		"cache clear": "Clear the Codeigniter cache and local file cache folder.",
 		"cache info": "show the cache information.",
+		"tools site [up|down]": "Take site up on down from the console.",
 		"migration current": "This works much the same way as current() but instead of looking for the $config['migration_version'] the Migration class will use the very newest migration found in the filesystem.",
 		"migration find": "Show migration files.",
 		"migration latest": "Migrates up to the current version (whatever is set for $config['migration_version'] in application/config/migration.php).",

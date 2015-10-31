@@ -68,16 +68,19 @@ class MY_Controller extends CI_Controller {
 		/* cache driver is loaded in MY_Loader::setting since it is needed so early on */
 
 		/* is the site open? */
-		if (setting('application','Site Open') != 1 && !$_COOKIE['ISOPEN']) {
-			$this->output->set_status_header(503, 'Site Down for Maintence');
 
-			/* if it's not ajax request sent a nice page */
-			if (!$this->input->is_ajax_request()) {
-				echo $this->load->partial('main/site_down');
+		if (php_sapi_name() !== 'cli') {
+			if (setting('application','Site Open') !== true && $_COOKIE['ISOPEN'] !== setting('application','Is Open Cookie',md5(uniqid()))) {
+				$this->output->set_status_header(503, 'Site Down for Maintence');
+	
+				/* if it's not ajax request sent a nice page */
+				if (!$this->input->is_ajax_request()) {
+					echo $this->load->partial('main/site_down');
+				}
+	
+				/* if it is a ajax request the 503 error should be handled by the ajax requesting javascript */
+				exit;
 			}
-
-			/* if it is a ajax request the 503 error should be handled by the ajax requesting javascript */
-			exit;
 		}
 
 		/* setup a default model if one is specified */
@@ -85,6 +88,6 @@ class MY_Controller extends CI_Controller {
 			$this->load->model($this->controller_model);
 		}
 
-	}
+	} /* end __construct */
 
 } /* end controller */
