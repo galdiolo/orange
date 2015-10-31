@@ -14,7 +14,7 @@ class helpCliController extends O_CliController {
 				if (isset($json->cli)) {
 					$entries = (array)$json->cli;
 					foreach ($entries as $k=>$c) {
-						$cli .= '<yellow>'.$k.chr(10).'<white>  '.$c.chr(10).chr(10);
+						$cli .= '<yellow>'.$k.' - <white>'.$c.chr(10).chr(10);
 					}
 				}
 			}

@@ -41,5 +41,24 @@ class toolsCliController extends O_CliController {
 
 		$this->output(($success == true) ? '<green>Complete' : '<red>Error');
 	}
+	
+	/* update onload */
+	
+	/* update autoload */
+	public function _update_todo($package=null) {
+		$this->load->library('package_manager');
+
+		if (!$package) {
+			$this->output('<blue>Please specify a package.');
+
+			include ROOTPATH.'/application/config/autoload.php';
+
+			foreach ($autoload['packages'] as $p) {
+				$this->output('<yellow>'.basename($p,'.php'));
+			}
+		} else {
+			$this->output(($this->package_manager->install_or_upgrade($package)) ? '<green>Complete' : '<red>Error');
+		}
+	}
 
 } /* end class */
