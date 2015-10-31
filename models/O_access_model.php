@@ -23,11 +23,29 @@ class o_access_model extends Database_model {
 		'description'    => ['field' => 'description','label' => 'Description','rules' => 'max_length[255]|filter_input[255]'],
 		'group'          => ['field' => 'group','label' => 'Group','rules' => 'required|max_length[128]|filter_input[128]'],
 		'key'            => ['field' => 'key','label' => 'Key','rules' => 'max_length[255]|filter_input[255]'],
+		'internal'			 => ['field' => 'internal'],
 	];
 	protected $rule_sets = [
 		'insert' => 'created_on,created_by,updated_on,updated_by,is_editable,is_deletable,name,description,group,key',
 		'update' => 'id,updated_on,updated_by,name,description,group,key',
 	];
+
+	public function seed($count=1) {
+		$seeds = [
+			'name' => function($faker) { return $faker->name; },
+			'created_on' => function($faker) { return $faker->dateTimeBetween($startDate = '-1 year','now')->format('Y-m-d H:i:s'); },
+			'created_by' => 1,
+			'updated_on' => date('Y-m-d H:i:s'),
+			'updated_by' => 1,
+			'is_editable' => function($faker) { return mt_rand(0,1); },
+			'is_deletable' => function($faker) { return mt_rand(0,1); },
+			'description' => function($faker) { return $faker->sentence(8); },
+			'group' => 'faker',
+			'internal' => 'faker',
+		];
+		
+		return $this->_seed($seeds,$count);
+	}
 
 	public function insert($data, $skip_validation = false) {
 		/* all keys are lowercase */
@@ -48,7 +66,7 @@ class o_access_model extends Database_model {
 
 		return parent::delete($id);
 	}
-	
+
 	/*
 	internal is often used by packages to store a identifier to the package which inserted the record
 	this then in turn can be used to delete all access matching this identifier
@@ -63,12 +81,12 @@ class o_access_model extends Database_model {
 
 		return $this->delete_by('internal',$internal);
 	}
-	
+
 	/* upsert used by the package install/upgrade */
 	public function upsert($data) {
 		/* all keys are lowercase */
 		$key = strtolower($data['group'].'::'.$data['name']);
-	
+
 		if ($this->exists('key',$key)) {
 			/* update */
 			$data['updated_on'] = date('Y-m-d H:i:s');
@@ -83,9 +101,9 @@ class o_access_model extends Database_model {
 
 			$this->_database->insert($this->table, $data);
 		}
-		
+
 		$record = $this->_database->get_where($this->table,['key'=>$key])->result();
-		
+
 		return $record[0]->id;
 	}
 

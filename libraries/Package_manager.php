@@ -8,8 +8,10 @@ class package_manager {
 	public $default_load_priority = 50;
 
 	public function __construct() {
-		ci()->load->library(['package/package_migration','package/package_migration_manager','package/package_requirements']);
+		ci()->load->library(['migration','package/package_migration','package/package_migration_manager','package/package_requirements']);
 		ci()->load->model('o_packages_model');
+
+		ci()->load->dbforge();
 
 		$this->prepare();
 	}

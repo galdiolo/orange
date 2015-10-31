@@ -402,7 +402,7 @@ abstract class Database_model extends MY_Model {
 
 		/* how many did we find? */
 		$rows_found = $query->num_rows();
-		
+
 		if ($rows_found == 0) {
 			/* nothing else named this exists */
 			return true;
@@ -411,8 +411,8 @@ abstract class Database_model extends MY_Model {
 		if ($rows_found > 1) {
 			/* we found more than 1 so that is for sure a error! */
 			return false;
-		}		
-		
+		}
+
 		/* does id on the record match the current record from a previous save? */
 		return ($query->row()->{$this->primary_key} == $this->input->post($postkey));
 	}
@@ -620,6 +620,28 @@ abstract class Database_model extends MY_Model {
 		$this->where_soft_delete();
 
 		return $this->_database->count($this->collection);
+	}
+
+	public function _seed($seeds,$count) {
+		$faker = Faker\Factory::create();
+
+		for ($i = 0; $i < $count; $i++) {
+			$data = [];
+
+			foreach ($seeds as $name=>$s) {
+				if (is_callable($s)) {
+					$data[$name] = $s($faker);
+				} elseif(is_array($s)) {
+					$data[$name] = $s[mt_rand(0, count($s) - 1)];
+				} elseif(is_string($s)) {
+					$data[$name] = $s;
+				}
+			}
+
+			$this->insert($data,true);
+		}
+
+		return true;
 	}
 
 } /* end DB Model */
