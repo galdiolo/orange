@@ -68,9 +68,11 @@ class MY_Controller extends CI_Controller {
 		/* cache driver is loaded in MY_Loader::setting since it is needed so early on */
 
 		/* is the site open? */
+		$key = setting('application','Is Open Cookie');
+		$key = (!empty($key)) ? $key : md5(uniqid(true));
 
 		if (php_sapi_name() !== 'cli') {
-			if (setting('application','Site Open') !== true && $_COOKIE['ISOPEN'] !== setting('application','Is Open Cookie',md5(uniqid()))) {
+			if (setting('application','Site Open') !== true && $_COOKIE['ISOPEN'] !== $key) {
 				$this->output->set_status_header(503, 'Site Down for Maintence');
 	
 				/* if it's not ajax request sent a nice page */

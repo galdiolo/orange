@@ -48,7 +48,7 @@ trait validate_dependent {
 	}
 
 	public function record_match(&$field, $options = null) {
-		/* is_uniquem[model_name,column_name,$_POST[primary_key]] */
+		/* record_match[model name.column 1.value 1.column 2.value 2] */
 		$this->set_message('record_match', 'You don\'t has access to this record.');
 
 		// has_access[admin_notice_model.msg_id.$msg_id.user_id.$user_id]
