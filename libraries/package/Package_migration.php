@@ -79,7 +79,7 @@ class package_migration {
 		$defaults = ['name'=>'','description'=>'','package'=>$package,'type'=>2,'is_editable'=>0,'is_deletable'=>0];
 
 		extract(array_diff_key($defaults,$data) + array_intersect_key($data,$defaults));
-		
+
 		/* if they only sent in the name use that for the description */
 		$description = (!empty($description)) ? $description : $name;
 
@@ -221,17 +221,20 @@ class package_migration {
 	public function drop_table($tablename) {
 		return $this->query("DROP TABLE IF EXISTS `".$tablename."`");
 	}
-	
+
 	public function describe_table($tablename,$database_config='default') {
 		$db = ci()->load->database($database_config,true);
 
-		return $db->list_fields($tablename);
+		$table_exists = $db->table_exists($table_name);
+
+		if ($table_exists) {
+			$fields = (array)$db->list_fields($tablename);
+		} else {
+			/* if the table doesn't exist return a empty array */
+			$fields = [];
+		}
+
+		return $fields;
 	}
-	
-	protected function db_column_exists($tablename,$columnname,$database_config='default') {
-		$columns = $this->describe_table($tablename,$database_config);
-		
-		return in_array($columnname,$columns);
-	}		
-		
+
 } /* end class */

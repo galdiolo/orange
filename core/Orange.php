@@ -165,7 +165,7 @@ function add_include_path($path) {
 	$package_path = $package_path.'/';
 
 	/* is it already in the search path? */
-	if (!in_array($package_path,$ATTACHED_PACKAGES)) {
+	if (!in_array($package_path,(array)$ATTACHED_PACKAGES)) {
 		$ATTACHED_PACKAGES[] = $package_path;
 				
 		$ADDED_PATHS .= PATH_SEPARATOR.$package_path;
