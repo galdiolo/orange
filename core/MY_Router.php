@@ -56,8 +56,14 @@ class MY_Router extends CI_Router {
 		/* http request method - this make the CI 3 method invalid */
 		$request = isset($_SERVER['REQUEST_METHOD']) ? ucfirst(strtolower($_SERVER['REQUEST_METHOD'])) : 'Cli';
 
+		$append = '';
+		$fixed_folder = '';
+
 		/* append this to the Controller Name */
-		$append = ($request == 'Cli') ? 'Cli' : '';
+		if ($request == 'Cli') {
+			$append = 'Cli';
+			$fixed_folder = 'cli/';
+		}
 
 		/* only a file cache is supported because the normal CI cache isn't even loaded yet */
 		$cache_file = ROOTPATH.'/var/local_file_cache/uri_'.md5(implode('',$segments).$request).'.php';
@@ -88,8 +94,8 @@ class MY_Router extends CI_Router {
 
 				$segments[1] = ((isset($segments[1])) ? str_replace('-', '_', $segments[1]) : 'index');
 
-				if (file_exists($path.'controllers/'.$this->directory.ucfirst($segments[0]).$append.'Controller.php')) {
-					if (!file_exists($path.'controllers/'.$this->directory.$segments[0].'/'.ucfirst($segments[1]).$append.'Controller.php')) {
+				if (file_exists($path.'controllers/'.$fixed_folder.$this->directory.ucfirst($segments[0]).$append.'Controller.php')) {
+					if (!file_exists($path.'controllers/'.$fixed_folder.$this->directory.$segments[0].'/'.ucfirst($segments[1]).$append.'Controller.php')) {
 						/* yes! then segment 0 is the controller */
 						$segments[0] = ucfirst($segments[0]).$append.'Controller';
 
@@ -98,7 +104,7 @@ class MY_Router extends CI_Router {
 
 						/* re-route codeigniter.php controller loading */
 						if ($this->package != 'application') {
-							$this->directory = '../../'.$this->package.'controllers/'.$this->directory;
+							$this->directory = '../../'.$this->package.'controllers/'.$fixed_folder.$this->directory;
 						}
 						
 						/* if the last seg is a integer it's prob a record so don't cache it */

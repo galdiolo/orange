@@ -33,6 +33,9 @@ trait validate_misc {
 						$param   = ($matches[2]) ? $matches[2] : 'id';
 						$replace = $this->ci_session->userdata($param);
 					break;
+					case 'ip':
+						$replace = ci()->input->ip_address();
+					break;
 				}
 			}
 

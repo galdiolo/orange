@@ -113,9 +113,6 @@ class MY_Model extends CI_Model {
 	public function catalog() {
 	}
 
-	public function seed($count=0) {
-	}
-
 	/* Real Model Generic Functions */
 
 	/* run get function to determine if a record with the primary exists */

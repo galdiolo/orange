@@ -16,8 +16,10 @@ class o_user_model extends Database_model {
 		'id'             => ['field' => 'id','label' => 'Id','rules' => 'required|integer|max_length[10]|less_than[4294967295]|filter_int[10]'],
 		'created_on'     => ['field' => 'created_on','label' => 'Created On','rules' => 'if_empty[now(Y-m-d H:i:s)]|required|max_length[24]|valid_datetime|filter_input[24]'],
 		'created_by'     => ['field' => 'created_by','label' => 'Created By','rules' => 'if_empty[user()]|required|integer|max_length[10]|less_than[4294967295]|filter_int[10]'],
+		'created_ip'     => ['field' => 'created_ip','label' => 'Created IP','rules' => 'if_empty[ip()]|required|filter_input[16]'],
 		'updated_on'     => ['field' => 'updated_on','label' => 'Updated On','rules' => 'if_empty[now(Y-m-d H:i:s)]|required|max_length[24]|valid_datetime|filter_input[24]'],
 		'updated_by'     => ['field' => 'updated_by','label' => 'Updated By','rules' => 'if_empty[user()]|required|integer|max_length[10]|less_than[4294967295]|filter_int[10]'],
+		'updated_ip'     => ['field' => 'updated_ip','label' => 'Updated IP','rules' => 'if_empty[ip()]|required|filter_input[16]'],
 		'is_editable'    => ['field' => 'is_editable','label' => 'Editable','rules' => 'if_empty[1]|one_of[0,1]|filter_int[1]|max_length[1]'],
 		'is_deletable'   => ['field' => 'is_deletable','label' => 'Deletable','rules' => 'if_empty[1]|one_of[0,1]|filter_int[1]|max_length[1]'],
 		'is_deleted'     => ['field' => 'is_deleted','label' => 'Deleted','rules' => 'if_empty[0000-00-00 00:00:00]|required|max_length[24]|valid_datetime|filter_input[24]'],
@@ -39,9 +41,9 @@ class o_user_model extends Database_model {
 	];
 
 	protected $rule_sets = [
-		'insert' => 'created_on,created_by,updated_on,updated_by,username,email,password,confirm_password,role_id,is_active',
-		'update' => 'id,updated_on,updated_by,username,email,role_id,is_active,password,confirm_password',
-		'update_no_password' => 'id,updated_on,updated_by,username,email,role_id,is_active',
+		'insert' => 'created_on,created_by,created_ip,updated_on,updated_by,updated_ip,username,email,password,confirm_password,role_id,is_active',
+		'update' => 'id,updated_on,updated_by,updated_ip,username,email,role_id,is_active,password,confirm_password',
+		'update_no_password' => 'id,updated_on,updated_by,updated_ip,username,email,role_id,is_active',
 		'login' => 'email,password',
 	];
 
@@ -68,6 +70,28 @@ class o_user_model extends Database_model {
 		if (!setting('auth','Allow Same Email')) {
 			$this->rules['email']['rules'] .= '|is_uniquem[o_user_model.email.id]';
 		}
+	}
+
+	public function seed($count=1) {
+		$seeds = [
+			'created_on' => function($faker) { return $faker->dateTimeBetween($startDate = '-1 year','now')->format('Y-m-d H:i:s'); },
+			'created_by' => 1,
+			'created_ip' => ci()->input->ip_address(),
+			'updated_on' => date('Y-m-d H:i:s'),
+			'updated_by' => 1,
+			'updated_ip' => ci()->input->ip_address(),
+
+			'username' => function($faker) { return $faker->name(); },
+			'email' => function($faker) { return $faker->safeEmail(); },
+			
+			'password' => function($faker,$data) { return $faker->password; },
+			'confirm_password' => function($faker,$data) { return $data['password']; },
+			
+			'role_id' => 2,
+			'is_active' => function($faker) { return mt_rand(0,1); },
+		];
+
+		return $this->_seed($seeds,$count);
 	}
 
 	/* validate can be insert,update,register,login */

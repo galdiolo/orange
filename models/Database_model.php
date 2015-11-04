@@ -630,10 +630,10 @@ abstract class Database_model extends MY_Model {
 
 			foreach ($seeds as $name=>$s) {
 				if (is_callable($s)) {
-					$data[$name] = $s($faker);
+					$data[$name] = $s($faker,$data);
 				} elseif(is_array($s)) {
 					$data[$name] = $s[mt_rand(0, count($s) - 1)];
-				} elseif(is_string($s)) {
+				} elseif(is_scalar($s)) {
 					$data[$name] = $s;
 				}
 			}

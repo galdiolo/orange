@@ -46,10 +46,11 @@ class packageCliController extends O_CliController {
 		$this->output('<green>Requirements:');
 		$this->output('<blue>Missing Required Packages: <off>'.implode(chr(10),$record['package_error_raw']));
 		$this->output('<blue>Missing Required Composer Packages: <off>'.implode(chr(10),$record['composer_error_raw']));
+		$this->output('<blue>Required By: <off>'.chr(10).implode(chr(10),$record['required_error']));
 		if (count($record['cli']) > 0) {
 			$this->output('<green>Command Line Methods:');
 			foreach ($record['cli'] as $a=>$b) {
-				$this->output('<blue>'.$a.'<off>'.$b);
+				$this->output('<blue>'.$a.'<off> '.$b);
 			}
 		}
 		
