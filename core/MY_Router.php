@@ -62,7 +62,7 @@ class MY_Router extends CI_Router {
 		/* append this to the Controller Name */
 		if ($request == 'Cli') {
 			$append = 'Cli';
-			$fixed_folder = 'cli/';
+			$fixed_folder = '_cli/';
 		}
 
 		/* only a file cache is supported because the normal CI cache isn't even loaded yet */
