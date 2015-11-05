@@ -53,8 +53,8 @@ class Widget {
             if (class_exists($class)) {
               $class = new $class();
             } else {
-              get_instance()->load->library($class);
-              $class =& get_instance()->$class;
+              ci()->load->library($class);
+              $class =& ci()->$class;
             }
 
             if ( ! method_exists($class, $method)) {
@@ -66,7 +66,7 @@ class Widget {
 
             // Cache it
             if ((int)$cache_time > 0) {
-              get_instance()->cache->save($cache_name, $output, (int)$cache_time * 60);
+              ci()->cache->save($cache_name, $output, (int)$cache_time * 60);
             }
         }
 

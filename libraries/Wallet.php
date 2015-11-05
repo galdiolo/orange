@@ -30,6 +30,7 @@ class Wallet {
 
 	protected $ci_load;
 	protected $ci_session;
+	protected $ci_input;
 
 	protected $default_breadcrumb_style = [
 		'crumb_divider'=>'<span class="divider"> / </span>',
@@ -60,6 +61,7 @@ class Wallet {
 
 		$this->ci_load = &ci()->load;
 		$this->ci_session = &ci()->session;
+		$this->ci_input = &ci()->input;
 
 		/* store whatever is in the session from the last page into a variable for the current page */
 		$this->ci_load->vars(['wallet_messages'=>[
@@ -153,12 +155,12 @@ class Wallet {
 
 	/* save url for use later */
 	public function save_previous_page() {
-		return $this->save_this_page(parse_url(ci()->input->server('HTTP_REFERER'), PHP_URL_PATH));
+		return $this->save_this_page(parse_url($this->ci_input->server('HTTP_REFERER'), PHP_URL_PATH));
 	}
 
 	/* save this page's url for use later */
 	public function save_this_page($url=null) {
-		$url = ($url) ? $url : ci()->input->server('REQUEST_URI');
+		$url = ($url) ? $url : $this->ci_input->server('REQUEST_URI');
 
 		return $this->snapdata($this->url_key,$url);
 	}
