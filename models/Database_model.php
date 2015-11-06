@@ -566,7 +566,7 @@ abstract class Database_model extends MY_Model {
 	}
 
 	/* default method called to produce the index view records */
-	public function index($orderby = null) {
+	public function index($orderby = null, $where = null) {
 		/* did we get any? */
 		if ($orderby) {
 			$direction = 'ASC';
@@ -578,7 +578,7 @@ abstract class Database_model extends MY_Model {
 			$this->order_by($orderby, $direction);
 		}
 
-		return $this->get_many();
+		return $this->get_many_by((array)$where);
 	}
 
 	/**

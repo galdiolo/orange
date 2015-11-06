@@ -21,6 +21,7 @@ class Page {
 	protected $script_attributes;
 	protected $link_attributes;
 	protected $encryption_key;
+	protected $short_name; /* name without path and theme_ */
 
 	/* used external libraries - mock these */
 	protected $ci_load;
@@ -82,6 +83,20 @@ class Page {
 		return $this;
 	}
 
+	public function theme_name($name=null) {
+		/* setter / getter */
+		if ($name == null) {
+			/* getter */
+			return $this->short_name;
+		}
+		
+		/* setter */
+		$this->short_name = $name;
+		
+		/* chain-able */
+		return $this;
+	}
+
 	/*
 	change theme
 	$this->page->theme('mytheme');
@@ -92,16 +107,22 @@ class Page {
 			return $this->theme;
 		}
 
+		$name = ltrim($name,'/');
+
 		/* does this theme even exist? */
-		if (!$theme_path = realpath(ROOTPATH.'/packages/theme_'.$name)) {
-			show_error('Cannot locate theme '.$name);
+		if (!$theme_path = realpath(ROOTPATH.'/packages/'.$name)) {
+			if (!$theme_path = realpath(ROOTPATH.'/vendor/'.$name)) {
+				show_error('Cannot locate theme '.$name);
+			}
 		}
+
+		$this->short_name = substr(basename($name),6);
 
 		/* 1 theme at a time so make this our new theme */
 		$this->theme = $name;
 
 		/* add it to the body class */
-		$this->body_class($name);
+		$this->body_class($this->short_name);
 
 		/* add it as a CI package */
 		$this->ci_load->theme($theme_path);
@@ -111,13 +132,13 @@ class Page {
 
 		$this->ci_load->vars(['theme_path'=>$this->theme_path]);
 
-		$theme_file = ROOTPATH.'/packages/theme_'.$name.'/support/'.$name.'_theme.php';
+		$theme_file = $theme_path.'/support/'.$this->short_name.'_theme.php';
 
 		/* does it have a theme init file? */
 		if (file_exists($theme_file)) {
 			include_once $theme_file;
 
-			$function_name = $name.'_theme_setup';
+			$function_name = $this->short_name.'_theme_setup';
 
 			if (function_exists($function_name)) {
 				$function_name($this,$this->theme_path);
