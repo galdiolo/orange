@@ -4,14 +4,20 @@
 	"type": "library",
 	"license": "MIT",
 	"homepage": "https://github.com/ProjectOrangeBox",
-  "keywords": ["codeigniter", "framework"],
+	"keywords": ["codeigniter", "framework"],
 	"authors": [{
 		"name": "Don Myers",
 		"email": "donmyers@projectorangebox.com"
 	}],
 	"require": {
-    "php": ">=5.5"
+		"php": ">=5.5",
+		"projectorangebox/theme_orange": "1.*.*",
+		"projectorangebox/plugin_select3": "1.*.*"
 	},
+	"repositories": [
+		{ "type": "vcs", "url": "https://github.com/projectorangebox/theme_orange" },
+		{ "type": "vcs", "url": "https://github.com/projectorangebox/plugin_select3" }
+	],
 	"orange": {
 		"version": "1.0.0",
 		"type": "core",
