@@ -3,20 +3,22 @@
 * Orange Framework Extension
 *
 * This content is released under the MIT License (MIT)
-*	Original idea for a CI presenter class by Jamie Rumbelow
+*	Original idea for a creating a CI presenter by Jamie Rumbelow
 *
-* @package	CodeIgniter / Orange
+* @package CodeIgniter / Orange
 * @author	Don Myers
-* @license	http://opensource.org/licenses/MIT	MIT License
+* @license http://opensource.org/licenses/MIT	MIT License
 * @link	https://github.com/dmyers2004
 *
 * Single record
 * $record = $this->c_snippet_model->get(2);
-* $record = ci()->presenter->create('role',$record);
+* $record = $this->load->presenter($record,'role),
 *
 * Multiple records in a array
 * $records = $this->c_snippet_model->index();
-* $records = ci()->presenter->create('role',$records);
+* $records = $this->load->presenter($records,'role');
+*
+*	inside the methods $this->object represents the current rows data
 *
 * While this is a neat idea unfortunately,
 * using this will slow down your views
@@ -24,22 +26,45 @@
 * thou it is faster than looping over the array to prepare it
 * 1 or more times before giving it to the view
 * since these transformations are only applied at the time
-* the are called in the view
+* they are called in the view
 *
 */
-class Presenter {
+class Presenter implements ArrayAccess {
 	/* current object or row */
 	protected $object;
+	protected $injected;
 
-	public function __construct($object = null) {
+	public function __construct($object = null,$inject = null) {
 		$this->object = $object;
+		$this->injected = $inject;
 	}
 
 	/* my magic function! */
+
+	public function offsetSet($offset, $value) {
+		/* you can't set */
+	}
+	
+	public function offsetExists($offset) {
+	  return isset($this->object->$offset);
+	}
+	
+	public function offsetUnset($offset) {
+		/* you can't unset */
+	}
+	
+	public function offsetGet($offset) {
+		return $this->__get($offset);
+	}
+    
 	public function __get($property) {
 		$return = '';
 
-		/* built in function? */
+		/*
+		built in function?
+		
+		$record->field__date;
+		*/
 		if (strpos($property,'__') !== false) {
 			list($property,$built_in) = explode('__', $property,2);
 
@@ -48,7 +73,11 @@ class Presenter {
 
 			$return = (property_exists($this->object, $property) && method_exists($this,$built_in)) ? $this->$built_in($property) : '';
 		} else {
-			/* is it a raw value request? */
+			/*
+			is it a raw value request?
+			
+			$record->field_raw
+			*/
 			$is_raw = (strtolower(substr($property,-4)) === '_raw');
 	
 			/* if so remove "raw" from the property */
@@ -60,7 +89,12 @@ class Presenter {
 				$return = $this->object->$property;
 			}
 	
-			/* is there a matching method and they aren't asking for a raw value? */
+			/*
+			is there a matching method and they aren't asking for a raw value?
+			
+			$record->method;
+			*/
+
 			if (method_exists($this,$property) && !$is_raw) {
 				/* yep! */
 				$return = $this->$property();
@@ -71,9 +105,10 @@ class Presenter {
 		/* then just return an empty string */
 		return $return;
 	}
-
+	
+	/* i_ internal */
 	public function i_human_date($value) {
-		$format = settings('presenter','date','l jS \of F Y h:i:s A');
+		$format = setting('presenter','date','l jS \of F Y h:i:s A');
 	
 		return date($format,strtotime($this->object->$value));
 	}
@@ -86,13 +121,13 @@ class Presenter {
 		return strtolower($this->object->$value);
 	}
 	
-	public function i_enum($value) {
-		$enum = settings('presenter','enum',[0=>'False',1=>'True']);
+	public function i_enum_bol_string($value) {
+		$enum = setting('presenter','enum',[0=>'False',1=>'True']);
 	
 		return $enum[$this->object->value];
 	}
 
-	public function i_enum_icon($value) {
+	public function i_enum_circle($value) {
 		$enum = [0=>'circle-o',1=>'check-circle-o'];
 	
 		return $enum[$this->object->value];

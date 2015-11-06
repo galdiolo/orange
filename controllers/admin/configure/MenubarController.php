@@ -42,6 +42,8 @@ class menubarController extends APP_AdminController {
 	}
 
 	public function listAction() {
+		$this->load->library('plugin_search_sort');
+
 		$this->page
 			->data('records',$this->o_menubar_model->index('url,sort'))
 			->build('/admin/configure/menubar/list');

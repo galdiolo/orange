@@ -47,6 +47,21 @@ trait validate_dependent {
 		return ci()->$model->is_uniquem($field, $column, $postkey);
 	}
 
+	public function record_match(&$field, $options = null) {
+		/* record_match[model name.column 1.value 1.column 2.value 2] */
+		$this->set_message('record_match', 'You don\'t has access to this record.');
+
+		// has_access[admin_notice_model.msg_id.$msg_id.user_id.$user_id]
+		list($model, $record_column1, $record_value1, $record_column2, $record_value2) = explode('.', $options, 5);
+
+		/* try to load the model */
+		$this->ci_load->model($model);
+
+		$record = ci()->$model->get_by([$record_column1=>$record_value1]);
+
+		return ($record->$record_column2 == $record_value2);
+	}
+
 	/* dependent on the record_group_id being set on the form */
 	public function if_empty_group_id(&$field, $options = null) {
 		$err_msg = 'Group id validation failure.';

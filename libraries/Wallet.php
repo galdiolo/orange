@@ -30,6 +30,7 @@ class Wallet {
 
 	protected $ci_load;
 	protected $ci_session;
+	protected $ci_input;
 
 	protected $default_breadcrumb_style = [
 		'crumb_divider'=>'<span class="divider"> / </span>',
@@ -60,6 +61,7 @@ class Wallet {
 
 		$this->ci_load = &ci()->load;
 		$this->ci_session = &ci()->session;
+		$this->ci_input = &ci()->input;
 
 		/* store whatever is in the session from the last page into a variable for the current page */
 		$this->ci_load->vars(['wallet_messages'=>[
@@ -153,12 +155,12 @@ class Wallet {
 
 	/* save url for use later */
 	public function save_previous_page() {
-		return $this->save_this_page(parse_url(ci()->input->server('HTTP_REFERER'), PHP_URL_PATH));
+		return $this->save_this_page(parse_url($this->ci_input->server('HTTP_REFERER'), PHP_URL_PATH));
 	}
 
 	/* save this page's url for use later */
 	public function save_this_page($url=null) {
-		$url = ($url) ? $url : ci()->input->server('REQUEST_URI');
+		$url = ($url) ? $url : $this->ci_input->server('REQUEST_URI');
 
 		return $this->snapdata($this->url_key,$url);
 	}
@@ -257,51 +259,70 @@ class Wallet {
 	public function msg($msg = '', $type = 'yellow', $sticky = false, $redirect = null) {
 		ci()->event->trigger('wallet.msg',$msg,$type,$sticky,$redirect);
 
-		$this->messages[] = ['msg' => trim($msg),'type' => $type,'sticky' => $sticky];
-		$this->ci_session->set_flashdata($this->msg_key, $this->messages);
+		/* show it on this page? if redirect is true */
+		if ($redirect === true) {
+			/* are there any messages set via session or other? */
+			$wallet_messages = $this->ci_load->get_var('wallet_messages');
+			
+			$current_msgs = (array)$wallet_messages['messages'];
 
-		/* redirect to another page immediately */
-		if ($redirect) {
-			redirect($redirect);
+			/* add to them */
+			$current_msgs[] = ['msg' => trim($msg),'type' => $type,'sticky' => $sticky];
+			
+			/* put it back in the page variables */
+			$this->ci_load->vars(['wallet_messages' => [
+				'messages'       => $current_msgs,
+				'initial_pause'  => $this->ci_load->setting('wallet','initial_pause',3),
+				'pause_for_each' => $this->ci_load->setting('wallet','pause_for_each',1000),
+			]]);
+		} else {
+			/* show it on the next page (flash msg style) */
+			$this->messages[] = ['msg' => trim($msg),'type' => $type,'sticky' => $sticky];
+			$this->ci_session->set_flashdata($this->msg_key, $this->messages);
 
-			exit; /* shouldn't be needed but just incase */
+			/* redirect to another page immediately */
+			if (is_string($redirect)) {
+				redirect($redirect);
+
+				exit; /* shouldn't be needed but just incase */
+			}
 		}
 
 		return $this;
 	}
 
 	public function success($msg,$redirect=null) {
-		$msg = ($msg) ? $msg : $this->default_msgs['success'];
+		$msg = (!empty($msg)) ? $msg : $this->default_msgs['success'];
 
 		return $this->msg($msg,'blue',false,$redirect);
 	}
 
 	public function failed($msg=null,$redirect=null) {
-		$msg = ($msg) ? $msg : $this->default_msgs['failed'];
+		$msg = (!empty($msg)) ? $msg : $this->default_msgs['failed'];
 
 		return $this->msg($msg,'red',true,$redirect);
 	}
 
 	public function denied($msg=null,$redirect=null) {
-		$msg = ($msg) ? $msg : $this->default_msgs['denied'];
+		$msg = (!empty($msg)) ? $msg : $this->default_msgs['denied'];
 
 		return $this->msg($msg,'red',true,$redirect);
 	}
 
 	public function created($title=null,$redirect=null) {
-		$msg = ($title) ? $title.' Created' : $this->default_msgs['created'];
+		$msg = (!empty($title)) ? $title.' Created' : $this->default_msgs['created'];
 
 		return $this->msg($msg,'blue',false,$redirect);
 	}
 
 	public function updated($title=null,$redirect=null) {
-		$msg = ($title) ? $title.' Updated' : $this->default_msgs['updated'];
+		$msg = (!empty($title)) ? $title.' Updated' : $this->default_msgs['updated'];
 
 		return $this->msg($msg,'blue',false,$redirect);
 	}
 
 	public function deleted($title=null,$redirect=null) {
-		$msg = ($title) ? $title.' Deleted' : $this->default_msgs['deleted'];
+		$msg = (!empty($title)) ? $title.' Deleted' : $this->default_msgs['deleted'];
 
 		return $this->msg($msg,'blue',false,$redirect);
 	}

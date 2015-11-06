@@ -56,10 +56,19 @@ class MY_Router extends CI_Router {
 		/* http request method - this make the CI 3 method invalid */
 		$request = isset($_SERVER['REQUEST_METHOD']) ? ucfirst(strtolower($_SERVER['REQUEST_METHOD'])) : 'Cli';
 
-		/* only a file cache is supported because the normal CI cache isn't even loaded yet */
-		$cache_file = ROOTPATH.'/var/cache/uri_'.md5(implode('',$segments).$request).'.php';
+		$append = '';
+		$fixed_folder = '';
 
-		/* get it from the cache? cache for a hour */
+		/* append this to the Controller Name */
+		if ($request == 'Cli') {
+			$append = 'Cli';
+			$fixed_folder = '_cli/';
+		}
+
+		/* only a file cache is supported because the normal CI cache isn't even loaded yet */
+		$cache_file = ROOTPATH.'/var/local_file_cache/uri_'.md5(implode('',$segments).$request).'.php';
+
+		/* get it from the cache? */
 		if ($cached = array_cache($cache_file)) {
 			$this->directory = $cached['directory'];
 			$this->package = $cached['package'];
@@ -85,20 +94,23 @@ class MY_Router extends CI_Router {
 
 				$segments[1] = ((isset($segments[1])) ? str_replace('-', '_', $segments[1]) : 'index');
 
-				if (file_exists($path.'controllers/'.$this->directory.ucfirst($segments[0]).'Controller.php')) {
-					if (!file_exists($path.'controllers/'.$this->directory.$segments[0].'/'.ucfirst($segments[1]).'Controller.php')) {
+				if (file_exists($path.'controllers/'.$fixed_folder.$this->directory.ucfirst($segments[0]).$append.'Controller.php')) {
+					if (!file_exists($path.'controllers/'.$fixed_folder.$this->directory.$segments[0].'/'.ucfirst($segments[1]).$append.'Controller.php')) {
 						/* yes! then segment 0 is the controller */
-						$segments[0] = ucfirst($segments[0]).'Controller';
+						$segments[0] = ucfirst($segments[0]).$append.'Controller';
 
 						/* make sure we have a method and add Action (along with the REST stuff) */
 						$segments[1] .= (($request == 'Get') ? '' : $request).'Action';
 
 						/* re-route codeigniter.php controller loading */
 						if ($this->package != 'application') {
-							$this->directory = '../../'.$this->package.'controllers/'.$this->directory;
+							$this->directory = '../../'.$this->package.'controllers/'.$fixed_folder.$this->directory;
 						}
-
-						array_cache($cache_file,['segments'=>$segments,'directory'=>$this->directory,'package'=>$this->package]);
+						
+						/* if the last seg is a integer it's prob a record so don't cache it */
+						if (substr(end($segments),-6) == 'Action') {
+							array_cache($cache_file,['segments'=>$segments,'directory'=>$this->directory,'package'=>$this->package]);
+						}
 
 						/* return the controller, method and anything else */
 						return $segments;

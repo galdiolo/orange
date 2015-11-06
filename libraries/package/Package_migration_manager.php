@@ -66,34 +66,59 @@ class package_migration_manager {
 	}
 
 	public function run_migrations($config,$dir) {
-		/* if it's down then we need a complete set of migrations */
-		$migration_files = ($dir == 'up') ? $config['migrations'] : $this->get_migrations_between($config['folder']);
+		log_message('debug', 'run migrations '.$dir.' '.$config['folder'].' '.$config['migration_version']);
 
-		foreach ($migration_files as $migration_file) {
-			$migration_filename = basename($migration_file,'.php');
+		if ($dir != 'up' && $dir != 'down') {
+			log_message('debug', 'migrations direction '.$dir.' not valid.');
 
-			$class_name = str_replace(['.','-'],['','_'],$migration_filename);
+			return false;
+		}
 
-			include $migration_file;
+		switch ($dir) {
+			case 'up':
+				/* if it's down then we need a complete set of migrations */
+				$migration_files = $this->get_migrations_between($config['folder'],$config['migration_version'],'999.999.999');
+			break;
+			case 'down':
+				/* if it's down then we need a complete set of migrations */
+				$migration_files = $this->get_migrations_between($config['folder'],'0.0.0',$config['migration_version']);
 
-			if (!class_exists($class_name,false)) {
-				show_error('Error: migration class named "'.$class_name.'" not found in "'.$migration_file.'"');
-			}
+				/* ok now run it backwards */
+				$migration_files = array_reverse($migration_files,true);
+			break;
+		}
 
-			$migration = new $class_name($config);
+		if (is_array($migration_files)) {
+			foreach ($migration_files as $migration_file) {
+				$migration_filename = basename($migration_file,'.php');
 
-			$success = true;
+				$class_name = str_replace(['.','-'],['','_'],$migration_filename);
 
-			if (method_exists($migration,$dir)) {
-				$success = $migration->$dir();
-			}
+				include $migration_file;
 
-			if ($success !== true) {
-				return $success;
+				if (!class_exists($class_name,false)) {
+					show_error('Error: migration class named "'.$class_name.'" not found in "'.$migration_file.'"');
+				}
+
+				$migration = new $class_name($config);
+
+				$success = true;
+
+				if (method_exists($migration,$dir)) {
+					log_message('debug', 'migrations running '.$class_name.'::'.$dir);
+
+					$success = $migration->$dir();
+				} else {
+					log_message('debug', 'migrations could not find '.$class_name.'::'.$dir);
+				}
+
+				if ($success !== true) {
+					break;
+				}
 			}
 		}
 
-		return true;
+		return $success;
 	}
 
 } /* end class */

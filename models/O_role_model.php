@@ -15,8 +15,10 @@ class o_role_model extends Database_model {
 		'id'              => ['field' => 'id','label' => 'Id','rules' => 'required|integer|max_length[10]|less_than[4294967295]|filter_int[10]'],
 		'created_on'      => ['field' => 'created_on','label' => 'Created On','rules' => 'if_empty[now(Y-m-d H:i:s)]|required|max_length[24]|valid_datetime|filter_input[24]'],
 		'created_by'      => ['field' => 'created_by','label' => 'Created By','rules' => 'if_empty[user()]|required|integer|max_length[10]|less_than[4294967295]|filter_int[10]'],
+		'created_ip'     => ['field' => 'created_ip','label' => 'Created IP','rules' => 'if_empty[ip()]|required|filter_input[16]'],
 		'updated_on'      => ['field' => 'updated_on','label' => 'Updated On','rules' => 'if_empty[now(Y-m-d H:i:s)]|required|max_length[24]|valid_datetime|filter_input[24]'],
 		'updated_by'      => ['field' => 'updated_by','label' => 'Updated By','rules' => 'if_empty[user()]|required|integer|max_length[10]|less_than[4294967295]|filter_int[10]'],
+		'updated_ip'     => ['field' => 'updated_ip','label' => 'Updated IP','rules' => 'if_empty[ip()]|required|filter_input[16]'],
 		'is_editable'     => ['field' => 'is_editable','label' => 'Editable','rules' => 'if_empty[1]|one_of[0,1]|filter_int[1]|max_length[1]'],
 		'is_deletable'    => ['field' => 'is_deletable','label' => 'Deletable','rules' => 'if_empty[1]|one_of[0,1]|filter_int[1]|max_length[1]'],
 		'name'            => ['field' => 'name','label' => 'Name','rules' => 'required|max_length[64]|filter_input[64]'],
@@ -25,8 +27,8 @@ class o_role_model extends Database_model {
 		'access'					=> ['field' => 'access','label' => 'Access','rules' => 'is_array'],
 	];
 	protected $rule_sets = [
-		'insert' => 'created_on,created_by,updated_on,updated_by,is_editable,is_deletable,name,description,access',
-		'update' => 'id,updated_on,updated_by,name,description,access',
+		'insert' => 'created_on,created_by,created_ip,updated_on,updated_by,updated_ip,is_editable,is_deletable,name,description,access',
+		'update' => 'id,updated_on,updated_by,updated_ip,name,description,access',
 	];
 
 	public function insert($data, $skip_validation = false) {

@@ -11,6 +11,8 @@
 *
 */
 class Presenter_iterator implements Iterator {
+	protected $inject;
+
 	/* current array or row */
 	protected $array;
 
@@ -20,15 +22,16 @@ class Presenter_iterator implements Iterator {
 	/* name of the presenter class */
 	protected $class = null;
 
-	public function __construct($array = null,$class = null) {
+	public function __construct($array = null,$class = null,$inject = null) {
 		$this->array = $array;
 		$this->index = 0;
 		$this->class = $class;
+		$this->inject = $inject;
 	}
 
 	/* Iterator required methods */
 	public function current() {
-		return new $this->class($this->array[$this->index]);
+		return new $this->class($this->array[$this->index],$this->inject);
 	}
 
 	public function key() {

@@ -1,9 +1,10 @@
 <?php
 theme::header_start('Users','manage users');
+Plugin_search_sort::field();
 theme::header_button_new();
 theme::header_end();
 
-theme::table_start(['Name','Email','Role','Active'=>'text-center','Actions'=>'text-center']);
+theme::table_start(['Name','Email','Role','Active'=>'text-center','Actions'=>'text-center'],['tbody_class'=>'searchable','class'=>'sortable']);
 
 foreach ($records as $record) {
 	theme::table_start_tr();

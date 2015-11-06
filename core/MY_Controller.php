@@ -50,7 +50,10 @@ class MY_Controller extends CI_Controller {
 			}
 		}
 				
-		/* does the cached onload exist? */
+		/*
+		does the cached onload exist? 
+		if this is a multi box system it might not
+		*/
 		if (!file_exists($this->load->onload_path)) {
 			/* no create it */
 			ci()->load->create_onload($this->load->onload_path);
@@ -59,25 +62,27 @@ class MY_Controller extends CI_Controller {
 		/* load the "cached" onload */
 		include $this->load->onload_path;
 
-		/* while you could have done this in your onload file - this keeps it "clean" 
+		/* while you could have done this in your onload file - this keeps it "clean" */
 		$this->event->trigger('ci.controller.startup',$this);
 
-		/*
-		cache driver is loaded in MY_Loader::setting
-		since it is needed so early on
-		*/
+		/* cache driver is loaded in MY_Loader::setting since it is needed so early on */
 
 		/* is the site open? */
-		if (setting('application','Site Open') != 1 && !$_COOKIE['ISOPEN']) {
-			$this->output->set_status_header(503, 'Site Down for Maintence');
+		$key = setting('application','Is Open Cookie');
+		$key = (!empty($key)) ? $key : md5(uniqid(true));
 
-			/* if it's not ajax request sent a nice page */
-			if (!$this->input->is_ajax_request()) {
-				echo $this->load->partial('main/site_down');
+		if (php_sapi_name() !== 'cli') {
+			if (setting('application','Site Open') !== true && $_COOKIE['ISOPEN'] !== $key) {
+				$this->output->set_status_header(503, 'Site Down for Maintence');
+	
+				/* if it's not ajax request sent a nice page */
+				if (!$this->input->is_ajax_request()) {
+					echo $this->load->partial('main/site_down');
+				}
+	
+				/* if it is a ajax request the 503 error should be handled by the ajax requesting javascript */
+				exit;
 			}
-
-			/* if it is a ajax request the 503 error should be handled by the ajax requesting javascript */
-			exit;
 		}
 
 		/* setup a default model if one is specified */
@@ -85,10 +90,6 @@ class MY_Controller extends CI_Controller {
 			$this->load->model($this->controller_model);
 		}
 
-	}
-
-	protected function _internal_production_onload($file_path) {
-	}
-
+	} /* end __construct */
 
 } /* end controller */

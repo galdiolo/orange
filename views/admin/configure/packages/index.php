@@ -1,8 +1,7 @@
 <?php
 theme::header_start('Packages','Interface to manage packages.');
-if ($filter) {
-	theme::header_button('Show All',$controller_path,'filter');
-}
+Plugin_search_sort::field();
+theme::header_button('Customize Load Order',$controller_path.'/load-order','sort-amount-asc');
 o::view_event($controller_path,'header.buttons');
 theme::header_end();
 
@@ -15,18 +14,13 @@ if ($errors) {
 	echo '</div>';
 }
 
-theme::table_start(['Name','Type'=>'text-center','Description','Version'=>'text-center','Actions'=>'text-center'],null,$records);
+theme::table_start(['Name','Type'=>'text-center','Description','Version'=>'text-center','Actions'=>'text-center'],['tbody_class'=>'searchable','class'=>'sortable'],$records);
 
 foreach ($records as $name=>$record) {
+	//k($name);
 	//k($record);
 
-	/* skip this record? */
-	if (substr($name,0,1) == '_' || (!empty($filter) && $record['type'] != $filter)) {
-		continue;
-	}
-
 	/* setup a few things */
-	$url_name = bin2hex($record['folder']);
 	$is_active = $record['is_active'];
 
 	/* Name */
@@ -38,95 +32,75 @@ foreach ($records as $name=>$record) {
 
 	/* type */
 	theme::table_row('text-center');
-	echo '<a href="'.$controller_path.'/index/'.$record['type'].'">';
+	echo '<a href="'.$controller_path.'/search/'.$record['type'].'">';
 	echo '<span class="label label-'.$type_map[$record['type']].'">'.$record['type'].'</span>';
 	echo '</a>';
 
 	/* Description */
 	theme::table_row();
-	if ($record['name'] == 'Orange') {
-		echo '<span style="font-weight: 700;color: #DF521B">Orange</span>';
-	} elseif($record['json_error']) {
-		echo '<span style="font-weight: 700;color: #A90018">info.json error</span>';
+	if($record['json_error']) {
+		echo '<span style="font-weight: 700;color: #A90018">'.$record['json_error_txt'].'</span>';
 	} else {
 		o::e($record['name']);
 	}
-	
+
 	if (!$record['json_error']) {
 		/* (i) for more information */
 		echo ' - ';
 		o::e($record['info']);
-		echo ' <a href="'.$controller_path.'/details/'.$url_name.'" class="" data-name="'.$name.'"><i class="fa fa-info-circle"></i></a> ';
+		echo ' <a href="'.$controller_path.'/details/'.$record['url_name'].'" class="" data-name="'.$name.'"><i class="fa fa-info-circle"></i></a> ';
 	}
 
 	/* Version */
 	theme::table_row('text-center');
 	/* show upgrade version and up arrow? */
-	if (!$record['json_error']) {
-		if ($is_active) {
-			switch ($record['version_check']) {
-				case 1: /* less than */
-					/* <i class="fa fa-arrow-up"></i> */ 
-					echo '<span class="label label-info"><i class="fa fa-exclamation-triangle"></i> '.$record['version'].'</span>&nbsp;';
-				break;
-				case 2:
-					/* version in db matches migration version */
-					$allow_uninstall = true;
-				break;
-				case 3: /* greater than */
-					/* <i class="fa fa-exclamation-triangle"></i> */
-					echo '<span class="label label-info"> <i class="fa fa-arrow-up"></i>'.$record['version'].'</span>&nbsp;';
-					$record['uninstall'] = false;
-					$record['upgrade'] = true;
-				break;
-			}
-	
+	switch ($record['version_display']) {
+		case 1: /* less than */
+			echo '<span class="label label-info"><i class="fa fa-exclamation-triangle"></i> '.$record['version'].'</span>&nbsp;';
 			echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
-		} else {
+		break;
+		case 2:
+			/* version in db matches migration version */
+			echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
+		break;
+		case 3: /* greater than */
+			echo '<span class="label label-info"> <i class="fa fa-arrow-up"></i>'.$record['version'].'</span>&nbsp;';
+			echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
+		break;
+		default:
 			echo '<span class="label label-default">'.$record['version'].'</span> ';
-		}
 	}
 
 	/* Actions */
 	theme::table_row('text-center');
 	echo '<nobr>';
-	
-	/*
-	(array)$record['required_error']
-	(array)$record['package_error']
-	(array)$record['composer_error']
-	*/
-	
-	/* show error icon /!\ */
-	$errors = array_merge_recursive((array)$record['package_error'],(array)$record['composer_error']);
-	$has_errors = (count($errors) > 0);
-	
-	$is_required = (count((array)$record['required_error']) > 0);
 
-	if ($has_errors) {
-		echo '<a href="'.$controller_path.'/details/'.$url_name.'" class="btn btn-xs btn-primary"><i class="fa fa-question-circle"></i></a> ';
+	if ($record['has_errors']) {
+		echo '<a href="'.$controller_path.'/details/'.$record['url_name'].'" class="btn btn-xs btn-primary"><i class="fa fa-question-circle"></i></a> ';
 	}
-	
+
 	/* show install */
-	if (!$is_active && !$record['json_error'] && !$has_errors) {
-		echo '<a href="'.$this->controller_path.'/install/'.$url_name.'" class="btn btn-xs btn-default">install</a> ';
+	if ($record['button']['install']) {
+		echo '<a href="'.$this->controller_path.'/install/'.$record['url_name'].'" class="btn btn-xs btn-default">install</a> ';
 	}
 
 	/* show upgrade */
-	if ($record['upgrade'] && !$record['json_error'] && !$has_errors) {
-		echo '<a href="'.$this->controller_path.'/upgrade/'.$url_name.'" class="btn btn-xs btn-info">upgrade</a> ';
+	if ($record['button']['upgrade']) {
+		echo '<a href="'.$this->controller_path.'/upgrade/'.$record['url_name'].'" class="btn btn-xs btn-info">upgrade</a> ';
 	}
 
 	/* show uninstall */
-	if ($is_active && !$record['json_error'] && !$is_required) {
-		echo '<a href="'.$this->controller_path.'/uninstall/'.$url_name.'" data-name="'.$record['name'].'" class="btn btn-xs btn-warning js-uninstallable">Uninstall</a> ';
-	} elseif ($is_active && $is_required) {
-		echo '<a href="'.$controller_path.'/details/'.$url_name.'" class="btn btn-xs btn-primary"><i class="fa fa-question-circle"></i></a> ';
+	if ($record['button']['uninstall']) {
+		echo '<a href="'.$this->controller_path.'/uninstall/'.$record['url_name'].'" data-name="'.$record['name'].'" class="btn btn-xs btn-warning js-uninstallable">Uninstall</a> ';
+	}
+	
+	if ($record['button']['info']) {
+		echo '<a href="'.$controller_path.'/details/'.$record['url_name'].'" class="btn btn-xs btn-primary"><i class="fa fa-question-circle"></i></a> ';
 	}
 
 	/* show delete */
-	if (!$is_active && !$record['json_error'] && !$is_required) {
-		echo '<a href="'.$this->controller_path.'/delete/'.$url_name.'" data-name="'.$record['name'].'" class="btn btn-xs btn-danger js-remove"><i class="fa fa-trash"></i></a> ';
+	if ($record['button']['delete']) {
+		echo '<a href="'.$this->controller_path.'/delete/'.$record['url_name'].'" data-name="'.$record['name'].'" data-redirect="true" data-icon="trash" data-text="Are you sure you want to delete this package?" data-heading="Delete Record" class="btn btn-xs btn-danger js-o_dialog"><i class="fa fa-trash"></i></a> ';
 	}
 
 	echo '</nobr>';

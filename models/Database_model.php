@@ -229,6 +229,10 @@ abstract class Database_model extends MY_Model {
 			/* passed by ref */
 			parent::protect_attributes($data);
 
+			if ($primary_value === null) {
+				$primary_value = $data[$this->primary_key];
+			}
+
 			$result = $this->_database->where($this->primary_key, $primary_value)->set($data)->update($this->table);
 
 			$this->log_last_query();
@@ -338,6 +342,7 @@ abstract class Database_model extends MY_Model {
 		ci()->event->trigger('database.'.$this->object.'.before.exists',$method,$column,$field);
 
 		$row = $this->_database->query("SELECT COUNT(`".$column."`) AS `exists` FROM `".$this->table."` WHERE `".$column."` = ".$this->_database->escape($field)."")->row()->exists;
+
 		$this->log_last_query();
 
 		return ($row > 0) ? true : false;
@@ -392,16 +397,24 @@ abstract class Database_model extends MY_Model {
 			->select($column.','.$this->primary_key)
 			->from($this->table)
 			->where($column, $field)
-			->limit(1)
+			->limit(3) /* more than 1 but less than 4 */
 			->get();
 
-		if ($query->num_rows() > 0) {
-			if ($query->row()->{$this->primary_key} != $this->input->post($postkey)) {
-				return false;
-			}
+		/* how many did we find? */
+		$rows_found = $query->num_rows();
+
+		if ($rows_found == 0) {
+			/* nothing else named this exists */
+			return true;
 		}
 
-		return true;
+		if ($rows_found > 1) {
+			/* we found more than 1 so that is for sure a error! */
+			return false;
+		}
+
+		/* does id on the record match the current record from a previous save? */
+		return ($query->row()->{$this->primary_key} == $this->input->post($postkey));
 	}
 
 	public function build_sql_where_in($array) {
@@ -530,7 +543,7 @@ abstract class Database_model extends MY_Model {
 		if ($key == null || $name == null) {
 			$key = ($key) ? $key : $this->primary_key;
 			$name = '*';
-			$order_by = 'id';
+			$order_by = $this->primary_key;
 		}
 
 		$cache_key = $this->cache_prefix.'.'.$key.'.'.$name.'.catalog';
@@ -566,7 +579,7 @@ abstract class Database_model extends MY_Model {
 	}
 
 	/* default method called to produce the index view records */
-	public function index($orderby = null, $where = null) {
+	public function index($orderby = null,$where = null) {
 		/* did we get any? */
 		if ($orderby) {
 			$direction = 'ASC';
@@ -607,6 +620,28 @@ abstract class Database_model extends MY_Model {
 		$this->where_soft_delete();
 
 		return $this->_database->count($this->collection);
+	}
+
+	public function _seed($seeds,$count) {
+		$faker = Faker\Factory::create();
+
+		for ($i = 0; $i < $count; $i++) {
+			$data = [];
+
+			foreach ($seeds as $name=>$s) {
+				if (is_callable($s)) {
+					$data[$name] = $s($faker,$data);
+				} elseif(is_array($s)) {
+					$data[$name] = $s[mt_rand(0, count($s) - 1)];
+				} elseif(is_scalar($s)) {
+					$data[$name] = $s;
+				}
+			}
+
+			$this->insert($data,true);
+		}
+
+		return true;
 	}
 
 } /* end DB Model */

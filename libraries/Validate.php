@@ -227,7 +227,7 @@ class Validate {
 	public function errors_json($options = null) {
 		$options = ($options)  ? $options : $this->json_options;
 
-		return json_encode(['err' => true, 'errors' => $this->error_string('', '<br>'), 'errors_array' => $this->error_array()], $options);
+		return json_encode(['err' => (count($this->_error_array) > 0), 'errors' => $this->error_string('', '<br>'), 'errors_array' => $this->error_array()], $options);
 	}
 
 	/**
@@ -428,6 +428,7 @@ class Validate {
 	*
 	* @param	array	array of rules in CodeIgniter Format
 	* @param	array	mixed variables to be tested passed by reference so it can be modified by the method if needed
+	* @param	boolean strip any field which doesn't have a rule
 	* @return	boolean true on success false on failure
 	*/
 	public function multiple($rules, &$fields, $strip = false) {

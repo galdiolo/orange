@@ -126,12 +126,12 @@ class O_AdminController extends APP_GuiController {
 		$this->_get_data('insert');
 
 		if ($id = $this->{$this->controller_model}->insert($this->data, false)) {
-			$this->wallet->created($this->content_title, $this->controller_path);
+			$this->wallet->created($this->controller_title, $this->controller_path);
 		}
 
 		log_message('debug', $this->{$this->controller_model}->errors);
 
-		$this->wallet->failed($this->content_title, $this->controller_path);
+		$this->wallet->failed('Record Creation Error', $this->controller_path);
 	}
 
 	/* update */
@@ -173,12 +173,12 @@ class O_AdminController extends APP_GuiController {
 		$this->_get_data('update');
 
 		if ($this->{$this->controller_model}->update($this->data['id'], $this->data, false)) {
-			$this->wallet->updated($this->content_title, $this->controller_path);
+			$this->wallet->updated($this->controller_title, $this->controller_path);
 		}
 
 		log_message('debug', $this->{$this->controller_model}->errors);
 
-		$this->wallet->failed($this->content_title, $this->controller_path);
+		$this->wallet->failed('Record Update Error', $this->controller_path);
 	}
 
 	/* delete record */
@@ -211,7 +211,17 @@ class O_AdminController extends APP_GuiController {
 	}
 
 	/* get the form data for the model */
-	protected function _get_data($which = null) {
+	protected function _get_data($which = null,$model_name=null) {
+		if (is_object($model_name)) {
+			$model = $model_name;
+		} elseif (is_string($model_name)) {
+			$model = $this->$model_name;
+		} elseif (isset($this->controller_model)) {
+			$model = $this->{$this->controller_model};
+		} else {
+			show_error('Could not get input from model.');
+		}
+
 		/*
 		First check to see if this controllers $this->form array has a matching key to map the form values to the $this->data variable
 		Second check to see if the default model on this controller has a matching rule set to map the form values to the $this->data variable
@@ -223,8 +233,8 @@ class O_AdminController extends APP_GuiController {
 			$this->input->map($this->forms[$which], $this->data);
 
 		/* is it a rule set in the model? */
-		} elseif ($this->{$this->controller_model}->get_rule_set($which) !== NULL) {
-			$this->input->map($this->{$this->controller_model}->get_rule_set($which), $this->data);
+		} elseif ($model->get_rule_set($which) !== NULL) {
+			$this->input->map($model->get_rule_set($which), $this->data);
 
 		/* just get the entire form? */
 		} else {

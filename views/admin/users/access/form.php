@@ -3,7 +3,7 @@ theme::form_start($controller_path.'/'.$controller_action,$record->id);
 theme::header_start(ucfirst($controller_action).' '.$controller_title);
 theme::header_end();
 
-o::hr(0,12); /* 4px padding top and bottom */
+o::hr(0,12);
 
 theme::start_form_section('Group',true,3);
 $sorted = o::smart_model_list('o_access_model','group','group');

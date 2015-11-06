@@ -31,7 +31,7 @@ class MY_Model extends CI_Model {
 	protected $connection = null;
 
 	/* This model's default primary key or unique identifier. Used by the get(), update() and delete() functions. */
-	protected $primary_key = 'id';
+	public $primary_key = 'id';
 
 	/* Optionally skip the validation. Used in conjunction with skip_validation() to skip data validation for any future calls. */
 	protected $skip_validation = false;
@@ -269,6 +269,14 @@ class MY_Model extends CI_Model {
 		$this->rules[$name] = $rule;
 
 		return $this;
+	}
+
+	public function add_rules($rules) {
+		foreach ((array)$rules as $rule_name=>$r) {
+			$this->rules[$rule_name] = $r;
+		}
+		
+		return $this;	
 	}
 
 	/* get a single rule by field name */

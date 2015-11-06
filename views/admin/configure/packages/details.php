@@ -29,6 +29,10 @@ theme::header_end();
 		<td><span class="label label-<?=$type_map[$record['type']]?>"><?=$record['type'] ?></span></td>
 	</tr>
 	<tr>
+		<td>Priority</td>
+		<td><?=$record['priority'] ?> - <?=($record['priority'] > 49) ? 'low' : 'high' ?></td>
+	</tr>
+	<tr>
 		<td>Package Requires</td>
 		<td>
 			<?
@@ -121,4 +125,18 @@ theme::header_end();
 			<?php } ?>
 		</td>
 	</tr>
+
+	<tr>
+		<td>Command Line</td>
+		<td>
+			<?php
+			if ($record['cli']) {
+				foreach ($record['cli'] as $a=>$b) {
+					echo '<code>'.$a.'</code> '.$b.'<br>';
+				}
+			}
+			?>
+		</td>
+	</tr>
+
 </table>
