@@ -10,18 +10,7 @@
 		"email": "donmyers@projectorangebox.com"
 	}],
 	"require": {
-    "php": ">=5.5",
-		"codeigniter/framework": "*",
-		"oodle/krumo": "*",
-		"composer/composer": "1.0.*",
-		"orange/plugin_search_sort": "1.*.*",
-		"orange/theme_orange": "1.*.*",
-		"orange/plugin_combobox": "1.*.*",
-		"orange/plugin_flash_msg": "1.*.*",
-		"orange/plugin_nestable": "1.*.*",
-		"orange/plugin_o_dialog": "1.*.*",
-		"orange/plugin_o_validate_form": "1.*.*",
-		"orange/plugin_select3": "1.*.*"
+    "php": ">=5.5"
 	},
 	"orange": {
 		"version": "1.0.0",
