@@ -1,7 +1,7 @@
 <?php
 theme::header_start('Packages','Interface to manage packages.');
 Plugin_search_sort::field();
-theme::header_button('Customize Load Order',$controller_path.'/load-order','sort-amount-asc');
+//theme::header_button('Customize Load Order',$controller_path.'/load-order','sort-amount-asc');
 o::view_event($controller_path,'header.buttons');
 theme::header_end();
 
@@ -43,9 +43,9 @@ foreach ($records as $name=>$record) {
 	/* Version */
 	theme::table_row('text-center');
 	/* show upgrade version and up arrow? */
-	switch ($record['version_display']) {
-		case 1: /* less than */
-			echo '<span class="label label-info"><i class="fa fa-exclamation-triangle"></i> '.$record['version'].'</span>&nbsp;';
+		switch ($record['version_display']) {
+		case 4: /* less than */
+			echo '<span class="label label-danger"><i class="fa fa-exclamation-triangle"></i> '.$record['composer_version'].'</span>&nbsp;';
 			echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
 		break;
 		case 2:
@@ -53,7 +53,7 @@ foreach ($records as $name=>$record) {
 			echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
 		break;
 		case 3: /* greater than */
-			echo '<span class="label label-info"> <i class="fa fa-arrow-up"></i>'.$record['version'].'</span>&nbsp;';
+			echo '<span class="label label-info"> <i class="fa fa-arrow-up"></i>'.$record['composer_version'].'</span>&nbsp;';
 			echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
 		break;
 		default:

@@ -11,8 +11,14 @@
 	}],
 	"require": {
 		"php": ">=5.5",
-		"projectorangebox/theme_orange": "dev-master",
-		"projectorangebox/plugin_select3": "dev-master"
+		"projectorangebox/plugin_combobox": "dev-master",
+		"projectorangebox/plugin_flash_msg": "dev-master",
+		"projectorangebox/plugin_nestable": "dev-master",
+		"projectorangebox/plugin_o_dialog": "dev-master",
+		"projectorangebox/plugin_o_validate_form": "dev-master",
+		"projectorangebox/plugin_search_sort": "dev-master",
+		"projectorangebox/plugin_select3": "dev-master",
+		"projectorangebox/theme_orange": "dev-master"
 	},
 	"orange": {
 		"version": "1.0.0",

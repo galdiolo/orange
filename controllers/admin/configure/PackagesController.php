@@ -57,14 +57,14 @@ class packagesController extends APP_AdminController {
 	}
 
 	public function detailsAction($package) {
-		$folder = hex2bin($package);
+		$package = hex2bin($package);
 
 		$this->page
 			->data([
 				'type_map'=>$this->type_map,
-				'record'=>$this->package_manager->record($folder),
-				'help'=>file_exists(ROOTPATH.'/packages/'.$folder.'/support/help/index.html'),
-				'help_folder'=>bin2hex(basename($folder)),
+				'record'=>$this->package_manager->record($package),
+/*				'help'=>file_exists(ROOTPATH.'/packages/'.$folder.'/support/help/index.html'), */
+/*				'help_folder'=>bin2hex(basename($folder)), */
 			])
 			->build();
 	}

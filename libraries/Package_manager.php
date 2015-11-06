@@ -17,6 +17,7 @@ class package_manager {
 		ci()->load->library(['migration','package/package_migration','package/package_migration_manager','package/package_requirements']);
 		ci()->load->model('o_packages_model');
 
+		/* load for migrations */
 		ci()->load->dbforge();
 
 		$this->o_packages_model = &ci()->o_packages_model;
@@ -24,7 +25,7 @@ class package_manager {
 		$this->package_requirements = &ci()->package_requirements;
 
 		$this->prepare();
-		
+
 		/* uncomment if you need to fill your database with all packages */
 		//$this->init_fill_db();
 	}
@@ -40,60 +41,83 @@ class package_manager {
 
 		$packages = $this->rglob(ROOTPATH.'/packages','composer.json');
 
-		$this->_prepare($packages);
+		/* did we even get any? */
+		if (count($packages)) {
+			$this->_prepare($packages);
+		}
 
 		$vendors = $this->rglob(ROOTPATH.'/vendor','composer.json');
 
-		$this->_prepare($vendors);
+		if (count($vendors)) {
+			$this->_prepare($vendors);
+		}
 	}
 
 	protected function _prepare($packages_info) {
-
 		foreach ($packages_info as $info) {
-			$json_config = $this->load_info_json($info);
+			$composer_config = $this->load_info_json($info);
 
-			if ($json_config !== false) {
-				$full_path = $key = str_replace(ROOTPATH,'',dirname($info));
-				$dir_name = basename(dirname($info));
+			if (is_array($composer_config)) {
+				$key = trim(str_replace(ROOTPATH,'',dirname($info)));
 
 				$db_config = $this->o_packages_model->read($key);
 
-				$db_config['db_priority'] = $db_config['priority'];
-
-				$starting_version = ($db_config['migration_version']) ? $db_config['migration_version'] : '0.0.0';
-
-				$migration_files = $this->package_migration_manager->get_migrations_between($key,$starting_version,$json_config['composer_version']);
-
 				$extra = [
-					'full_path'=>$full_path,
-					'folder'=>$dir_name,
-					'migrations'=>$migration_files,
-					'has_migrations'=>(count($migration_files) > 0),
-					'is_active'=>isset($db_config['folder_name']),
-					'version_check'=>$this->package_migration_manager->version_check($db_config['migration_version'],$json_config['composer_version'])
+					'db_priority'=>$db_config['priority'],
+					'full_path'=>$key,
+					'human'=>str_replace('/',' ',$key),
+					'is_active'=>(($db_config['is_active'] == 1) ? true : false),
+					'version_check'=>$this->package_migration_manager->version_check($db_config['migration_version'],$composer_config['composer_version']),
+					'url_name'=>bin2hex($key),
 				];
 
-				/* combined what we have so far */
-				$config = array_merge($json_config,$db_config,$extra);
-
-				/* update packages that don't have migrations */
-				if ($config['has_migrations'] == false && $config['version_check'] == 3) {
-					/* no migrations - just update the veresion since the code is already up to date */
-					$config['migration_version'] = $config['version'];
-					$config['version_check'] = 2;
-
-					$this->o_packages_model->write_new_version($config['folder'],$config['version']);
-				}
-
-				$config['url_name'] = bin2hex($config['full_path']);
-
-				$this->packages[$key] = $config;
+				$this->packages[$key] = array_merge((array)$composer_config,(array)$db_config,(array)$extra);
 			}
 		}
 
 		/* calculate the package requirements - passed by ref. */
 		$this->package_requirements->process($this->packages);
 
+		$this->figure_migrations();
+
+		$this->figure_buttons();
+
+		/* check out folders */
+		$msgs = false;
+
+		if (!is_writable($this->autoload)) {
+			$msgs[] = 'autoload config is not writable';
+		}
+
+		if (!is_writable($this->routes)) {
+			$msgs[] = 'routes config is not writable';
+		}
+
+		$this->messages = ($msgs === false) ? false : implode('<br>',$msgs);
+	}
+
+	protected function figure_migrations() {
+		foreach ($this->packages as $key=>$config) {
+			/* starting version for migrations */
+			$starting_version = ($config['migration_version']) ? $config['migration_version'] : '0.0.0';
+
+			$migration_files = $this->package_migration_manager->get_migrations_between($key,$starting_version,$composer_config['composer_version']);
+
+			$this->packages[$key]['migrations'] = $migration_files;
+			$this->packages[$key]['has_migrations'] = (count($migration_files) > 0);
+
+			/* update packages that don't have migrations */
+			if ($this->packages[$key]['has_migrations'] == false && $this->packages[$key]['version_check'] == 3) {
+				/* no migrations - just update the veresion since the code is already up to date */
+				$this->packages[$key]['migration_version'] = $this->packages[$key]['composer_version'];
+				$this->packages[$key]['version_check'] = 2;
+
+				$this->o_packages_model->write_new_version($this->packages[$key]['full_path'],$this->packages[$key]['composer_version']);
+			}
+		}
+	}
+
+	protected function figure_buttons() {
 		/*
 		finally calculate the buttons & version display for the view
 		Should this be done in the first loop?
@@ -102,7 +126,7 @@ class package_manager {
 
 		foreach ($this->packages as $key=>$config) {
 			/* calc which buttons to show so it's not done in the view (where it doesn't belong) */
-			if (!$config['has_errors']) {
+			if (!$config['has_error']) {
 				$config['button']['install'] = (!$config['is_active']);
 				$config['button']['upgrade'] = ($config['version_check'] == 3 && $config['is_active']);
 				$config['button']['uninstall'] = ($config['is_active'] && !$config['is_required']);
@@ -144,19 +168,6 @@ class package_manager {
 			/* ok now put this in the array as well! */
 			$this->packages[$key] = $config;
 		}
-
-		/* check out folders */
-		$msgs = false;
-
-		if (!is_writable($this->autoload)) {
-			$msgs[] = 'autoload config is not writable';
-		}
-
-		if (!is_writable($this->routes)) {
-			$msgs[] = 'routes config is not writable';
-		}
-
-		$this->messages = ($msgs === false) ? false : implode('<br>',$msgs);
 	}
 
 	public function records() {
@@ -178,7 +189,7 @@ class package_manager {
 		$this->package_migration_manager->run_migrations($config,'up');
 
 		/* add to db */
-		$this->o_packages_model->write($package,$config['version'],true,$config['priority']);
+		$this->o_packages_model->write($package,$config['composer_version'],true,$config['priority']);
 
 		$this->create_autoload();
 		$this->create_onload();
@@ -192,7 +203,7 @@ class package_manager {
 		/* migrations up */
 		$this->package_migration_manager->run_migrations($config,'up');
 
-		$this->o_packages_model->write_new_version($package,$config['version']);
+		$this->o_packages_model->write_new_version($package,$config['composer_version']);
 		$this->o_packages_model->write_new_priority($package,$config['priority'],null,false);
 
 		$this->create_autoload();
@@ -365,7 +376,7 @@ class package_manager {
 
 		return $files;
 	}
-	
+
 	protected function init_fill_db() {
 		foreach ($this->packages as $p) {
 			$this->o_packages_model->write($p['full_path'],$p['composer_version'],true,$p['composer_priority']);
