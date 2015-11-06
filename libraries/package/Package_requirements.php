@@ -6,11 +6,13 @@ class package_requirements {
 	protected $key;
 
 	public function process(&$packages) {
+		/* make local ref */
 		$this->packages = &$packages;
 		
 		/* load composer json */
 		$composer_json = json_decode(file_get_contents(ROOTPATH.'/composer.json'));
-
+		
+		/* get the required objects from composer */
 		$this->composer = (array)$composer_json->require;
 		
 		/* test the packages */
@@ -24,12 +26,10 @@ class package_requirements {
 			/* each package starts with not being required */
 			$this->packages[$this->key]['is_required'] = false;
 
-			$this->check_composer($package);
+			//$this->check_composer($package);
 			$this->check_packages($package);
 			$this->allow_uninstall($package);
 		}
-		
-		//kd($this->packages);
 	}
 
 	public function check_composer($package) {
