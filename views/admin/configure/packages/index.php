@@ -16,6 +16,8 @@ if ($errors) {
 
 theme::table_start(['Name','Type'=>'text-center','Description','Version'=>'text-center','Actions'=>'text-center'],['tbody_class'=>'searchable','class'=>'sortable'],$records);
 
+//kd($records);
+
 foreach ($records as $name=>$record) {
 	//k($name);
 	//k($record);
@@ -74,8 +76,9 @@ foreach ($records as $name=>$record) {
 	/* Actions */
 	theme::table_row('text-center');
 	echo '<nobr>';
-
-	if ($record['has_errors']) {
+	
+	/* show info buton? error or otherwise */
+	if ($record['button']['info']) {
 		echo '<a href="'.$controller_path.'/details/'.$record['url_name'].'" class="btn btn-xs btn-primary"><i class="fa fa-question-circle"></i></a> ';
 	}
 
@@ -94,10 +97,6 @@ foreach ($records as $name=>$record) {
 		echo '<a href="'.$this->controller_path.'/uninstall/'.$record['url_name'].'" data-name="'.$record['name'].'" class="btn btn-xs btn-warning js-uninstallable">Uninstall</a> ';
 	}
 	
-	if ($record['button']['info']) {
-		echo '<a href="'.$controller_path.'/details/'.$record['url_name'].'" class="btn btn-xs btn-primary"><i class="fa fa-question-circle"></i></a> ';
-	}
-
 	/* show delete */
 	if ($record['button']['delete']) {
 		echo '<a href="'.$this->controller_path.'/delete/'.$record['url_name'].'" data-name="'.$record['name'].'" data-redirect="true" data-icon="trash" data-text="Are you sure you want to delete this package?" data-heading="Delete Record" class="btn btn-xs btn-danger js-o_dialog"><i class="fa fa-trash"></i></a> ';

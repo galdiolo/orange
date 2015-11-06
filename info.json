@@ -5,14 +5,14 @@
   "type": "core",
   "priority": 95,
   "requires": {
+		"plugin_search_sort": "1.*.*",
+		"theme_orange": "1.*.*",
 		"plugin_combobox": "1.*.*",
 		"plugin_flash_msg": "1.*.*",
 		"plugin_nestable": "1.*.*",
 		"plugin_o_dialog": "1.*.*",
 		"plugin_o_validate_form": "1.*.*",
-		"plugin_select3": "1.*.*",
-		"plugin_search_sort": "1.*.*",
-		"theme_orange": "1.*.*"
+		"plugin_select3": "1.*.*"
   },
   "requires-composer": {
 		"codeigniter/framework": "*",

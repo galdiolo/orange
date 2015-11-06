@@ -23,7 +23,7 @@ class orangeController extends APP_AdminController {
 		}
 
 		$this->page
-			->css($this->page->theme_path().'/assets/css/auth/login.min.css')
+			->css('/themes/orange/assets/css/auth/login.min.css')
 			->build($this->controller_path.'/index');
 	}
 

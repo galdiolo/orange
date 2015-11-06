@@ -9,6 +9,9 @@ class package_manager {
 	public $o_packages_model;
 	public $package_migration_manager;
 	public $package_requirements;
+	public $autoload = ROOTPATH.'/application/config/autoload.php';
+	public $routes = ROOTPATH.'/application/config/routes.php';
+	public $allow_delete = false;
 
 	public function __construct() {
 		ci()->load->library(['migration','package/package_migration','package/package_migration_manager','package/package_requirements']);
@@ -28,19 +31,28 @@ class package_manager {
 	based on json files.
 	*/
 	public function prepare() {
-		$packages_folder = ROOTPATH.'/packages';
-		$packages_folders = glob($packages_folder.'/*',GLOB_ONLYDIR);
-
-		include ROOTPATH.'/application/config/autoload.php';
+		include $this->autoload;
 
 		$this->config_packages = $autoload['packages'];
+	
+		$packages = $this->rglob(ROOTPATH.'/packages','info.json');
+		
+		$this->_prepare($packages);
 
-		foreach ($packages_folders as $package) {
-			$dir_name = basename($package);
+		$vendors = $this->rglob(ROOTPATH.'/vendor','info.json');
 
-			$json_config = $this->load_info_json($package);
+		$this->_prepare($vendors);
+	}
+	
+	protected function _prepare($packages_info) {
 
-			$db_config = $this->o_packages_model->read($dir_name);
+		foreach ($packages_info as $info) {
+			$json_config = $this->load_info_json($info);
+
+			$full_path = $key = str_replace(ROOTPATH,'',dirname($info));
+			$dir_name = basename(dirname($info));
+
+			$db_config = $this->o_packages_model->read($key);
 
 			$db_config['db_priority'] = $db_config['priority'];
 
@@ -49,9 +61,10 @@ class package_manager {
 			$migration_files = $this->package_migration_manager->get_migrations_between($dir_name,$starting_version,$json_config['version']);
 
 			$extra = [
+				'full_path'=>$full_path,
+				'folder'=>$dir_name,
 				'migrations'=>$migration_files,
 				'has_migrations'=>(count($migration_files) > 0),
-				'folder'=>$dir_name,
 				'is_active'=>isset($db_config['folder_name']),
 				'version_check'=>$this->package_migration_manager->version_check($db_config['migration_version'],$json_config['version'])
 			];
@@ -68,11 +81,12 @@ class package_manager {
 				$this->o_packages_model->write_new_version($config['folder'],$config['version']);
 			}
 
-			$config['url_name'] = bin2hex($config['folder']);
+			$config['url_name'] = bin2hex($config['full_path']);
 
-			$this->packages[$dir_name] = $config;
+			$this->packages[$key] = $config;
 		}
-
+		
+		/* calculate the package requirements - passed by ref. */
 		$this->package_requirements->process($this->packages);
 
 		/*
@@ -82,16 +96,20 @@ class package_manager {
 		*/
 	
 		foreach ($this->packages as $key=>$config) {
-			$config['is_required'] = (count((array)$config['required_error']) > 0);
-			$errors = array_merge_recursive((array)$config['package_error'],(array)$config['composer_error']);
-			$config['has_errors'] = (count($errors) > 0);
-
 			/* calc which buttons to show so it's not done in the view (where it doesn't belong) */
-			$config['button']['install'] = (!$config['is_active'] && !$config['json_error'] && !$config['has_errors']);
-			$config['button']['upgrade'] = ($config['version_check'] == 3 && $config['is_active'] && !$config['json_error'] && !$config['has_errors']);
-			$config['button']['uninstall'] = ($config['is_active'] && !$config['json_error'] && !$config['is_required']);
-			$config['button']['delete'] = (!$config['is_active'] && !$config['json_error'] && !$config['is_required']);
-			$config['button']['info'] = ($config['is_active'] && !$config['json_error'] && $config['is_required']);
+			if (!$config['has_errors']) {
+				$config['button']['install'] = (!$config['is_active']);
+				$config['button']['upgrade'] = ($config['version_check'] == 3 && $config['is_active']);
+				$config['button']['uninstall'] = ($config['is_active'] && !$config['is_required']);
+				
+				if ($this->allow_delete) {
+					$config['button']['delete'] = (!$config['is_active'] && !$config['is_required']);
+				} else {
+					$config['button']['delete'] = false;
+				}
+			} else {
+				$config['button']['info'] = true;
+			}
 
 			/* calc version display */
 			$config['version_display'] = 0;
@@ -122,13 +140,14 @@ class package_manager {
 			$this->packages[$key] = $config;
 		}
 
+		/* check out folders */
 		$msgs = false;
 
-		if (!is_writable(ROOTPATH.'/application/config/autoload.php')) {
+		if (!is_writable($this->autoload)) {
 			$msgs[] = 'autoload config is not writable';
 		}
 
-		if (!is_writable(ROOTPATH.'/application/config/routes.php')) {
+		if (!is_writable($this->routes)) {
 			$msgs[] = 'routes config is not writable';
 		}
 
@@ -154,9 +173,9 @@ class package_manager {
 		$this->package_migration_manager->run_migrations($config,'up');
 
 		/* add to db */
-		$this->o_packages_model->write($config['version'],$package,true,$config['priority']);
+		$this->o_packages_model->write($package,$config['version'],true,$config['priority']);
 
-		$this->packages_config();
+		$this->create_autoload();
 		$this->create_onload();
 
 		return true;
@@ -171,7 +190,7 @@ class package_manager {
 		$this->o_packages_model->write_new_version($package,$config['version']);
 		$this->o_packages_model->write_new_priority($package,$config['priority'],null,false);
 
-		$this->packages_config();
+		$this->create_autoload();
 		$this->create_onload();
 
 		return true;
@@ -186,13 +205,17 @@ class package_manager {
 		/* deactive package autoload */
 		$this->o_packages_model->activate($package,false);
 
-		$this->packages_config();
+		$this->create_autoload();
 		$this->create_onload();
 
 		return true;
 	}
 
 	public function delete($package) {
+		if (!$this->allow_delete) {
+			show_error('Delete not allowed.');
+		}
+		
 		/* delete the entire folder */
 		ci()->load->helper('directory');
 
@@ -200,7 +223,7 @@ class package_manager {
 
 		$path = ROOTPATH.'/packages/'.$package;
 
-		$this->packages_config();
+		$this->create_autoload();
 		$this->create_onload();
 
 		return rmdirr($path);
@@ -238,9 +261,7 @@ class package_manager {
 		return $this->o_packages_model->write_new_priority($folder_name,$priority,$overridden,$force);
 	}
 
-	public function load_info_json($folder) {
-		$json_file = $folder.'/info.json';
-
+	public function load_info_json($json_file) {
 		$error = false;
 
 		if (!file_exists($json_file)) {
@@ -286,63 +307,23 @@ class package_manager {
 
 	/* wrapper for loader function */
 	public function create_onload() {
-		ci()->load->create_onload();
+		return ci()->load->create_onload();
 	}
 
 	/* write autoload.php */
-	public function packages_config() {
-		$filepath = ROOTPATH.'/application/config/autoload.php';
-
-		$autoload_packages = $this->o_packages_model->active();
-
-		$package_text = '$autoload[\'packages\'] = array('.chr(10);
-
-		$package_text .= chr(9).'/* updated: '.date('Y-m-d-H:i:s').' */'.chr(10);
-
-		// 	ROOTPATH.'/packages/theme_zerotype',
-		foreach ($autoload_packages as $ap) {
-			/* let's make sure the packages is still there! */
-			if (is_dir(ROOTPATH.'/packages/'.$ap->folder_name)) {
-				$package_text .= chr(9).'ROOTPATH.\'/packages/'.$ap->folder_name."',".chr(10);
-			}
-		}
-
-		$package_text .= ');';
-
-		$current_content = file_get_contents($filepath);
-
-		$re = "/^\\s*\\\$autoload\\['packages']\\s*=\\s*array\\s*\\((.+?)\\);/ms";
-
-		preg_match_all($re,$current_content,$matches);
-
-		if (!isset($matches[0][0])) {
-			show_error('Regular Expression Error: packages_config->autoload.php');
-		}
-
-		$content = str_replace($matches[0][0],$package_text,$current_content);
-
-		return atomic_file_put_contents($filepath,$content);
+	public function create_autoload() {
+		return ci()->load->create_autoload();
 	}
-
-	/* change route file */
-	public function route_config($from,$to,$mode) {
-		$filepath = ROOTPATH.'/application/config/routes.php';
-
-		require $filepath;
-
-		/* remove it if it's already there */
-		foreach ($route as $key=>$val) {
-			if ($key == $from && $val == $to) {
-				unset($route[$key]);
-			}
+	
+	protected function rglob($path='',$pattern='*',$flags=0) {
+		$paths = glob($path.'*', GLOB_MARK|GLOB_ONLYDIR|GLOB_NOSORT);
+		$files = glob($path.$pattern, $flags);
+		
+		foreach ($paths as $path) {
+			$files=array_merge($files,$this->rglob($path, $pattern, $flags));
 		}
-
-		/* add mode it? */
-		if ($mode == 'add' && !isset($route[$from])) {
-			$route[$from] = $to;
-		}
-
-		return file_put_contents($filepath,'<?php '.chr(10).$this->config_header.'$route = '.var_export($route,true).';');
+		
+		return $files;
 	}
 
 } /* end class */

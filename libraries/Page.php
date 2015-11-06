@@ -97,6 +97,17 @@ class Page {
 		return $this;
 	}
 
+	public function icons($image_path=null) {
+		$html = '';
+
+		if ($image_path) {
+			$html .= '<link rel="icon" type="image/x-icon" href="'.$image_path.'">';
+			$html .= '<link rel="apple-touch-icon" href="'.$image_path.'">';
+		}
+		
+		$this->_data_core('page_icons',$html);
+	}
+
 	/*
 	change theme
 	$this->page->theme('mytheme');
@@ -109,13 +120,6 @@ class Page {
 
 		$name = ltrim($name,'/');
 
-		/* does this theme even exist? */
-		if (!$theme_path = realpath(ROOTPATH.'/packages/'.$name)) {
-			if (!$theme_path = realpath(ROOTPATH.'/vendor/'.$name)) {
-				show_error('Cannot locate theme '.$name);
-			}
-		}
-
 		$this->short_name = substr(basename($name),6);
 
 		/* 1 theme at a time so make this our new theme */
@@ -123,6 +127,18 @@ class Page {
 
 		/* add it to the body class */
 		$this->body_class($this->short_name);
+
+		/* if theme is "default" then just bail here */
+		if ($name == 'default') {
+			return $this;
+		}
+
+		/* does this theme even exist? */
+		if (!$theme_path = realpath(ROOTPATH.'/packages/'.$name)) {
+			if (!$theme_path = realpath(ROOTPATH.'/vendor/'.$name)) {
+				show_error('Cannot locate theme '.$name);
+			}
+		}
 
 		/* add it as a CI package */
 		$this->ci_load->theme($theme_path);

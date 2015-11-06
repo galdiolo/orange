@@ -7,8 +7,7 @@
 		<meta name="description" content="<?=$meta_description ?>">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<?=$page_meta ?>
-		<link rel="icon" type="image/x-icon" href="<?=$theme_path ?>/assets/images/box.png">
-		<link rel="apple-touch-icon" href="<?=$theme_path ?>/assets/images/box.png">
+		<?=$page_icons ?>
 		<?=$page_css ?>
 		<style><?=$page_style ?></style>
 		<?=$page_head ?>

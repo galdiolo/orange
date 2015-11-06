@@ -51,11 +51,11 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 	}
 
 	/* is this a orange extended class? these are only in the orange package folder */
-	if (file_exists(ROOTPATH.'/packages/orange/'.$directory.'/'.config_item('subclass_prefix').$class.'.php')) {
+	if (file_exists(ROOTPATH.'/vendor/orange/orange/'.$directory.'/'.config_item('subclass_prefix').$class.'.php')) {
 		$name = config_item('subclass_prefix').$class;
 
 		if (class_exists($name, false) === false) {
-			require_once ROOTPATH.'/packages/orange/'.$directory.'/'.$name.'.php';
+			require_once ROOTPATH.'/vendor/orange/orange/'.$directory.'/'.$name.'.php';
 		}
 	}
 
@@ -87,7 +87,7 @@ function codeigniter_autoload($class) {
 
 		return true;
 	} elseif ($class == 'Database_model') { /* abstract class */
-		include_once ROOTPATH.'/packages/orange/models/Database_model.php';
+		include_once ROOTPATH.'/vendor/orange/orange/models/Database_model.php';
 
 		return true;
 	} elseif (substr($class, -6) == '_model') { /* is it a CI model? */

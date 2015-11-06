@@ -3,6 +3,7 @@
 class package_requirements {
 	protected $packages;
 	protected $composer;
+	protected $key;
 
 	public function process(&$packages) {
 		$this->packages = &$packages;
@@ -13,22 +14,35 @@ class package_requirements {
 		$this->composer = (array)$composer_json->require;
 		
 		/* test the packages */
-		foreach ($packages as $package) {
+		foreach ($packages as $key=>$package) {
+			/* active record index */
+			$this->key = $key;
+		
+			/* each package starts with no errors */
+			$this->packages[$this->key]['has_errors'] = false;
+			
+			/* each package starts with not being required */
+			$this->packages[$this->key]['is_required'] = false;
+
 			$this->check_composer($package);
 			$this->check_packages($package);
 			$this->allow_uninstall($package);
 		}
+		
+		//kd($this->packages);
 	}
 
 	public function check_composer($package) {
 		$composer_requirements = $package['requires-composer'];
+		
+		/* we need the internal folder name? !todo make namespaced path */
 		$folder = $package['folder'];
 
 		foreach ($composer_requirements as $name=>$looking_for_version) {
 
 			if (!array_key_exists($name,$this->composer)) {
-				$this->add_issue($folder,'composer_error','Required composer package "'.$name.' v'.$looking_for_version.'" is not loaded.');
-				$this->add_issue($folder,'composer_error_raw',$name.' v'.$looking_for_version);
+				$this->add_issue('composer_error','Required composer package "'.$name.' v'.$looking_for_version.'" is not loaded.');
+				$this->add_issue('composer_error_raw',$name.' v'.$looking_for_version);
 			} else {
 
 				/*
@@ -41,8 +55,8 @@ class package_requirements {
 				}
 
 				if (!ci()->package_migration_manager->version_in_range($composer_version,$looking_for_version)) {
-					$this->add_issue($folder,'composer_error','Required composer package "'.$name.' v'.$looking_for_version.'" is not loaded.');
-					$this->add_issue($folder,'composer_error_raw',$name.' v'.$looking_for_version.' - found v'.$composer_version);
+					$this->add_issue('composer_error','Required composer package "'.$name.' v'.$looking_for_version.'" is not loaded.');
+					$this->add_issue('composer_error_raw',$name.' v'.$looking_for_version.' - found v'.$composer_version);
 				}
 			}
 		}
@@ -52,18 +66,19 @@ class package_requirements {
 
 	public function check_packages($package) {
 		$package_requirements = $package['requires'];
+
 		$folder = $package['folder'];
 
 		foreach ($package_requirements as $name=>$looking_for_version) {
-			if ($this->packages[$name]['is_active'] != true) {
-				$this->add_issue($folder,'package_error','Required package "'.$name.' v'.$looking_for_version.'" is not loaded.');
-				$this->add_issue($folder,'package_error_raw',$name.' v'.$looking_for_version);
+			if ($this->packages[$this->key]['is_active'] != true) {
+				$this->add_issue('package_error','Required package "'.$name.' v'.$looking_for_version.'" is not loaded.');
+				$this->add_issue('package_error_raw',$name.' v'.$looking_for_version);
 			} else {
-				$package_version = $this->packages[$folder]['version'];
+				$package_version = $this->packages[$this->key]['version'];
 
 				if (!ci()->package_migration_manager->version_in_range($package_version,$looking_for_version)) {
-					$this->add_issue($folder,'package_error','Required package "'.$name.' v'.$looking_for_version.'" is not loaded.');
-					$this->add_issue($folder,'package_error_raw',$name.' v'.$looking_for_version.' - found v'.$package_version);
+					$this->add_issue('package_error','Required package "'.$name.' v'.$looking_for_version.'" is not loaded.');
+					$this->add_issue('package_error_raw',$name.' v'.$looking_for_version.' - found v'.$package_version);
 				}
 			}
 		}
@@ -73,24 +88,28 @@ class package_requirements {
 
 	/* Does any other package require this packages? */
 	public function allow_uninstall($package) {
-		$folder = $package['folder'];
+		/* get the current package internal name (folder name) */
+		$folder_name = $package['folder'];
 
+		/* now loop over all the packages to determine if it is required */
 		foreach ($this->packages as $package) {
-			if ($package['is_active']) {
-				foreach ((array)$package['requires'] as $name=>$version) {
-					if ($name == $folder) {
-						$this->add_issue($folder,'required_error','This package is required by "'.$package['folder'].'" package');
-						$this->add_issue($folder,'required_error_raw',$package['folder']);
-		
-						break;
-					}
+			/* is the package active? */
+			if ($package['is_active'] && is_array($package['requires'])) {
+				if (array_key_exists($folder_name,$package['requires'])) {
+					$this->add_issue('required_error','This package is required by "'.$folder_name.'" package');
+					$this->add_issue('required_error_raw',$folder_name);
+
+					$this->packages[$this->key]['is_required'] = true;
 				}
 			}
 		}
 	}
 
-	public function add_issue($package_name,$key,$msg) {
-		$this->packages[$package_name][$key][] = $msg;
+	public function add_issue($key,$msg) {
+		$this->packages[$this->key][$key][$msg] = $msg;
+		
+		/* now this package has a issue */
+		$this->packages[$this->key]['has_errors'] = true;
 	}
 
 } /* end class */
