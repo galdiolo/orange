@@ -5,7 +5,7 @@
  * Partial Caching library for CodeIgniter
  *
  * @category	Libraries
- * @author		Phil Sturgeon, Heavily Modified by Don Myers
+ * @author		Phil Sturgeon, Modified by Don Myers
  * @link		http://philsturgeon.co.uk/code/codeigniter-cache
  * @license		MIT
  * @version		2.1
@@ -46,7 +46,6 @@ add cache dependencies array of additional calls
 $this->cache->add_dependencies(['Categories_model'=>['method',['user_name','name']]])->model('blog_m', 'getPosts', array($category_id, 'live'), 3600);
 
 */
-
 class O_cache {
 	protected $ci;
 	protected $ci_load;
@@ -157,37 +156,7 @@ class O_cache {
 			$this->_filename = $filename;
 		}
 
-		/* Check directory permissions */
-		if (!is_dir($this->_path) OR ! is_really_writable($this->_path)) {
-			return FALSE;
-		}
-
-		/* Build the file path */
-		$filepath = $this->_path.strtolower($this->_filename).'.cache';
-
-		/* Check if the cache exists, if not return FALSE */
-		if (!@file_exists($filepath)) {
-			return FALSE;
-		}
-
-		/* Check if the cache can be opened, if not return FALSE */
-		if (!$fp = @fopen($filepath, FOPEN_READ)) {
-			return FALSE;
-		}
-
-		/* Lock the cache */
-		flock($fp, LOCK_SH);
-
-		/* If the file contains data return it, otherwise return NULL */
-		if (filesize($filepath) > 0) {
-			$this->_contents = unserialize(fread($fp, filesize($filepath)));
-		} else {
-			$this->_contents = NULL;
-		}
-
-		/* Unlock the cache and close the file */
-		flock($fp, LOCK_UN);
-		fclose($fp);
+		$this->_contents = ci()->cache->get(md5($filepath));
 
 		/* Check cache expiration, delete and return FALSE when expired */
 		if ($use_expires && !empty($this->_contents['__cache_expires']) && $this->_contents['__cache_expires'] < time()) {
@@ -251,35 +220,8 @@ class O_cache {
 		/* can be easily removed from the output */
 		$this->_contents = array('__cache_contents' => $this->_contents);
 
-		/* Check directory permissions */
-		if (!is_dir($this->_path) OR ! is_really_writable($this->_path)) {
-			return;
-		}
-
-		/* check if filename contains dirs */
-		$subdirs = explode(DIRECTORY_SEPARATOR, $this->_filename);
-
-		if (count($subdirs) > 1) {
-			array_pop($subdirs);
-			$test_path = $this->_path.implode(DIRECTORY_SEPARATOR, $subdirs);
-
-			/* check if specified subdir exists */
-			if (!@file_exists($test_path)) {
-				/* create non existing dirs, asumes PHP5 */
-				if (!@mkdir($test_path, DIR_WRITE_MODE, TRUE)) {
-					return FALSE;
-				}
-			}
-		}
-
 		/* Set the path to the cachefile which is to be created */
 		$cache_path = $this->_path.strtolower($this->_filename).'.cache';
-
-		/* Open the file and log if an error occures */
-		if (!$fp = @fopen($cache_path, FOPEN_WRITE_CREATE_DESTRUCTIVE)) {
-			log_message('error', 'Unable to write Cache file: '.$cache_path);
-			return;
-		}
 
 		/* Meta variables */
 		$this->_contents['__cache_created'] = time();
@@ -290,22 +232,14 @@ class O_cache {
 		/* Add expires variable if its set */
 		if (!empty($this->_expires)) {
 			$this->_contents['__cache_expires'] = $this->_expires + time();
+			$expires = $this->_expires;
 		} elseif (!empty($this->_default_expires) ) {
 			/* ...or add default expiration if its set */
 			$this->_contents['__cache_expires'] = $this->_default_expires + time();
+			$expires = $this->_default_expires;
 		}
 
-		/* Lock the file before writing or log an error if it failes */
-		if (flock($fp, LOCK_EX)) {
-			fwrite($fp, serialize($this->_contents));
-			flock($fp, LOCK_UN);
-		} else {
-			log_message('error', 'Cache was unable to secure a file lock for file at: '.$cache_path);
-			return;
-		}
-
-		fclose($fp);
-		@chmod($cache_path, DIR_WRITE_MODE);
+		ci()->cache->save(md5($cache_path), $this->_contents,$expires);
 
 		/* Log success */
 		log_message('debug', 'Cache file written: '.$cache_path);
