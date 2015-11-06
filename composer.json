@@ -14,10 +14,6 @@
 		"projectorangebox/theme_orange": "dev-master",
 		"projectorangebox/plugin_select3": "dev-master"
 	},
-	"repositories": [
-		{ "type": "vcs", "url": "https://github.com/projectorangebox/theme_orange" },
-		{ "type": "vcs", "url": "https://github.com/projectorangebox/plugin_select3" }
-	],
 	"orange": {
 		"version": "1.0.0",
 		"type": "core",
