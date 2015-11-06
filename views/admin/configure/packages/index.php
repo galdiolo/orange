@@ -22,14 +22,11 @@ foreach ($records as $name=>$record) {
 	//k($name);
 	//k($record);
 
-	/* setup a few things */
-	$is_active = $record['is_active'];
-
 	/* Name */
 	theme::table_start_tr();
 	echo '<span style="';
-	echo ($is_active) ? 'font-weight: 700">' : '">';
-	o::e($record['folder']);
+	echo ($record['is_active']) ? 'font-weight: 700">' : '">';
+	o::e($record['name']);
 	echo '</span>';
 
 	/* type */
@@ -40,18 +37,8 @@ foreach ($records as $name=>$record) {
 
 	/* Description */
 	theme::table_row();
-	if($record['json_error']) {
-		echo '<span style="font-weight: 700;color: #A90018">'.$record['json_error_txt'].'</span>';
-	} else {
-		o::e($record['name']);
-	}
-
-	if (!$record['json_error']) {
-		/* (i) for more information */
-		echo ' - ';
-		o::e($record['info']);
-		echo ' <a href="'.$controller_path.'/details/'.$record['url_name'].'" class="" data-name="'.$name.'"><i class="fa fa-info-circle"></i></a> ';
-	}
+	o::e($record['description']);
+	echo ' <a href="'.$controller_path.'/details/'.$record['url_name'].'"><i class="fa fa-info-circle"></i></a> ';
 
 	/* Version */
 	theme::table_row('text-center');
@@ -70,7 +57,7 @@ foreach ($records as $name=>$record) {
 			echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
 		break;
 		default:
-			echo '<span class="label label-default">'.$record['version'].'</span> ';
+			echo '<span class="label label-default">'.$record['composer_version'].'</span> ';
 	}
 
 	/* Actions */

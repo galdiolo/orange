@@ -33,7 +33,8 @@ class o_packages_model extends Database_model {
 
 	public function write($key,$migration_version,$is_active,$priority=50) {
 		/* let's validate / correct a few things */
-		$folder_name = basename(dirname($key));
+		$folder_name = str_replace('/',' ',$key);
+
 		$migration_version = (!empty($migration_version)) ? $migration_version : '0.0.0';
 		$is_active = ($is_active) ? 1 : 0;
 		$priority = (!empty($priority)) ? (int)$priority : 50;

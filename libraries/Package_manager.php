@@ -24,8 +24,11 @@ class package_manager {
 		$this->package_requirements = &ci()->package_requirements;
 
 		$this->prepare();
+		
+		/* uncomment if you need to fill your database with all packages */
+		//$this->init_fill_db();
 	}
-	
+
 	/*
 	parse through the folder and setup the mega array with data
 	based on json files.
@@ -34,58 +37,60 @@ class package_manager {
 		include $this->autoload;
 
 		$this->config_packages = $autoload['packages'];
-	
-		$packages = $this->rglob(ROOTPATH.'/packages','info.json');
-		
+
+		$packages = $this->rglob(ROOTPATH.'/packages','composer.json');
+
 		$this->_prepare($packages);
 
-		$vendors = $this->rglob(ROOTPATH.'/vendor','info.json');
+		$vendors = $this->rglob(ROOTPATH.'/vendor','composer.json');
 
 		$this->_prepare($vendors);
 	}
-	
+
 	protected function _prepare($packages_info) {
 
 		foreach ($packages_info as $info) {
 			$json_config = $this->load_info_json($info);
 
-			$full_path = $key = str_replace(ROOTPATH,'',dirname($info));
-			$dir_name = basename(dirname($info));
+			if ($json_config !== false) {
+				$full_path = $key = str_replace(ROOTPATH,'',dirname($info));
+				$dir_name = basename(dirname($info));
 
-			$db_config = $this->o_packages_model->read($key);
+				$db_config = $this->o_packages_model->read($key);
 
-			$db_config['db_priority'] = $db_config['priority'];
+				$db_config['db_priority'] = $db_config['priority'];
 
-			$starting_version = ($db_config['migration_version']) ? $db_config['migration_version'] : '0.0.0';
+				$starting_version = ($db_config['migration_version']) ? $db_config['migration_version'] : '0.0.0';
 
-			$migration_files = $this->package_migration_manager->get_migrations_between($dir_name,$starting_version,$json_config['version']);
+				$migration_files = $this->package_migration_manager->get_migrations_between($key,$starting_version,$json_config['composer_version']);
 
-			$extra = [
-				'full_path'=>$full_path,
-				'folder'=>$dir_name,
-				'migrations'=>$migration_files,
-				'has_migrations'=>(count($migration_files) > 0),
-				'is_active'=>isset($db_config['folder_name']),
-				'version_check'=>$this->package_migration_manager->version_check($db_config['migration_version'],$json_config['version'])
-			];
+				$extra = [
+					'full_path'=>$full_path,
+					'folder'=>$dir_name,
+					'migrations'=>$migration_files,
+					'has_migrations'=>(count($migration_files) > 0),
+					'is_active'=>isset($db_config['folder_name']),
+					'version_check'=>$this->package_migration_manager->version_check($db_config['migration_version'],$json_config['composer_version'])
+				];
 
-			/* combined what we have so far */
-			$config = array_merge($json_config,$db_config,$extra);
+				/* combined what we have so far */
+				$config = array_merge($json_config,$db_config,$extra);
 
-			/* update packages that don't have migrations */
-			if ($config['has_migrations'] == false && $config['version_check'] == 3) {
-				/* no migrations - just update the veresion since the code is already up to date */
-				$config['migration_version'] = $config['version'];
-				$config['version_check'] = 2;
+				/* update packages that don't have migrations */
+				if ($config['has_migrations'] == false && $config['version_check'] == 3) {
+					/* no migrations - just update the veresion since the code is already up to date */
+					$config['migration_version'] = $config['version'];
+					$config['version_check'] = 2;
 
-				$this->o_packages_model->write_new_version($config['folder'],$config['version']);
+					$this->o_packages_model->write_new_version($config['folder'],$config['version']);
+				}
+
+				$config['url_name'] = bin2hex($config['full_path']);
+
+				$this->packages[$key] = $config;
 			}
-
-			$config['url_name'] = bin2hex($config['full_path']);
-
-			$this->packages[$key] = $config;
 		}
-		
+
 		/* calculate the package requirements - passed by ref. */
 		$this->package_requirements->process($this->packages);
 
@@ -94,14 +99,14 @@ class package_manager {
 		Should this be done in the first loop?
 		not sure since package_requirements requires the complete array to do it's logic checks?
 		*/
-	
+
 		foreach ($this->packages as $key=>$config) {
 			/* calc which buttons to show so it's not done in the view (where it doesn't belong) */
 			if (!$config['has_errors']) {
 				$config['button']['install'] = (!$config['is_active']);
 				$config['button']['upgrade'] = ($config['version_check'] == 3 && $config['is_active']);
 				$config['button']['uninstall'] = ($config['is_active'] && !$config['is_required']);
-				
+
 				if ($this->allow_delete) {
 					$config['button']['delete'] = (!$config['is_active'] && !$config['is_required']);
 				} else {
@@ -113,7 +118,7 @@ class package_manager {
 
 			/* calc version display */
 			$config['version_display'] = 0;
-			
+
 			if (!$config['json_error']) {
 				if ($config['is_active']) {
 					switch ($config['version_check']) {
@@ -135,7 +140,7 @@ class package_manager {
 					}
 				}
 			}
-			
+
 			/* ok now put this in the array as well! */
 			$this->packages[$key] = $config;
 		}
@@ -215,7 +220,7 @@ class package_manager {
 		if (!$this->allow_delete) {
 			show_error('Delete not allowed.');
 		}
-		
+
 		/* delete the entire folder */
 		ci()->load->helper('directory');
 
@@ -262,31 +267,19 @@ class package_manager {
 	}
 
 	public function load_info_json($json_file) {
-		$error = false;
+		$config = json_decode(file_get_contents($json_file),true);
 
-		if (!file_exists($json_file)) {
-			$error = true;
-			$error_txt = '<i class="fa fa-exclamation-triangle"></i> info.json file not found';
-		} else {
-			$config = json_decode(file_get_contents($json_file),true);
-
-			if ($config === null) {
-				$error = true;
-				$error_txt = '<i class="fa fa-exclamation-triangle"></i> info.json is not valid json';
-			}
+		/* error decoding json */
+		if ($config === null || !isset($config['orange'])) {
+			return false;
 		}
 
-		if ($error) {
-			$config['json_error'] = true;
-			$config['json_error_txt'] = $error_txt;
-			$config['is_active'] = false;
-		} else {
-			$config['json_error'] = false;
-			$config['json_error_txt'] = '';
-			$config['type'] = (isset($config['type'])) ? $config['type'] : 'package';
-			$config['json_priority'] = (!empty($config['priority'])) ? (int)$config['priority'] : $this->default_load_priority;
-			$config['priority'] = (!empty($config['priority'])) ? (int)$config['priority'] : $this->default_load_priority;
-		}
+		/* from orange */
+		$config['type'] = (isset($config['orange']['type'])) ? $config['orange']['type'] : 'package';
+		$config['priority'] = (!empty($config['orange']['priority'])) ? (int)$config['orange']['priority'] : $this->default_load_priority;
+
+		$config['composer_priority'] = (!empty($config['orange']['priority'])) ? (int)$config['orange']['priority'] : $this->default_load_priority;
+		$config['composer_version'] = (!empty($config['orange']['version'])) ? $config['orange']['version'] : '?';
 
 		return $config;
 	}
@@ -312,18 +305,71 @@ class package_manager {
 
 	/* write autoload.php */
 	public function create_autoload() {
-		return ci()->load->create_autoload();
+		$autoload_packages = $this->o_packages_model->active();
+
+		$package_text = '$autoload[\'packages\'] = array('.chr(10);
+
+		$package_text .= chr(9).'/* updated: '.date('Y-m-d-H:i:s').' */'.chr(10);
+
+		// 	ROOTPATH.'/packages/theme_zerotype',
+		foreach ($autoload_packages as $ap) {
+			/* let's make sure the packages is still there! */
+			if (is_dir(ROOTPATH.$ap->full_path)) {
+				$package_text .= chr(9).'ROOTPATH.\''.$ap->full_path."',".chr(10);
+			}
+		}
+
+		$package_text .= ');';
+
+		$current_content = file_get_contents($this->autoload);
+
+		$re = "/^\\s*\\\$autoload\\['packages']\\s*=\\s*array\\s*\\((.+?)\\);/ms";
+
+		preg_match_all($re,$current_content,$matches);
+
+		if (!isset($matches[0][0])) {
+			show_error('Regular Expression Error: packages_config->autoload.php');
+		}
+
+		$content = str_replace($matches[0][0],$package_text,$current_content);
+
+		return atomic_file_put_contents($this->autoload,$content);
 	}
-	
+
+	/* change route file */
+	public function route_config($from,$to,$mode) {
+		require $this->routes;
+
+		/* remove it if it's already there */
+		foreach ($route as $key=>$val) {
+			if ($key == $from && $val == $to) {
+				unset($route[$key]);
+			}
+		}
+
+		/* add mode? */
+		if ($mode == 'add' && !isset($route[$from])) {
+			$route[$from] = $to;
+		}
+
+		return file_put_contents($this->routes,'<?php '.chr(10).$this->config_header.'$route = '.var_export($route,true).';');
+	}
+
 	protected function rglob($path='',$pattern='*',$flags=0) {
 		$paths = glob($path.'*', GLOB_MARK|GLOB_ONLYDIR|GLOB_NOSORT);
 		$files = glob($path.$pattern, $flags);
-		
+
 		foreach ($paths as $path) {
-			$files=array_merge($files,$this->rglob($path, $pattern, $flags));
+			$files = array_merge($files,$this->rglob($path, $pattern, $flags));
 		}
-		
+
 		return $files;
+	}
+	
+	protected function init_fill_db() {
+		foreach ($this->packages as $p) {
+			$this->o_packages_model->write($p['full_path'],$p['composer_version'],true,$p['composer_priority']);
+		}
 	}
 
 } /* end class */

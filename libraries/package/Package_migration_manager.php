@@ -4,7 +4,7 @@ class package_migration_manager {
 
 	public function get_migrations_between($package,$start_ver='0.0.0',$end_ver='999.999.999') {
 		$migration_array = [];
-		$migration_folder = ROOTPATH.'/packages/'.$package.'/support/migrations';
+		$migration_folder = ROOTPATH.$package.'/support/migrations';
 
 		if (is_dir($migration_folder)) {
 			/* migrations start with v ie. v1.0.0-name_of_migration.php */
