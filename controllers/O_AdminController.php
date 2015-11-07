@@ -17,7 +17,7 @@
 *
 */
 class O_AdminController extends APP_GuiController {
-	public $theme_folder = '/projectorangebox/theme_orange';
+	public $theme_folder = '/projectorangebox/theme-orange';
 	public $body_class = 'admin';
 
 	/* your basic scaffolding */
