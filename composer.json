@@ -11,7 +11,7 @@
 	}],
 	"require": {
 		"php": ">=5.5",
-		"projectorangebox/plugin-combobox": "dev-master"
+		"projectorangebox/plugin-combobox": "dev-master",
 		"projectorangebox/plugin-flash-msg": "dev-master",
 		"projectorangebox/plugin-nestable": "dev-master",
 		"projectorangebox/plugin-o-dialog": "dev-master",
