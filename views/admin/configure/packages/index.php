@@ -1,5 +1,5 @@
 <?php
-theme::header_start('Packages','Interface to manage packages.');
+theme::header_start('Packages','Package manager');
 Plugin_search_sort::field();
 //theme::header_button('Customize Load Order',$controller_path.'/load-order','sort-amount-asc');
 o::view_event($controller_path,'header.buttons');

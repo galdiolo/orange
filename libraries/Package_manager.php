@@ -43,17 +43,17 @@ class package_manager {
 
 		/* did we even get any? */
 		if (count($packages)) {
-			$this->_prepare($packages);
+			$this->_prepare($packages,'framework');
 		}
 
 		$vendors = $this->rglob(ROOTPATH.'/vendor','composer.json');
 
 		if (count($vendors)) {
-			$this->_prepare($vendors);
+			$this->_prepare($vendors,'composer');
 		}
 	}
 
-	protected function _prepare($packages_info) {
+	protected function _prepare($packages_info,$type_of_package) {
 		foreach ($packages_info as $info) {
 			$composer_config = $this->load_info_json($info);
 
@@ -62,7 +62,23 @@ class package_manager {
 
 				$db_config = $this->o_packages_model->read($key);
 
+				$cr = $composer_config['composer_priority'];
+
+				if ($cr >= 0 && $cr <= 20) {
+					$human_priority = 'highest';
+				} elseif ($cr >= 21 && $cr <= 40) {
+					$human_priority = 'high';
+				} elseif ($cr >= 41 && $cr <= 60) {
+					$human_priority = 'med';
+				} elseif ($cr >= 61 && $cr <= 80) {
+					$human_priority = 'low';
+				} elseif ($cr >= 81 && $cr <= 100) {
+					$human_priority = 'lowest';
+				}
+				
 				$extra = [
+					'composer_human_priority'=>$human_priority,
+					'type_of_package'=>$type_of_package,
 					'db_priority'=>$db_config['priority'],
 					'full_path'=>$key,
 					'human'=>str_replace('/',' ',$key),

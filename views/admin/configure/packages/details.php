@@ -49,8 +49,17 @@ theme::header_end();
 	</tr>
 
 	<tr>
+		<td>Managed by</td>
+		<?php if ($record['type_of_package'] == 'composer') { ?>
+			<td><span class="label label-primary"><?=$record['type_of_package'] ?></span></td>
+		<?php } else { ?>
+			<td><span class="label label-info"><?=$record['type_of_package'] ?></span></td>
+		<?php } ?>
+	</tr>
+
+	<tr>
 		<td>Package Priority</td>
-		<td><?=$record['composer_priority'] ?> - <?=($record['composer_priority'] > 49) ? 'low' : 'high' ?></td>
+		<td><?=$record['composer_priority'] ?> - <?=$record['composer_human_priority'] ?> <small> / Common priorities: themes 10, default 50, libraries 70, plugins 80, Orange 90+</small></td>
 	</tr>
 
 	<tr>
