@@ -21,7 +21,7 @@ theme::end_form_section();
 
 o::view_event($controller_path,'form.footer');
 
-o::hr(0,12); /* 4px padding top and bottom */
+o::hr(0,12);
 
 theme::footer_start();
 theme::footer_cancel_button($controller_path);

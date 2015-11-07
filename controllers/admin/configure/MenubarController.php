@@ -95,7 +95,14 @@ class menubarController extends APP_AdminController {
 		$this->wallet->failed($this->content_title,$this->controller_path);
 	}
 
-	public function editAction($id = null) {
+
+	public function editAction($id = null,$advanced = null) {
+		if ($advanced == 'advanced' && has_access('Orange::Advanced Menubar')) {
+			$this->page->data('advanced',true);
+		}
+
+		$this->page->data('return_to',$this->input->server('HTTP_REFERER'));
+
 		$record = $this->o_menubar_model->get($id);
 		$catalog = $this->o_menubar_model->catalog();
 		
@@ -119,11 +126,13 @@ class menubarController extends APP_AdminController {
 	public function editPostAction() {
 		$this->_get_data('update');
 
+		$return_to = (!empty($this->input->post('return_to'))) ? $this->input->post('return_to') : $this->controller_path;
+
 		if ($this->o_menubar_model->update($this->data['id'], $this->data, false)) {
-			$this->wallet->updated($this->content_title,$this->controller_path);
+			$this->wallet->updated($this->content_title,$return_to);
 		}
 
-		$this->wallet->failed($this->content_title,$this->controller_path);
+		$this->wallet->failed($this->content_title,$return_to);
 	}
 
 	public function deleteAction($id=null) {

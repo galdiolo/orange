@@ -43,21 +43,24 @@ foreach ($records as $name=>$record) {
 	/* Version */
 	theme::table_row('text-center');
 	/* show upgrade version and up arrow? */
-		switch ($record['version_display']) {
-		case 4: /* less than */
-			echo '<span class="label label-danger"><i class="fa fa-exclamation-triangle"></i> '.$record['composer_version'].'</span>&nbsp;';
-			echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
-		break;
-		case 2:
-			/* version in db matches migration version */
-			echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
-		break;
-		case 3: /* greater than */
-			echo '<span class="label label-info"> <i class="fa fa-arrow-up"></i>'.$record['composer_version'].'</span>&nbsp;';
-			echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
-		break;
-		default:
-			echo '<span class="label label-default">'.$record['composer_version'].'</span> ';
+	switch ($record['version_display']) {
+	case 0:
+		echo '<span class="label label-primary">'.$record['composer_version'].'</span> ';
+	break;
+	case 4: /* less than */
+		echo '<span class="label label-danger"><i class="fa fa-exclamation-triangle"></i> '.$record['composer_version'].'</span>&nbsp;';
+		echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
+	break;
+	case 2:
+		/* version in db matches migration version */
+		echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
+	break;
+	case 3: /* greater than */
+		echo '<span class="label label-info"> <i class="fa fa-arrow-up"></i>'.$record['composer_version'].'</span>&nbsp;';
+		echo '<span class="label label-primary">'.$record['migration_version'].'</span> ';
+	break;
+	default:
+		echo '<span class="label label-default">'.$record['composer_version'].'</span> ';
 	}
 
 	/* Actions */

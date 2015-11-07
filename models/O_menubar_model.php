@@ -31,10 +31,11 @@ class o_menubar_model extends Database_model {
 		'color'          => ['field' => 'color','label' => 'Color','rules' => 'if_empty[d28445]|filter_hex[6]|max_length[7]|filter_input[7]'],
 		'icon'           => ['field' => 'icon','label' => 'Icon','rules' => 'if_empty[square]|max_length[32]|filter_input[32]'],
 		'internal'       => ['field' => 'internal','label' => 'Internal','rules' => 'filter_input[255]'],
+		'target'         => ['field' => 'target','label' => 'Target','rules' => 'filter_input[128]'],
 	];
 	protected $rule_sets = [
-		'insert'          => 'created_on,created_by,created_ip,updated_on,updated_by,updated_ip,access_id,is_editable,is_deletable,url,text,parent_id,sort,class,active,color,icon,internal',
-		'update'          => 'id,updated_on,updated_by,updated_ip,access_id,url,text,parent_id,sort,class,active,color,icon',
+		'insert'          => 'created_on,created_by,created_ip,updated_on,updated_by,updated_ip,access_id,is_editable,is_deletable,url,text,parent_id,sort,class,active,color,icon,internal,target',
+		'update'          => 'id,updated_on,updated_by,updated_ip,access_id,url,text,parent_id,sort,class,active,color,icon,target',
 		'update_on_order' => 'sort,parent_id',
 	];
 	public $sort = 10;

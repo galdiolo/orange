@@ -32,26 +32,49 @@ theme::header_end();
 		<td>Location</small></td>
 		<td><?=$record['full_path'] ?></td>
 	</tr>
+
 	<tr>
 		<td>Active</td>
 		<td><?=($record['is_active']) ? '<span class="label label-success">TRUE</span>' : '<span class="label label-danger">FALSE</span>' ?></td>
 	</tr>
+
 	<tr>
 		<td>Description</td>
 		<td><?=$record['description'] ?></td>
 	</tr>
-	<tr>
-		<td>Version</td>
-		<td><?=$record['composer_version'] ?></td>
-	</tr>
+
 	<tr>
 		<td>Type</td>
 		<td><span class="label label-<?=$type_map[$record['type']]?>"><?=$record['type'] ?></span></td>
 	</tr>
+
 	<tr>
 		<td>Package Priority</td>
 		<td><?=$record['composer_priority'] ?> - <?=($record['composer_priority'] > 49) ? 'low' : 'high' ?></td>
 	</tr>
+
+	<tr>
+		<td>Version</td>
+		<td><?=$record['composer_version'] ?></td>
+	</tr>
+
+	<tr>
+		<td>Last Migrated Version</td>
+		<td><?=($record['migration_version'] == '') ? 'Not Installed' : $record['migration_version'] ?></td>
+	</tr>
+
+	<tr>
+		<td>Migration Status</td>
+		<?php $map = [1=>'Less Than',2=>'Equal To',3=>'Greater Than'] ?>
+		<td><?=$map[$record['version_check']] ?> Migration Version</td>
+	</tr>
+
+	<tr>
+		<td>Has Migrations</td>
+		<td><span class="badge"><?=count($record['migrations']) ?></span></td>
+	</tr>
+
+
 	<tr>
 		<td>Package Requires</td>
 		<td>
@@ -73,38 +96,21 @@ theme::header_end();
 		</td>
 	</tr>
 
+	<?php if (count($record['orange']['tables'])) { ?>
 	<tr>
 		<td>Table<?=(strpos($record['orange']['tables'],',') === false) ? '' : 's' ?></td>
 		<td><?=str_replace(',','<br>',$record['orange']['tables']) ?></td>
 	</tr>
+	<?php } ?>
 
+	<?php if (count($record['orange']['notes'])) { ?>
 	<tr>
 		<td>Notes</td>
 		<td><?=$record['orange']['notes'] ?></td>
 	</tr>
+	<?php } ?>
 
-	<tr>
-		<td>Last Migrated Version</td>
-		<td><?=($record['migration_version'] == '') ? 'Not Installed' : $record['migration_version'] ?></td>
-	</tr>
-
-	<tr>
-		<td>Migration Status</td>
-		<?php $map = [1=>'Less Than',2=>'Equal To',3=>'Greater Than'] ?>
-		<td><?=$map[$record['version_check']] ?> Migration Version</td>
-	</tr>
-
-	<tr>
-		<td>Has Migrations</td>
-		<td><span class="badge"><?=count($record['migrations']) ?></span></td>
-	</tr>
-
-	<tr>
-		<td colspan="2">
-			<h4>Requirements</h4>
-		</td>
-	</tr>
-
+	<?php if (count($record['orange']['cli'])) { ?>
 	<tr>
 		<td>Command Line</td>
 		<td>
@@ -117,5 +123,6 @@ theme::header_end();
 			?>
 		</td>
 	</tr>
+	<?php } ?>
 
 </table>

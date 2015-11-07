@@ -27,6 +27,10 @@ foreach ($records as $record) {
 		theme::table_action('edit',$this->controller_path.'/edit/'.$record->id);
 	}
 
+	if ($record->is_editable || has_access('Orange::Advanced Menubar')) {
+		theme::table_action('pencil-square',$this->controller_path.'/edit/'.$record->id.'/advanced');
+	}
+
 	if ($record->is_deletable || has_access('Orange::Menubar::Override is deletable')) {
 		o_dialog::confirm_a_delete($this->controller_path.'/delete/'.$record->id);
 	}

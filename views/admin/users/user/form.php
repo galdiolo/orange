@@ -3,7 +3,7 @@ theme::form_start($controller_path.'/'.$controller_action,$record->id);
 theme::header_start(ucfirst($controller_action).' '.$controller_title);
 theme::header_end();
 
-o::hr(0,12); /* 4px padding top and bottom */
+o::hr(0,12);
 
 theme::start_form_section('User Name',true,3);
 o::text('username', $record->username);
@@ -43,7 +43,7 @@ if (strtotime($record->last_login) > 1) {
 
 o::view_event($controller_path,'form.footer');
 
-o::hr(0,12); /* 4px padding top and bottom */
+o::hr(0,12);
 
 theme::footer_start();
 theme::footer_cancel_button($controller_path);

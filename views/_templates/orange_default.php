@@ -15,7 +15,7 @@
 		<?=$page_head ?>
 	</head>
 	<body class="<?=$page_body_class ?>">
-		<?=bootstrap_menu::nav() ?>
+		<?=bootstrap_menu::nav(121,122) ?>
 		<?=$page_start ?>
 		<?=$page_header ?>
 		<div class="container">

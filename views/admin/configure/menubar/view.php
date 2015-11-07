@@ -1,5 +1,5 @@
 <div>
-	<strong>Start Id: </strong><?php o::e($record->id) ?>
+	<strong>Id: </strong><?php o::e($record->id) ?>
 </div>
 <br>
 <div>
@@ -26,5 +26,7 @@
 
 	<a href="<?=$controller_path.'/new/'.$record->id.'/'.rawurlencode($record->text) ?>" data-id="<?=$record->id ?>" class="btn btn-sm btn-default"><i class="fa fa-magic"></i> Add Child Menu</a>
 
+<?php if ($record->is_editable) { ?>
 	<a href="<?=$controller_path.'/edit/'.$record->id ?>" data-id="<?=$record->id ?>" class="btn btn-sm btn-primary"><i class="fa fa-edit"></i> Edit</a>
+<?php } ?>
 </div>
