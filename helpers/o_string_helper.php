@@ -40,8 +40,18 @@ if (!function_exists('nthfield')) {
 	}
 }
 
+/*
+lambda function
+
+$field = '{a} + {b}';
+$data = ['a'=>24,'b'=>89,'c'=>12'];
+
+$field = 'substr({a},strlen({a}) + 1,-1)';
+$field = 'ci()->user->name';
+
+*/
 if (!function_exists('formula')) {
-	function formula($field, $data) {
+	function formula($field, $data=[]) {
 		/* put the fields in the place holders */
 		foreach ($data as $key => $val) {
 			$field = str_replace('{'.$key.'}', "'".str_replace("'", "\'", $val)."'", $field);

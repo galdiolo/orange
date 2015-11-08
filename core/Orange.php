@@ -260,17 +260,14 @@ function array_cache($filename=null,$data=null) {
 
 function atomic_file_put_contents($filepath,$content) {
 	$tmpfname = tempnam(dirname($filepath),'temp');
+
 	file_put_contents($tmpfname,$content);
-	return rename($tmpfname,$filepath); /* atomic */
-}
 
-function opcache_flush($filename) {
-	$success = true;
-
-	/* force flush opcached filed if exists */
+	$success = rename($tmpfname,$filepath); /* atomic */
+	
+	/* now tell opcche to re-compile it */
 	if (function_exists('opcache_invalidate')) {
-		//opcache_invalidate($filename,true); /* this seems to blow up the session / http request? */
-		$success = opcache_compile_file($filename); /* so let's try this! */
+		opcache_invalidate($filepath,true);
 	}
 	
 	return $success;

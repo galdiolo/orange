@@ -87,7 +87,7 @@ class MY_Loader extends CI_Loader {
 		if it's not then return it as the presenter classes only record
 		*/
 		$object = (is_array($object)) ? new Presenter_iterator($object,$classname,$inject) : new $classname($object,$inject);
-		
+
 		return $object;
 	}
 
@@ -174,7 +174,9 @@ class MY_Loader extends CI_Loader {
 		}
 
 		/* force flush opcached filed if exists */
-		opcache_flush($this->cache_file);
+		if (function_exists('opcache_invalidate')) {
+			opcache_invalidate($this->cache_file,true);
+		}
 
 		return $return;
 	}
@@ -319,17 +321,19 @@ class MY_Loader extends CI_Loader {
 		$combined = '<?php'.chr(10);
 
 		foreach ($records as $p) {
-			$package_folder = ROOTPATH.'/packages/'.$p->folder_name;
+			$package_folder = ROOTPATH.'/'.$p->full_path;
 
 			if (file_exists($package_folder.'/support/onload.php')) {
-				$combined .= str_replace('<?php','/* --> '.$p->folder_name.' <-- */'.chr(10),file_get_contents($package_folder.'/support/onload.php')).chr(10);
+				$combined .= str_replace('<?php','/* --> '.$p->full_path.' <-- */'.chr(10),file_get_contents($package_folder.'/support/onload.php')).chr(10);
 			}
 		}
 
 		atomic_file_put_contents($this->onload_path,$combined);
 
 		/* force flush opcached filed if exists */
-		opcache_flush($this->onload_path);
+		if (function_exists('opcache_invalidate')) {
+			opcache_invalidate($this->onload_path,true);
+		}
 
 		return $this;
 	}
@@ -342,7 +346,9 @@ class MY_Loader extends CI_Loader {
 		}
 
 		/* force flush opcached filed if exists */
-		opcache_flush($this->onload_path);
+		if (function_exists('opcache_invalidate')) {
+			opcache_invalidate($this->onload_path,true);
+		}
 
 		return $return;
 	}

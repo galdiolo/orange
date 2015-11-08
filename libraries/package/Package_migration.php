@@ -3,6 +3,7 @@
 class package_migration {
 	public $config;
 	public $name;
+	public $internal;
 	protected $o_access_model;
 	protected $o_menubar_model;
 	protected $o_setting_model;
@@ -11,7 +12,8 @@ class package_migration {
 
 	public function __construct($config) {
 		$this->config;
-		$this->name = $config['folder'];
+		$this->name = ucwords(basename($config['full_path']));
+		$this->internal = $config['full_path'];
 
 		$this->o_access_model = &ci()->o_access_model;
 		$this->o_menubar_model = &ci()->o_menubar_model;
@@ -28,6 +30,7 @@ class package_migration {
 
 	public function add_menu($data=[]) {
 		$package = ($package) ? $package : $this->name;
+		$internal = ($data['internal']) ? $data['internal'] : $this->internal;
 
 		$defaults = ['url'=>'','text'=>'','parent_id'=>1,'access_id'=>1,'sort'=>0,'class'=>'','color'=>null,'icon'=>null,'package'=>$package,'is_editable'=>1,'is_deletable'=>0,'active'=>1];
 
@@ -61,20 +64,21 @@ class package_migration {
 			'active'=>$active,
 			'color'=>$color,
 			'icon'=>$icon,
-			'internal'=>$package,
+			'internal'=>$internal,
 		];
 
 		return $this->o_menubar_model->insert($data,true);
 	}
 
 	public function remove_menu($package=null) {
-		$package = ($package) ? $package : $this->name;
+		$internal = ($package) ? $package : $this->internal;
 
-		return $this->o_menubar_model->delete_by('internal',$package);
+		return $this->o_menubar_model->delete_by('internal',$internal);
 	}
 
 	public function add_access($data) {
-		$package = ($package) ? $package : $this->name;
+		$package = ($data['package']) ? $data['package'] : $this->name;
+		$internal = ($data['internal']) ? $data['internal'] : $this->internal;
 
 		$defaults = ['name'=>'','description'=>'','package'=>$package,'type'=>2,'is_editable'=>0,'is_deletable'=>0];
 
@@ -89,7 +93,7 @@ class package_migration {
 			'name'=>$name,
 			'description'=>$description,
 			'type'=>$type, /* 0 user, 1 system, 2 package */
-			'internal'=>$package,
+			'internal'=>$internal,
 			'group'=>$package,
 		];
 
@@ -98,13 +102,14 @@ class package_migration {
 	}
 
 	public function remove_access($package=null) {
-		$package = ($package) ? $package : $this->name;
+		$internal = ($package) ? $package : $this->internal;
 
-		return $this->o_access_model->delete_by('internal',$package);
+		return $this->o_access_model->delete_by('internal',$internal);
 	}
 
 	public function add_setting($data) {
-		$package = ($package) ? $package : $this->name;
+		$package = ($data['package']) ? $data['package'] : $this->name;
+		$internal = ($data['internal']) ? $data['internal'] : $this->internal;
 
 		$defaults = ['name'=>'','value'=>'','group'=>$package,'help'=>'','type'=>0,'options'=>'','package'=>$package,'is_editable'=>1,'is_deletable'=>0,'enabled'=>1,'managed'=>1];
 
@@ -120,7 +125,7 @@ class package_migration {
 			'group'=>$group,
 			'enabled'=>$enabled, /* not used at this time */
 			'help'=>$help,
-			'internal'=>$package,
+			'internal'=>$internal,
 			'managed'=>$managed, /* managed setting */
 			'show_as'=>$type, /* 0 textarea, 1 True/False (radios), 2 Radios (json format), 3 text input (option is length) */
 			'options'=>$options,
@@ -130,9 +135,9 @@ class package_migration {
 	}
 
 	public function remove_setting($package=null) {
-		$package = ($package) ? $package : $this->name;
+		$internal = ($package) ? $package : $this->internal;
 
-		return $this->o_setting_model->delete_by('internal',$package);
+		return $this->o_setting_model->delete_by('internal',$internal);
 	}
 
 	public function add_route($from,$to) {

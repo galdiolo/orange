@@ -1,0 +1,76 @@
+	public function refresh_package_priority() {
+		/* update the database records first to reflect the info.json file */
+		foreach ($this->packages as $folder_name=>$record) {
+			if (!empty($record['priority'])) {
+				$this->o_packages_model->write_package_priority($folder_name,$record['priority']);
+			}
+		}
+
+		/* reload */
+		$this->prepare();
+
+		/* now double check the override - if the json and current value match then it's not overridden so turn it off */
+		foreach ($this->packages as $folder_name=>$record) {
+			$jp = (int)$record['json_priority'];
+			$dp = (int)$record['db_priority'];
+
+			if ($jp > 0 && $dp > 0) {
+				$override = ($jp == $dp) ? 0 : 1;
+
+				$this->o_packages_model->write_package_overridden($folder_name,$override);
+			}
+		}
+
+		/* reload */
+		$this->prepare();
+	}
+
+	/* wrapper */
+	public function write_new_priority($folder_name,$priority,$overridden=1,$force=false) {
+		return $this->o_packages_model->write_new_priority($folder_name,$priority,$overridden,$force);
+	}
+
+	/* do a complete reset on load order */
+	public function reset_priorities() {
+		/* update the database records first to reflect the info.json file */
+		foreach ($this->packages as $folder_name=>$record) {
+			if (!empty($record['json_priority'])) {
+				$this->o_packages_model->write_new_priority($folder_name,$record['json_priority'],0,true);
+				$this->o_packages_model->write_package_overridden($folder_name,0);
+			}
+		}
+
+		/* reload */
+		$this->prepare();
+	}
+
+
+
+	echo '<nobr>';
+	
+	/* show info buton? error or otherwise */
+	if ($record['button']['info']) {
+		echo '<a href="'.$controller_path.'/details/'.$record['url_name'].'" class="btn btn-xs btn-primary"><i class="fa fa-question-circle"></i></a> ';
+	}
+
+	/* show install */
+	if ($record['button']['install']) {
+		echo '<a href="'.$this->controller_path.'/install/'.$record['url_name'].'" class="btn btn-xs btn-default">install</a> ';
+	}
+
+	/* show upgrade */
+	if ($record['button']['upgrade']) {
+		echo '<a href="'.$this->controller_path.'/upgrade/'.$record['url_name'].'" class="btn btn-xs btn-info">upgrade</a> ';
+	}
+
+	/* show uninstall */
+	if ($record['button']['uninstall']) {
+		echo '<a href="'.$this->controller_path.'/uninstall/'.$record['url_name'].'" data-name="'.$record['name'].'" class="btn btn-xs btn-warning js-uninstallable">Uninstall</a> ';
+	}
+	
+	/* show delete */
+	if ($record['button']['delete']) {
+		echo '<a href="'.$this->controller_path.'/delete/'.$record['url_name'].'" data-name="'.$record['name'].'" data-redirect="true" data-icon="trash" data-text="Are you sure you want to delete this package?" data-heading="Delete Record" class="btn btn-xs btn-danger js-o_dialog"><i class="fa fa-trash"></i></a> ';
+	}
+
+	echo '</nobr>';

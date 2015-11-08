@@ -1,15 +1,12 @@
 <?php
 /*
 CREATE TABLE `orange_packages` (
-  `folder_name` varchar(128) NOT NULL,
   `full_path` varchar(255) DEFAULT NULL,
   `migration_version` varchar(16) DEFAULT NULL,
   `is_active` tinyint(1) unsigned DEFAULT '1',
   `package_priority` tinyint(1) unsigned DEFAULT '0',
   `priority` tinyint(4) NOT NULL DEFAULT '50',
   `priority_overridden` tinyint(1) unsigned DEFAULT '0',
-  PRIMARY KEY (`folder_name`),
-  UNIQUE KEY `idx_folder_name` (`folder_name`) USING BTREE,
   UNIQUE KEY `idx_full_path` (`full_path`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 */
@@ -32,14 +29,11 @@ class o_packages_model extends Database_model {
 	}
 
 	public function write($key,$migration_version,$is_active,$priority=50) {
-		/* let's validate / correct a few things */
-		$folder_name = trim(str_replace('/',' ',$key));
-
 		$migration_version = (!empty($migration_version)) ? $migration_version : '0.0.0';
 		$is_active = ($is_active) ? 1 : 0;
 		$priority = (!empty($priority)) ? (int)$priority : 50;
 	
-		return $this->_database->replace($this->table,[$this->primary_key=>$key,'folder_name'=>$folder_name,'migration_version'=>$migration_version,'is_active'=>$is_active,'package_priority'=>$priority,'priority'=>$priority,'priority_overridden'=>0]);
+		return $this->_database->replace($this->table,[$this->primary_key=>$key,'migration_version'=>$migration_version,'is_active'=>$is_active,'package_priority'=>$priority,'priority'=>$priority,'priority_overridden'=>0]);
 	}
 
 	public function write_new_version($key,$migration_version) {

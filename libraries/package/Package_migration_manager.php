@@ -4,8 +4,9 @@ class package_migration_manager {
 
 	public function get_migrations_between($package,$start_ver='0.0.0',$end_ver='999.999.999') {
 		$migration_array = [];
-		$migration_folder = ROOTPATH.$package.'/support/migrations';
+		$migration_folder = ROOTPATH.'/'.$package.'/support/migrations';
 
+		/* is it there? */
 		if (is_dir($migration_folder)) {
 			/* migrations start with v ie. v1.0.0-name_of_migration.php */
 			$migrations = glob($migration_folder.'/v*.php');
@@ -66,27 +67,37 @@ class package_migration_manager {
 	}
 
 	public function run_migrations($config,$dir) {
-		log_message('debug', 'run migrations '.$dir.' '.$config['folder'].' '.$config['migration_version']);
+		log_message('debug', 'run migrations '.$dir.' '.$config['full_path'].' '.$config['composer_version']);
+
+		if (empty($config['full_path'])) {
+			show_error('Full Path Empty');
+		}
+		
+		if (empty($config['composer_version'])) {
+			show_error('Composer Version Empty');
+		}
 
 		if ($dir != 'up' && $dir != 'down') {
-			log_message('debug', 'migrations direction '.$dir.' not valid.');
-
-			return false;
+			show_error('debug', 'migrations direction '.$dir.' not valid.');
 		}
 
 		switch ($dir) {
 			case 'up':
 				/* if it's down then we need a complete set of migrations */
-				$migration_files = $this->get_migrations_between($config['folder'],$config['migration_version'],'999.999.999');
+				$migration_files = $this->get_migrations_between($config['full_path'],$config['composer_version'],'999.999.999');
 			break;
 			case 'down':
 				/* if it's down then we need a complete set of migrations */
-				$migration_files = $this->get_migrations_between($config['folder'],'0.0.0',$config['migration_version']);
+				$migration_files = $this->get_migrations_between($config['full_path'],'0.0.0',$config['composer_version']);
 
 				/* ok now run it backwards */
 				$migration_files = array_reverse($migration_files,true);
 			break;
 		}
+
+		log_message('debug','Found '.count($migration_files).' migration files');
+
+		$success = true;
 
 		if (is_array($migration_files)) {
 			foreach ($migration_files as $migration_file) {
@@ -102,14 +113,13 @@ class package_migration_manager {
 
 				$migration = new $class_name($config);
 
-				$success = true;
 
 				if (method_exists($migration,$dir)) {
 					log_message('debug', 'migrations running '.$class_name.'::'.$dir);
 
 					$success = $migration->$dir();
 				} else {
-					log_message('debug', 'migrations could not find '.$class_name.'::'.$dir);
+					show_error('migrations could not find '.$class_name.'::'.$dir);
 				}
 
 				if ($success !== true) {

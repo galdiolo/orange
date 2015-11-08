@@ -86,11 +86,19 @@ class o_menubar_model extends Database_model {
 		return $result;
 	}
 
-	public function get_menus_ordered_by_parent_ids($menus = []) {
-		$result = [];
-
-		foreach ($menus as $id => $rec) {
-			$result[$rec->parent_id][$rec->id] = $rec;
+	public function get_menus_ordered_by_parent_ids($user_access) {
+		$key = $this->cache_prefix.'_access_menu_'.md5(serialize($user_access));
+		
+		if (!$result = ci()->cache->get($key)) {
+			$all_menus = ci()->o_menubar_model->get_menus($user_access);
+	
+			$result = [];
+	
+			foreach ($all_menus as $id => $rec) {
+				$result[$rec->parent_id][$rec->id] = $rec;
+			}
+			
+			ci()->cache->save($key, $result);
 		}
 
 		return $result;
