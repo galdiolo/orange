@@ -71,6 +71,8 @@ class package_manager {
 		$this->package_helper->migrations($this->packages);
 
 		$this->package_helper->buttons($this->packages);
+		
+		kd($this->packages);
 	}
 
 	protected function _prepare($packages_info,$type_of_package) {
@@ -84,18 +86,12 @@ class package_manager {
 
 				$cr = $composer_config['composer_priority'];
 
-				if ($cr >= 0 && $cr <= 20) {
-					$human_priority = 'highest';
-				} elseif ($cr >= 21 && $cr <= 40) {
-					$human_priority = 'high';
-				} elseif ($cr >= 41 && $cr <= 60) {
-					$human_priority = 'med';
-				} elseif ($cr >= 61 && $cr <= 80) {
-					$human_priority = 'low';
-				} elseif ($cr >= 81 && $cr <= 100) {
-					$human_priority = 'lowest';
-				}
-				
+				$human_priority = (in_array($cr,range(0,20)) ? 'highest' : '');
+				$human_priority = (in_array($cr,range(21,40)) ? 'high' : '');
+				$human_priority = (in_array($cr,range(41,60)) ? 'normal' : '');
+				$human_priority = (in_array($cr,range(61,80)) ? 'low' : '');
+				$human_priority = (in_array($cr,range(81,100)) ? 'lowest' : '');
+
 				$extra = [
 					'name'=>trim(str_replace('/',' ',$key)),
 					'composer_human_priority'=>$human_priority,
