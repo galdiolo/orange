@@ -18,7 +18,9 @@
 		"projectorangebox/plugin-o-validate-form": "dev-master",
 		"projectorangebox/plugin-search-sort": "dev-master",
 		"projectorangebox/plugin-select3": "dev-master",
-		"projectorangebox/theme-orange": "dev-master"
+		"projectorangebox/theme-orange": "dev-master",
+		"projectorangebox/support": "dev-master"
+		
 	},
 	"orange": {
 		"version": "1.0.0",
