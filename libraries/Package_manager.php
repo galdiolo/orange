@@ -24,7 +24,9 @@ class package_manager {
 		$this->package_migration_manager = &ci()->package_migration_manager;
 		$this->package_helper = &ci()->package_helper;
 
-		$this->prepare();
+		include $this->autoload;
+
+		$this->config_packages = $autoload['packages'];
 
 		/* check out folders */
 		$msgs = false;
@@ -39,8 +41,7 @@ class package_manager {
 
 		$this->messages = ($msgs === false) ? false : implode('<br>',$msgs);
 
-		/* uncomment if you need to fill your database with all packages */
-		//$this->init_fill_db();
+		$this->prepare();
 	}
 
 	/*
@@ -48,10 +49,6 @@ class package_manager {
 	based on json files.
 	*/
 	public function prepare() {
-		include $this->autoload;
-
-		$this->config_packages = $autoload['packages'];
-
 		$packages = $this->rglob(ROOTPATH.'/packages','composer.json');
 
 		/* did we even get any? */
@@ -66,46 +63,63 @@ class package_manager {
 		}
 
 		/* calculate the package requirements - passed by ref. */
-		$this->package_helper->requirements($this->packages);
+		//$this->package_helper->requirements($this->packages);
 
-		$this->package_helper->migrations($this->packages);
+		//$this->package_helper->migrations($this->packages);
 
-		$this->package_helper->buttons($this->packages);
-		
-		kd($this->packages);
+		//$this->package_helper->buttons($this->packages);
+
+		//kd($this->packages);
 	}
 
 	protected function _prepare($packages_info,$type_of_package) {
 		foreach ($packages_info as $info) {
-			$composer_config = $this->load_info_json($info);
+			$key = trim(str_replace(ROOTPATH,'',dirname($info)));
 
-			if (is_array($composer_config)) {
-				$key = trim(str_replace(ROOTPATH,'',dirname($info)));
+			/* load json composer file */
+			$composer_config = json_decode(file_get_contents($info),true);
 
-				$db_config = $this->o_packages_model->read($key);
+			/* did we get a error or does it not have a description */
+			if ($composer_config !== null) {
+				if ($composer_config['description']) {
+	
+					/* from orange */
+	//				$composer_config['type'] = (isset($composer_config['orange']['type'])) ? $composer_config['orange']['type'] : 'package';
+	//				$composer_config['priority'] = (!empty($composer_config['orange']['priority'])) ? (int)$composer_config['orange']['priority'] : $this->default_load_priority;
+	
+	//				$composer_config['composer_priority'] = (!empty($composer_config['orange']['priority'])) ? (int)$composer_config['orange']['priority'] : $this->default_load_priority;
+	//				$composer_config['composer_version'] = (!empty($composer_config['orange']['version'])) ? $composer_config['orange']['version'] : '?';
+	
+	
+					$db_config = $this->o_packages_model->get($key);
+	
+	/*
+					$cr = $composer_config['composer_priority'];
+	
+					$human_priority = (in_array($cr,range(0,20)) ? 'highest' : '');
+					$human_priority = (in_array($cr,range(21,40)) ? 'high' : '');
+					$human_priority = (in_array($cr,range(41,60)) ? 'normal' : '');
+					$human_priority = (in_array($cr,range(61,80)) ? 'low' : '');
+					$human_priority = (in_array($cr,range(81,100)) ? 'lowest' : '');
+	*/
+	
+					$extra = [
+	/*
+						'name'=>trim(str_replace('/',' ',$key)),
+						'composer_human_priority'=>$human_priority,
+						'type_of_package'=>$type_of_package,
+						'db_priority'=>$db_config['priority'],
+						'full_path'=>$key,
+						'human'=>str_replace('/',' ',$key),
+						'is_active'=>(($db_config['is_active']) ? true : false),
+						'version_check'=>$this->package_migration_manager->version_check($db_config['migration_version'],$composer_config['composer_version']),
+						'url_name'=>bin2hex($key),
+						'composer_name'=>$composer_config['name'],
+	*/
+					];
 
-				$cr = $composer_config['composer_priority'];
-
-				$human_priority = (in_array($cr,range(0,20)) ? 'highest' : '');
-				$human_priority = (in_array($cr,range(21,40)) ? 'high' : '');
-				$human_priority = (in_array($cr,range(41,60)) ? 'normal' : '');
-				$human_priority = (in_array($cr,range(61,80)) ? 'low' : '');
-				$human_priority = (in_array($cr,range(81,100)) ? 'lowest' : '');
-
-				$extra = [
-					'name'=>trim(str_replace('/',' ',$key)),
-					'composer_human_priority'=>$human_priority,
-					'type_of_package'=>$type_of_package,
-					'db_priority'=>$db_config['priority'],
-					'full_path'=>$key,
-					'human'=>str_replace('/',' ',$key),
-					'is_active'=>(($db_config['is_active']) ? true : false),
-					'version_check'=>$this->package_migration_manager->version_check($db_config['migration_version'],$composer_config['composer_version']),
-					'url_name'=>bin2hex($key),
-					'composer_name'=>$composer_config['name'],
-				];
-
-				$this->packages[$key] = array_merge((array)$composer_config,(array)$db_config,(array)$extra);
+					$this->packages[$key] = ['composer'=>$composer_config,'database'=>(array)$db_config,'extra'=>$extra];
+				}
 			}
 		}
 	}
@@ -127,10 +141,10 @@ class package_manager {
 
 		/* migrations up */
 		if ($success = $this->package_migration_manager->run_migrations($config,'up')) {
-	
+
 			/* add to db */
 			$this->o_packages_model->write($package,$config['composer_version'],true,$config['priority']);
-	
+
 			$this->create_autoload();
 			$this->create_onload();
 		}
@@ -143,10 +157,10 @@ class package_manager {
 
 		/* migrations up */
 		if ($success = $this->package_migration_manager->run_migrations($config,'up')) {
-	
+
 			$this->o_packages_model->write_new_version($package,$config['composer_version']);
 			$this->o_packages_model->write_new_priority($package,$config['priority'],null,false);
-	
+
 			$this->create_autoload();
 			$this->create_onload();
 		}
@@ -160,7 +174,7 @@ class package_manager {
 		/* migrations down */
 		if ($success = $this->package_migration_manager->run_migrations($config,'down')) {
 			$this->o_packages_model->activate($package,false);
-	
+
 			$this->create_autoload();
 			$this->create_onload();
 		}
@@ -184,24 +198,6 @@ class package_manager {
 		$this->create_onload();
 
 		return rmdirr($path);
-	}
-
-	public function load_info_json($json_file) {
-		$config = json_decode(file_get_contents($json_file),true);
-
-		/* error decoding json */
-		if ($config === null || !isset($config['orange'])) {
-			return false;
-		}
-
-		/* from orange */
-		$config['type'] = (isset($config['orange']['type'])) ? $config['orange']['type'] : 'package';
-		$config['priority'] = (!empty($config['orange']['priority'])) ? (int)$config['orange']['priority'] : $this->default_load_priority;
-
-		$config['composer_priority'] = (!empty($config['orange']['priority'])) ? (int)$config['orange']['priority'] : $this->default_load_priority;
-		$config['composer_version'] = (!empty($config['orange']['version'])) ? $config['orange']['version'] : '?';
-
-		return $config;
 	}
 
 	/* wrapper for loader function */
@@ -270,12 +266,6 @@ class package_manager {
 		}
 
 		return $files;
-	}
-
-	protected function init_fill_db() {
-		foreach ($this->packages as $p) {
-			$this->o_packages_model->write($p['full_path'],$p['composer_version'],true,$p['composer_priority']);
-		}
 	}
 
 } /* end class */
