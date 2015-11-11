@@ -20,7 +20,7 @@ class MY_Loader extends CI_Loader {
 	*/
 	public $orange_extended_helpers = ['array','date','directory','file','string'];
 	public $settings = null; /* local per request storage */
-	public $onload_path = ROOTPATH.'/var/local_file_cache/onload.php';
+	public $onload_path = ROOTPATH.'/application/config/onload.php';
 	public $cache_file = ROOTPATH.'/var/local_file_cache/settings.php';
 	public $themes = '';
 
@@ -317,14 +317,22 @@ class MY_Loader extends CI_Loader {
 		/* let's load the active packages in order */
 		$records = ci()->o_packages_model->active();
 
+		$n = chr(10);
+
 		/* our cache files starts with */
-		$combined = '<?php'.chr(10);
+		$combined  = '<?php'.$n;
+		$combined .= '/*'.$n;
+		$combined .= 'DO NOT MODIFY THIS FILE'.$n;
+		$combined .= 'THIS FILE IS MANAGED COMPLETELY BY THE FRAMEWORK'.$n;
+		$combined .= 'This file is all of the onloads in a single file to make attaching them a single action'.$n;
+		$combined .= 'This file is automatically rebuild by the package manager as needed'.$n;
+		$combined .= '*/'.$n.$n;
 
 		foreach ($records as $p) {
 			$package_folder = ROOTPATH.'/'.$p->full_path;
 
 			if (file_exists($package_folder.'/support/onload.php')) {
-				$combined .= str_replace('<?php','/* --> '.$p->full_path.' <-- */'.chr(10),file_get_contents($package_folder.'/support/onload.php')).chr(10);
+				$combined .= str_replace('<?php','/* --> '.$p->full_path.' <-- */',trim(file_get_contents($package_folder.'/support/onload.php'))).$n.$n;
 			}
 		}
 

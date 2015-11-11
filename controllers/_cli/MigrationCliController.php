@@ -9,7 +9,6 @@ class migrationCliController extends O_CliController {
 	}
 
 	public function currentCliAction() {
-
 		$version = $this->migration->current();
 
 		if ($version === false) {
@@ -19,7 +18,7 @@ class migrationCliController extends O_CliController {
 		} else {
 			$this->output('Version: <yellow>'.$version);
 		}
-		
+
 		$this->output('<green>Complete');
 	}
 
@@ -37,6 +36,16 @@ class migrationCliController extends O_CliController {
 		$this->output('<green>Complete');
 	}
 
+	public function configCliAction() {
+		include ROOTPATH.'/application/config/migration.php';
+
+		foreach ($config as $k=>$c) {
+			$this->output($k.' '.$c);
+		}
+
+		$this->output('<green>Complete');
+	}
+
 	public function latestCliAction() {
 
 		$version = $this->migration->latest();
@@ -46,7 +55,7 @@ class migrationCliController extends O_CliController {
 		} else {
 			$this->output('Version: <yellow>'.$version);
 		}
-		
+
 		$this->output('<green>Complete');
 	}
 
@@ -62,7 +71,7 @@ class migrationCliController extends O_CliController {
 		} else {
 			$this->output('Version: <yellow>'.$version);
 		}
-		
+
 		$this->output('<green>Complete');
 	}
 
