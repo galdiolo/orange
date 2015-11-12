@@ -43,8 +43,13 @@ class package_migration_manager {
 		1 = less than
 		2 = exact
 		3 = greater than
+		4 = error
 		*/
 		$must_match = str_replace('*','0',$must_match);
+
+		if (empty($current_version) || empty($must_match)) {
+			return 4;
+		}
 
 		if (version_compare($must_match,$current_version,'=')) {
 			return 2;

@@ -152,14 +152,16 @@ class package_helper {
 		if (is_array($package['composer']['require'])) {
 			/* yes - ok let's see if they are active */
 			foreach ($package['composer']['require'] as $required_package=>$version) {
-
-				$this->_tell_package_it_is_needed($required_package,$package['composer']['name']);
+				
+				if ($package['is_active']) {
+					$this->_tell_package_it_is_needed($required_package,$package['composer']['name']);
+				}
 
 				if (!$this->_test_is_available($required_package)) {
-					$this->packages[$key]['package_not_available'][] = $required_package;
+					$this->packages[$key]['package_not_available'][$required_package] = $required_package;
 					$this->packages[$key]['missing_package'] = true;
 				} elseif (!$this->_test_is_active($required_package)) {
-					$this->packages[$key]['package_not_active'][] = $required_package;
+					$this->packages[$key]['package_not_active'][$required_package] = $required_package;
 					$this->packages[$key]['not_active_package'] = true;
 				}
 
@@ -170,7 +172,7 @@ class package_helper {
 	protected function _tell_package_it_is_needed($namespace,$required_by) {
 		foreach ($this->packages as $key=>$package) {
 			if ($package['composer']['name'] == $namespace) {
-				$this->packages[$key]['is_required_by'][] = $required_by;
+				$this->packages[$key]['is_required_by'][$required_by] = $required_by;
 
 				return true;
 			}
