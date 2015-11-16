@@ -11,14 +11,14 @@ class toolsCliController extends O_CliController {
 		}
 
 		$value = ($mode == 'up') ? 'true' : 'false';
-	
+
 		$success = $this->o_setting_model->update_by(['name'=>'Site Open','group'=>'application'],['value'=>$value],'update_value');
 
 		$msg = ($success) ? '<green>Site status updated.' : '<red>Error changing site status.';
-	
+
 		$this->output($msg);
 	}
-	
+
 	public function clearCliAction($what=null) {
 		$what = strtolower($what);
 		$one_of = ['logs','sessions','upload_temp','cache','local_file_cache'];
@@ -41,24 +41,22 @@ class toolsCliController extends O_CliController {
 
 		$this->output(($success == true) ? '<green>Complete' : '<red>Error');
 	}
-	
+
 	/* update onload */
-	
-	/* update autoload */
-	public function _update_todo($package=null) {
+	public function rebuildCliAction($what=null) {
 		$this->load->library('package_manager');
 
-		if (!$package) {
-			$this->output('<blue>Please specify a package.');
+		$valid = ['onload','autoload'];
 
-			include ROOTPATH.'/application/config/autoload.php';
-
-			foreach ($autoload['packages'] as $p) {
-				$this->output('<yellow>'.basename($p,'.php'));
-			}
-		} else {
-			$this->output(($this->package_manager->install_or_upgrade($package)) ? '<green>Complete' : '<red>Error');
+		if (!in_array($what,$valid)) {
+			$this->output('<red> valid values are: '.implode(', ',$valid),true);
 		}
+
+		$method = 'create_'.$what;
+
+		$success = !$this->package_manager->$method;
+
+		$this->output(($success == true) ? '<green>Complete' : '<red>Error');
 	}
 
 } /* end class */

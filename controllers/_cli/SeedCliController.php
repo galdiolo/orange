@@ -1,5 +1,8 @@
 <?php
+/*
+php index.php seed model_name_model 100
 
+*/
 class seedCliController extends O_CliController {
 
 	public function _remap($method,$param=[]) {
@@ -19,6 +22,7 @@ class seedCliController extends O_CliController {
 			$this->output('<red>Seed method not available in <off>'.$model,true);
 		}
 
+		/* make sure it's a integer */
 		$count = ((int)$param[0] > 0) ? (int)$param[0] : 1;
 
 		if ($this->$model->seed($count)) {

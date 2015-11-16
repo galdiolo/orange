@@ -2,73 +2,39 @@
 
 class package_helper {
 	protected $packages;
-	protected $namespace_packages = [];
-	protected $active_packages = [];
 	protected $package_migration_manager;
 	protected $o_packages_model;
+	protected $active_packages;
+	protected $available_packages;
+	protected $sudo_packages = ['php'];
 
-	public function requirements(&$packages) {
-		/* save this for later to add errors */
-		$this->packages = &$packages;
+	public function __construct() {
 		$this->package_migration_manager = &ci()->package_migration_manager;
 		$this->o_packages_model = &ci()->o_packages_model;
-
-		/* first convert array from full path keys to composer namespace keys */
-		foreach ($packages as $key=>$package) {
-			$this->namespace_packages[$package['composer_name']] = $package;
-
-			if ($package['is_active']) {
-				$this->active_packages[$key] = $package;
-			}
-		}
-
-		/* ok now loop over the packages to determine the requirements */
-		foreach ($this->namespace_packages as $key=>$package) {
-			$package_key = $package['full_path'];
-		
-			$this->packages[$package_key]['errors'] = '';
-			$this->packages[$package_key]['errors_raw'] = [];
-			$this->packages[$package_key]['has_error'] = false;
-
-			$this->_test_requirement($package_key,$package);
-		}
-	}
-
-	protected function _test_requirement($key,$package) {
-	/* does this package have any requirements? */
-		if (is_array($package['require'])) {
-			/* yes - is the required package in the active packages? */
-			if (!array_key_exists($package['composer_name'],$this->active_packages)) {
-				$missing_package = $this->namespace_packages[$package['composer_name']];
-				/* no - add an error */
-
-				$this->packages[$key]['required_errors'][] = $missing_package['composer_name'];
-				$this->packages[$key]['required_errors_raw'][] = $missing_package['composer_name'];
-				$this->packages[$key]['has_error'] = true;
-			}
-		}
 	}
 
 	public function migrations(&$packages) {
 		/* save this for later to add errors */
 		$this->packages = &$packages;
 
-		foreach ($this->packages as $key=>$config) {
+		foreach ($this->packages as $key=>$package) {
+			$this->packages[$key]['version_check'] = $this->package_migration_manager->version_check($package['database']['migration_version'],$package['composer']['orange']['version']);
+
 			/* starting version for migrations */
-			$starting_version = ($config['migration_version']) ? $config['migration_version'] : '0.0.0';
+			$starting_version = ($package['database']['migration_version']) ? $package['database']['migration_version'] : '0.0.0';
 
-			$migration_files = $this->package_migration_manager->get_migrations_between($key,$starting_version,$composer_config['composer_version']);
+			$migration_files = $this->package_migration_manager->get_migrations_between($key,$starting_version,$package['composer']['orange']['version']);
 
-			$this->packages[$key]['migrations'] = $migration_files;
-			$this->packages[$key]['has_migrations'] = (count($migration_files) > 0);
+			$this->packages[$key]['migrations']['files'] = $migration_files;
+			$this->packages[$key]['migrations']['has_migrations'] = (count($migration_files) > 0);
 
 			/* update packages that don't have migrations */
-			if ($this->packages[$key]['has_migrations'] == false && $this->packages[$key]['version_check'] == 3) {
+			if ($this->packages[$key]['migrations']['has_migrations'] == false && $this->packages[$key]['version_check'] == 3) {
 				/* no migrations - just update the veresion since the code is already up to date */
-				$this->packages[$key]['migration_version'] = $this->packages[$key]['composer_version'];
-				$this->packages[$key]['version_check'] = 2;
+				$this->packages[$key]['migrations']['migration_version'] = $this->packages[$key]['composer']['orange']['version'];
+				$this->packages[$key]['migrations']['version_check'] = 2;
 
-				$this->o_packages_model->write_new_version($this->packages[$key]['full_path'],$this->packages[$key]['composer_version']);
+				$this->o_packages_model->version($key,$this->packages[$key]['composer']['orange']['version']);
 			}
 		}
 	}
@@ -83,49 +49,151 @@ class package_helper {
 		not sure since package_requirements requires the complete array to do it's logic checks?
 		*/
 
-		foreach ($this->packages as $key=>$config) {
-			/* calc which buttons to show so it's not done in the view (where it doesn't belong) */
-			if (!$config['has_error']) {
-				$config['button']['install'] = (!$config['is_active']);
-				$config['button']['upgrade'] = ($config['version_check'] == 3 && $config['is_active']);
-				$config['button']['uninstall'] = ($config['is_active'] && !$config['is_required']);
+		foreach ($this->packages as $key=>$package) {
+			$errors = false;
 
-				if ($this->allow_delete) {
-					$config['button']['delete'] = (!$config['is_active'] && !$config['is_required']);
-				} else {
-					$config['button']['delete'] = false;
-				}
+			$this->packages[$key]['buttons']['deactivate'] = false;
+			$this->packages[$key]['buttons']['activate'] = false;
+			$this->packages[$key]['buttons']['upgrade'] = false;
+			$this->packages[$key]['buttons']['uninstall'] = false;
+
+			if ($package['database']['is_active']) {
+				$this->packages[$key]['www_name'] = '<strong>'.htmlentities($package['composer']['name']).'</strong>';
 			} else {
-				$config['button']['info'] = true;
+				$this->packages[$key]['www_name'] = htmlentities($package['composer']['name']);
 			}
 
-			/* calc version display */
-			$config['version_display'] = 0;
+			if (isset($package['composer']['orange'])) {
 
-			if (!$config['json_error']) {
-				if ($config['is_active']) {
-					switch ($config['version_check']) {
-						case 1: /* less than */
-							$config['version_display'] = 4;
-							$config['show_version'] = true;
-						break;
-						case 2:
-							$config['version_display'] = 2;
-							/* version in db matches migration version */
-						break;
-						case 3: /* greater than */
-							$config['version_display'] = 3;
-							$config['uninstall'] = false;
-							$config['upgrade'] = true;
-						break;
-						default:
-							$config['version_display'] = 4;
-					}
+				/*
+				show activate / deactivate
+
+				activate will add to onload and autoload and run all migrations up to the latest as needed
+				deactivate removes from onload and autoload but does NOT run migrations down (uninstall does that)
+				*/
+				if ($package['is_active']) {
+					$this->packages[$key]['buttons']['deactivate'] = true;
+				} else {
+					$this->packages[$key]['buttons']['activate'] = true;
 				}
+
+				/*
+				show upgrade
+
+				this will run all migrations up to the listed orange version
+				*/
+				if ($package['migrations']['has_migrations'] && $package['is_active']) {
+					$this->packages[$key]['buttons']['upgrade'] = true;
+				}
+
+				/*
+				show uninstall
+
+				This will run all migrations down to 0
+				*/
+				if ($package['is_active'] != '1') {
+					$this->packages[$key]['buttons']['uninstall'] = true;
+				}
+
+				/* is this loaded? if it isn't then they can't unload it */
+				if ($package['database']['is_installed'] != '1') {
+					$this->packages[$key]['buttons']['uninstall'] = false;
+				}
+
+				/* is this package required by anyone? */
+				if (count($package['is_required_by']) > 0) {
+					$this->packages[$key]['buttons']['deactivate'] = false;
+					$this->packages[$key]['buttons']['uninstall'] = false;
+					$this->packages[$key]['buttons']['error'] = true;
+				}
+
+				if (count($package['package_not_active']) > 0) {
+					$this->packages[$key]['buttons']['activate'] = false;
+					$this->packages[$key]['buttons']['error'] = true;
+				}
+
+				if (count($package['package_not_available']) > 0) {
+					$this->packages[$key]['buttons']['activate'] = false;
+					$this->packages[$key]['buttons']['error'] = true;
+				}
+
 			}
 
-			/* ok now put this in the array as well! */
-			$this->packages[$key] = $config;
 		}
 	}
+
+	/* find if a package is require so they don't deactivate it */
+	public function requirements(&$packages) {
+		/* save this for later to add errors */
+		$this->packages = &$packages;
+
+		/* first convert array from full path keys to composer namespace keys */
+		foreach ($this->packages as $key=>$package) {
+			$this->available_packages[$package['composer']['name']] = $package;
+
+			if ($package['is_active'] || !isset($package['composer']['orange'])) {
+				$this->active_packages[$package['composer']['name']] = $package;
+			}
+		}
+
+		/* ok now loop over the packages to determine the requirements */
+		foreach ($this->packages as $key=>$package) {
+			if (isset($package['composer']['orange'])) {
+				$this->packages[$key]['missing_package'] = false;
+				$this->packages[$key]['not_active_package'] = false;
+
+				$this->_test_requirement($key,$package);
+			}
+		}
+	}
+
+	protected function _test_requirement($key,$package) {
+		/* does this package have any requirements? */
+		if (is_array($package['composer']['require'])) {
+			/* yes - ok let's see if they are active */
+			foreach ($package['composer']['require'] as $required_package=>$version) {
+				
+				if ($package['is_active']) {
+					$this->_tell_package_it_is_needed($required_package,$package['composer']['name']);
+				}
+
+				if (!$this->_test_is_available($required_package)) {
+					$this->packages[$key]['package_not_available'][$required_package] = $required_package;
+					$this->packages[$key]['missing_package'] = true;
+				} elseif (!$this->_test_is_active($required_package)) {
+					$this->packages[$key]['package_not_active'][$required_package] = $required_package;
+					$this->packages[$key]['not_active_package'] = true;
+				}
+
+			}
+		}
+	}
+
+	protected function _tell_package_it_is_needed($namespace,$required_by) {
+		foreach ($this->packages as $key=>$package) {
+			if ($package['composer']['name'] == $namespace) {
+				$this->packages[$key]['is_required_by'][$required_by] = $required_by;
+
+				return true;
+			}
+		}
+	}
+
+	protected function _test_is_active($key) {
+		if (in_array($key,$this->sudo_packages)) {
+			return true;
+		}
+
+		return array_key_exists($key,$this->active_packages);
+	}
+
+	protected function _test_is_available($key) {
+		if (in_array($key,$this->sudo_packages)) {
+			return true;
+		}
+
+		return array_key_exists($key,$this->available_packages);
+	}
+
+
 } /* end class */

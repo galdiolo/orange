@@ -3,9 +3,8 @@
 class package_manager {
 	public $packages = [];
 	public $config_header = "/*\nWARNING!\nThis file is directly modified by the framework\ndo not modify it unless you know what you are doing\n*/\n\n";
-	public $config_packages;
 	public $messages;
-	public $default_load_priority = 50;
+	public $default_load_priority = 55;
 	public $o_packages_model;
 	public $package_migration_manager;
 	public $package_requirements;
@@ -24,8 +23,6 @@ class package_manager {
 		$this->package_migration_manager = &ci()->package_migration_manager;
 		$this->package_helper = &ci()->package_helper;
 
-		$this->prepare();
-
 		/* check out folders */
 		$msgs = false;
 
@@ -39,8 +36,7 @@ class package_manager {
 
 		$this->messages = ($msgs === false) ? false : implode('<br>',$msgs);
 
-		/* uncomment if you need to fill your database with all packages */
-		//$this->init_fill_db();
+		$this->prepare();
 	}
 
 	/*
@@ -48,10 +44,6 @@ class package_manager {
 	based on json files.
 	*/
 	public function prepare() {
-		include $this->autoload;
-
-		$this->config_packages = $autoload['packages'];
-
 		$packages = $this->rglob(ROOTPATH.'/packages','composer.json');
 
 		/* did we even get any? */
@@ -66,46 +58,61 @@ class package_manager {
 		}
 
 		/* calculate the package requirements - passed by ref. */
+		/* this is now done by composer */
 		$this->package_helper->requirements($this->packages);
 
 		$this->package_helper->migrations($this->packages);
 
 		$this->package_helper->buttons($this->packages);
-		
-		kd($this->packages);
+
+		/* sort all nice based on namespace */
+		uasort($this->packages,function($obj1,$obj2) {
+			if ($obj1['composer']['name'] == $obj2['composer']['name']) {
+				return 0;
+			}
+
+			return ($obj1['composer']['name'] < $obj2['composer']['name']) ? -1 : 1;
+		});
+
+		/* return incase somebody else called us */
+		return $this->packages;
 	}
 
 	protected function _prepare($packages_info,$type_of_package) {
 		foreach ($packages_info as $info) {
-			$composer_config = $this->load_info_json($info);
+			$key = trim(str_replace(ROOTPATH,'',dirname($info)));
 
-			if (is_array($composer_config)) {
-				$key = trim(str_replace(ROOTPATH,'',dirname($info)));
+			/* load json composer file */
+			$composer_config = json_decode(file_get_contents($info),true);
 
-				$db_config = $this->o_packages_model->read($key);
+			/* did we get a error or does it not have a description */
+			if ($composer_config !== null) {
+				if ($composer_config['description']) {
 
-				$cr = $composer_config['composer_priority'];
+					$db_config = (array)$this->o_packages_model->get($key);
 
-				$human_priority = (in_array($cr,range(0,20)) ? 'highest' : '');
-				$human_priority = (in_array($cr,range(21,40)) ? 'high' : '');
-				$human_priority = (in_array($cr,range(41,60)) ? 'normal' : '');
-				$human_priority = (in_array($cr,range(61,80)) ? 'low' : '');
-				$human_priority = (in_array($cr,range(81,100)) ? 'lowest' : '');
+					if (isset($composer_config['orange'])) {
+						$composer_config['orange']['priority'] = ($composer_config['orange']['priority']) ? $composer_config['orange']['priority'] : $this->default_load_priority;
+					}
 
-				$extra = [
-					'name'=>trim(str_replace('/',' ',$key)),
-					'composer_human_priority'=>$human_priority,
-					'type_of_package'=>$type_of_package,
-					'db_priority'=>$db_config['priority'],
-					'full_path'=>$key,
-					'human'=>str_replace('/',' ',$key),
-					'is_active'=>(($db_config['is_active']) ? true : false),
-					'version_check'=>$this->package_migration_manager->version_check($db_config['migration_version'],$composer_config['composer_version']),
-					'url_name'=>bin2hex($key),
-					'composer_name'=>$composer_config['name'],
-				];
+					$cr = $composer_config['orange']['priority'];
 
-				$this->packages[$key] = array_merge((array)$composer_config,(array)$db_config,(array)$extra);
+					$cr = (in_array($cr,range(0,20)) ? 'highest' : $cr);
+					$cr = (in_array($cr,range(21,40)) ? 'high' : $cr);
+					$cr = (in_array($cr,range(41,60)) ? 'normal' : $cr);
+					$cr = (in_array($cr,range(61,80)) ? 'low' : $cr);
+					$cr = (in_array($cr,range(81,100)) ? 'lowest' : $cr);
+
+					$extra = [
+						'human_priority'=>$cr,
+						'url_name'=>bin2hex($key),
+						'key'=>$key,
+						'is_active'=>(($db_config['is_active']) ? true : false),
+						'folder'=>$type_of_package,
+					];
+
+					$this->packages[$key] = $extra + ['composer'=>$composer_config,'database'=>$db_config];
+				}
 			}
 		}
 	}
@@ -118,90 +125,195 @@ class package_manager {
 		return $this->packages[$package];
 	}
 
-	public function install_or_upgrade($package) {
-		return ($this->packages[$package]['is_active']) ? $this->upgrade($package) : $this->install($package);
-	}
+	public function activate($key) {
+		log_message('debug', 'Package Manager Activate');
 
-	public function install($package) {
-		$config = $this->packages[$package];
+		/* need to install this into the database */
+		$package = $this->packages[$key];
 
-		/* migrations up */
-		if ($success = $this->package_migration_manager->run_migrations($config,'up')) {
-	
-			/* add to db */
-			$this->o_packages_model->write($package,$config['composer_version'],true,$config['priority']);
-	
-			$this->create_autoload();
-			$this->create_onload();
-		}
+		if (!is_array($package)) {
+			log_message('debug', 'Activate package not an array');
 
-		return $success;
-	}
-
-	public function upgrade($package) {
-		$config = $this->packages[$package];
-
-		/* migrations up */
-		if ($success = $this->package_migration_manager->run_migrations($config,'up')) {
-	
-			$this->o_packages_model->write_new_version($package,$config['composer_version']);
-			$this->o_packages_model->write_new_priority($package,$config['priority'],null,false);
-	
-			$this->create_autoload();
-			$this->create_onload();
-		}
-
-		return $success;
-	}
-
-	public function uninstall($package) {
-		$config = $this->packages[$package];
-
-		/* migrations down */
-		if ($success = $this->package_migration_manager->run_migrations($config,'down')) {
-			$this->o_packages_model->activate($package,false);
-	
-			$this->create_autoload();
-			$this->create_onload();
-		}
-
-		return $success;
-	}
-
-	public function delete($package) {
-		if (!$this->allow_delete) {
-			show_error('Delete not allowed.');
-		}
-
-		/* delete the entire folder */
-		ci()->load->helper('directory');
-
-		$this->o_packages_model->remove($package);
-
-		$path = ROOTPATH.'/packages/'.$package;
-
-		$this->create_autoload();
-		$this->create_onload();
-
-		return rmdirr($path);
-	}
-
-	public function load_info_json($json_file) {
-		$config = json_decode(file_get_contents($json_file),true);
-
-		/* error decoding json */
-		if ($config === null || !isset($config['orange'])) {
 			return false;
 		}
 
-		/* from orange */
-		$config['type'] = (isset($config['orange']['type'])) ? $config['orange']['type'] : 'package';
-		$config['priority'] = (!empty($config['orange']['priority'])) ? (int)$config['orange']['priority'] : $this->default_load_priority;
+		$package_name = $package['composer']['name'];
 
-		$config['composer_priority'] = (!empty($config['orange']['priority'])) ? (int)$config['orange']['priority'] : $this->default_load_priority;
-		$config['composer_version'] = (!empty($config['orange']['version'])) ? $config['orange']['version'] : '?';
+		log_message('debug', 'Activate '.$package_name);
 
-		return $config;
+		/* migrations up */
+		if (!$this->package_migration_manager->run_migrations($package,'up')) {
+			log_message('debug', 'Activate error run migrations '.$package_name);
+
+			return false;
+		}
+
+		$version = ($package['composer']['orange']['version']) ? $package['composer']['orange']['version'] : '1.0.0';
+		$priority = ($package['composer']['orange']['priority']) ? $package['composer']['orange']['priority'] : $this->default_load_priority;
+
+		/* add to db */
+		if (!$this->o_packages_model->add($key,$version,true,true,$priority)) {
+			log_message('debug', 'Activate error add record '.$package_name);
+
+			return false;
+		}
+		
+		/* make sure it's is loaded */
+		if (!$this->o_packages_model->load($key,true)) {
+			log_message('debug', 'Activate error load '.$package_name);
+
+			return false;
+		}
+
+		if (!$this->create_autoload()) {
+			log_message('debug', 'Activate error create autoload '.$package_name);
+
+			return false;
+		}
+
+		if (!$this->create_onload()) {
+			log_message('debug', 'Activate error create onload '.$package_name);
+
+			return false;
+		}
+
+		return true;
+	}
+
+	public function deactivate($key) {
+		log_message('debug', 'Package Manager Deactivate');
+
+		/* need to install this into the database */
+		$package = $this->packages[$key];
+
+		if (!is_array($package)) {
+			log_message('debug', 'Deactivate package not an array');
+
+			return false;
+		}
+
+		$package_name = $package['composer']['name'];
+
+		log_message('debug', 'Deactivate '.$package_name);
+
+		/* add to db */
+		if (!$this->o_packages_model->activate($key,false)) {
+			log_message('debug', 'Deactivate error record deactivate '.$package_name);
+
+			return false;
+		}
+
+		if (!$this->create_autoload()) {
+			log_message('debug', 'Deactivate error create autoload '.$package_name);
+
+			return false;
+		}
+
+		if (!$this->create_onload()) {
+			log_message('debug', 'Deactivate error create onload '.$package_name);
+
+			return false;
+		}
+
+		return true;
+	}
+
+	public function upgrade($key) {
+		log_message('debug', 'Package Manager Upgrade');
+
+		$package = $this->packages[$key];
+
+		if (!is_array($package)) {
+			log_message('debug', 'Upgrade package not an array');
+
+			return false;
+		}
+
+		$package_name = $package['composer']['name'];
+
+		log_message('debug', 'Upgrade '.$package_name);
+
+		/* migrations up */
+		if (!$this->package_migration_manager->run_migrations($package,'up')) {
+			log_message('debug', 'Upgrade error run migration up '.$package_name);
+
+			return false;
+		}
+
+		if (!$this->o_packages_model->version($package,$package['composer']['orange']['version'])) {
+			log_message('debug', 'Upgrade error write new version '.$package_name);
+
+			return false;
+		}
+
+		if (!$this->o_packages_model->priority($package,$package['composer']['orange']['priority'])) {
+			log_message('debug', 'Upgrade error write new priority '.$package_name);
+
+			return false;
+		}
+
+		if (!$this->create_autoload()) {
+			log_message('debug', 'Upgrade error create autoload '.$package_name);
+
+			return false;
+		}
+
+		if (!$this->create_onload()) {
+			log_message('debug', 'Upgrade error create onload '.$package_name);
+
+			return false;
+		}
+
+		return true;
+	}
+
+	public function uninstall($key) {
+		log_message('debug', 'Package Manager Uninstall');
+
+		$package = $this->packages[$key];
+
+		if (!is_array($package)) {
+			log_message('debug', 'Uninstall package not an array');
+
+			return false;
+		}
+		
+		$package_name = $package['composer']['name'];
+
+		log_message('debug', 'Uninstall '.$package_name);
+
+		/* migrations down */
+		if (!$this->package_migration_manager->run_migrations($package,'down')) {
+			log_message('debug', 'Uninstall error run migratons down '.$package_name);
+
+			return false;
+		}
+
+		if (!$this->o_packages_model->activate($package['key'],false)) {
+			log_message('debug', 'Uninstall error activate '.$package_name);
+
+			return false;
+		}
+
+		if (!$this->o_packages_model->load($package['key'],false)) {
+			log_message('debug', 'Uninstall error load '.$package_name);
+
+			return false;
+		}
+
+		if (!$this->create_autoload()) {
+			log_message('debug', 'Upgrade error create autoload '.$package_name);
+
+			return false;
+		}
+
+		if (!$this->create_onload()) {
+			log_message('debug', 'Upgrade error create onload '.$package_name);
+
+			return false;
+		}
+
+		return true;
 	}
 
 	/* wrapper for loader function */
@@ -270,12 +382,6 @@ class package_manager {
 		}
 
 		return $files;
-	}
-
-	protected function init_fill_db() {
-		foreach ($this->packages as $p) {
-			$this->o_packages_model->write($p['full_path'],$p['composer_version'],true,$p['composer_priority']);
-		}
 	}
 
 } /* end class */

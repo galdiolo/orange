@@ -153,21 +153,14 @@ class package_migration {
 
 		$asset = trim($asset,'/');
 
-		/* get package folder name */
-		$folder = explode('_',get_called_class());
-
-		array_shift($folder);
-
-		$package_folder = ROOTPATH.'/packages/'.implode('_',$folder).'/public/'.$asset;
-		$public_folder = ROOTPATH.'/public/'.$asset;
-
-		/* does the package exists */
-		if (!realpath($package_folder)) {
-			ci()->wallet->red('Couldn\'t find package file or folder <small>"'.str_replace(ROOTPATH,'',$package_folder).'"</small>','/admin/configure/packages');
+		if (!$package_folder = $this->_find_package($asset)) {
+			ci()->wallet->red('Couldn\'t find package folder "'.$this->package.'/public/'.$asset.'".','/admin/configure/packages');
 
 			return false;
 		}
 
+		$public_folder = ROOTPATH.'/public/'.$asset;
+		
 		/* let's make the public path if it's not there */
 		@mkdir(dirname($public_folder),0777,true);
 
@@ -175,7 +168,7 @@ class package_migration {
 		$this->remove_symlink($asset);
 
 		if (!relative_symlink($package_folder,$public_folder)) {
-			ci()->wallet->red('Couldn\'t create Link "'.str_replace(ROOTPATH,'',$public_folder).'".','/admin/configure/packages');
+			ci()->wallet->red('Couldn\'t create Link "'.$this->package.'::'.$asset.'".','/admin/configure/packages');
 
 			return false;
 		}
@@ -185,9 +178,23 @@ class package_migration {
 
 	public function remove_symlink($asset) {
 		$asset = trim($asset,'/');
+		
 		$public_folder = ROOTPATH.'/public/'.$asset;
 
 		return (file_exists($public_folder)) ? unlink($public_folder) : true;
+	}
+
+	protected function _find_package($path) {
+		$package = ROOTPATH.'/vendor/'.$this->package.'/public/'.$path;
+		$vendor = ROOTPATH.'/package/'.$this->package.'/public/'.$path;
+		
+		if (is_dir($package)) {
+			return $package;
+		} elseif (is_dir($vendor)) {
+			return $vendor;
+		}
+		
+		return false;
 	}
 
 	public function query($sql,$database_config='default') {

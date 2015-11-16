@@ -1,6 +1,7 @@
 <?php
 
 class O_CliController extends MY_Controller {
+	public $packages;
 
 	/* safety check - this can only be called via command line */
 	public function __construct() {
@@ -12,22 +13,24 @@ class O_CliController extends MY_Controller {
 		}
 	}
 
-	public function indexCliAction() {
+	public function indexCliAction($json=false) {
 		$class = get_called_class();
 
-		//$methods = get_class_methods($class);
+		$methods = get_class_methods($class);
 
-		$this->output($class);
+		$this->output('*** '.str_replace('CliController','',$class));
 
-		$match = str_replace('CliController','',$class);
-
-		$matching = $this->_get_matching($match);
-
-		$this->output('<blue>Available Methods:');
-
-		foreach ($matching as $command=>$desc) {
-			$this->output('<yellow>'.str_replace($match.' ','',$command));
-			$this->output('  <white>'.$desc);
+		foreach ($methods as $command) {
+			if (substr($command,-9) == 'CliAction' && $command != 'indexCliAction') {
+				$command = str_replace('CliAction','',$command);
+				
+				if ($json) {
+					// "help": "Show detailed help on all command line interface commands exposed in all packages.",
+					$this->output('<yellow>"'.str_replace('CliController','',$class).' '.str_replace($match.' ','',$command).'": "",');
+				} else {
+					$this->output('<yellow>'.str_replace('CliController','',$class).' '.str_replace($match.' ','',$command));
+				}
+			}
 		}
 	}
 
@@ -85,30 +88,5 @@ class O_CliController extends MY_Controller {
 
 		return $files;
 	}
-
-	public function _get_matching($match) {
-		/* find all info.json */
-		$infos = $this->_rglob(ROOTPATH.'/packages','info.json');
-		$matches = [];
-
-		foreach ($infos as $i) {
-			$json = json_decode(file_get_contents($i));
-
-			if ($json !== null) {
-				if (isset($json->cli)) {
-					$entries = (array)$json->cli;
-					foreach ($entries as $k=>$c) {
-						$parts = explode(' ',$k);
-						if ($parts[0] == $match) {
-							$matches[$k] = $c;
-						}
-					}
-				}
-			}
-		}
-
-		return $matches;
-	}
-
 
 } /* end class */
