@@ -423,6 +423,7 @@ class Page {
 		$this->js_var('base_url',$base_url);
 		$this->js_var('appid', md5($base_url));
 		$this->js_var('controller_path', '/'.str_replace('/index', '', $this->route));
+		$this->js_var('controller_path_raw', '/'.str_replace('/index', '', ci()->uri->uri_string));
 		$this->js_var('userid', $userid);
 
 		/* fast and loose */
