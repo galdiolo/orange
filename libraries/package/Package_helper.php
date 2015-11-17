@@ -58,8 +58,13 @@ class package_helper {
 			$this->packages[$key]['buttons']['uninstall'] = false;
 
 			if ($package['database']['is_active']) {
-				$this->packages[$key]['www_name'] = '<strong>'.htmlentities($package['composer']['name']).'</strong>';
+				/* orange and active */
+				$this->packages[$key]['www_name'] = htmlentities($package['composer']['name']).' <b class="text-primary">*</b>';
+			} elseif (isset($package['composer']['orange']) && !$package['database']['is_active']) {
+				/* orange but not active */
+				$this->packages[$key]['www_name'] = htmlentities($package['composer']['name']).' <span class="text-muted">*</span>';
 			} else {
+				/* non orange package */
 				$this->packages[$key]['www_name'] = htmlentities($package['composer']['name']);
 			}
 
