@@ -13,7 +13,7 @@ class O_CliController extends MY_Controller {
 		}
 	}
 
-	public function indexCliAction($json=false) {
+	public function indexCliAction() {
 		$class = get_called_class();
 
 		$methods = get_class_methods($class);
@@ -24,12 +24,7 @@ class O_CliController extends MY_Controller {
 			if (substr($command,-9) == 'CliAction' && $command != 'indexCliAction') {
 				$command = str_replace('CliAction','',$command);
 				
-				if ($json) {
-					// "help": "Show detailed help on all command line interface commands exposed in all packages.",
-					$this->output('<yellow>"'.str_replace('CliController','',$class).' '.str_replace($match.' ','',$command).'": "",');
-				} else {
-					$this->output('<yellow>'.str_replace('CliController','',$class).' '.str_replace($match.' ','',$command));
-				}
+				$this->output('<yellow>'.str_replace('CliController','',$class).' '.str_replace($match.' ','',$command));
 			}
 		}
 	}

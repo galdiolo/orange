@@ -71,20 +71,24 @@ class Auth {
 		$session_data = $this->ci_session->userdata($this->session_key);
 
 		$profile = new stdClass;
-
-		/* Does the user have a "saved" user profile? */
-		if ($this->validate_profile($session_data) === true) {
-			/* yes */
-			$profile = $session_data;
-		} else {
-			/* no - user the guest profile */
-			if (!$guest_profile = ci()->cache->get('auth-default-profile')) {
-				$guest_profile = $this->build_profile(setting('auth','Guest Id'));
-
-				ci()->cache->save('auth-default-profile',$guest_profile,setting('config','cache_ttl'));
+		
+		/* if this is a cli request we don't need to setup the user profile */
+		if (!$this->ci_input->is_cli_request()) {
+	
+			/* Does the user have a "saved" user profile? */
+			if ($this->validate_profile($session_data) === true) {
+				/* yes */
+				$profile = $session_data;
+			} else {
+				/* no - user the guest profile */
+				if (!$guest_profile = ci()->cache->get('auth-default-profile')) {
+					$guest_profile = $this->build_profile(setting('auth','Guest Id'));
+	
+					ci()->cache->save('auth-default-profile',$guest_profile,setting('config','cache_ttl'));
+				}
+	
+				$profile = $guest_profile;
 			}
-
-			$profile = $guest_profile;
 		}
 
 		ci()->user = $profile;
