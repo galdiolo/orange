@@ -10,17 +10,7 @@
 		"email": "donmyers@projectorangebox.com"
 	}],
 	"require": {
-		"php": ">=5.5",
-		"projectorangebox/plugin-combobox": "dev-master",
-		"projectorangebox/plugin-flash-msg": "dev-master",
-		"projectorangebox/plugin-nestable": "dev-master",
-		"projectorangebox/plugin-o-dialog": "dev-master",
-		"projectorangebox/plugin-o-validate-form": "dev-master",
-		"projectorangebox/plugin-search-sort": "dev-master",
-		"projectorangebox/plugin-select3": "dev-master",
-		"projectorangebox/theme-orange": "dev-master",
-		"projectorangebox/support": "dev-master"
-		
+		"php": ">=5.5"		
 	},
 	"orange": {
 		"version": "1.0.0",
