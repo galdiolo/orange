@@ -17,10 +17,6 @@ class o_packages_model extends Database_model {
 		return $this->_database->update($this->table,['is_active'=>(int)$is_active],[$this->primary_key=>$key]);
 	}
 
-	public function load($key,$is_installed) {
-		return $this->_database->update($this->table,['is_installed'=>(int)$is_installed],[$this->primary_key=>$key]);
-	}
-
 	public function version($key,$version) {
 		return $this->_database->update($this->table,['migration_version'=>$version],[$this->primary_key=>$key]);
 	}
@@ -29,13 +25,13 @@ class o_packages_model extends Database_model {
 		return $this->_database->update($this->table,['priority'=>$priority],[$this->primary_key=>$key]);
 	}
 
-	public function add($key,$migration_version,$is_active,$is_loaded,$priority=50) {
+	public function add($key,$migration_version,$is_active,$priority=50) {
 		$migration_version = (!empty($migration_version)) ? $migration_version : '0.0.0';
 		$is_active = ($is_active) ? 1 : 0;
 		$is_loaded = ($is_loaded) ? 1 : 0;
 		$priority = (!empty($priority)) ? (int)$priority : 50;
 
-		return $this->_database->replace($this->table,[$this->primary_key=>$key,'migration_version'=>$migration_version,'is_active'=>$is_active,'is_installed'=>$is_installed,'priority'=>$priority]);
+		return $this->_database->replace($this->table,[$this->primary_key=>$key,'migration_version'=>$migration_version,'is_active'=>$is_active,'priority'=>$priority]);
 	}
 
 	/* get active in order */

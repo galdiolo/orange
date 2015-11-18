@@ -20,13 +20,13 @@ class package_helper {
 		foreach ($this->packages as $key=>$package) {
 			$this->packages[$key]['version_check'] = $this->package_migration_manager->version_check($package['database']['migration_version'],$package['composer']['orange']['version']);
 
-			/* starting version for migrations */
-			$starting_version = ($package['database']['migration_version']) ? $package['database']['migration_version'] : '0.0.0';
-
-			$migration_files = $this->package_migration_manager->get_migrations_between($key,$starting_version,$package['composer']['orange']['version']);
+			/* find this packages migrations starting at the current database migration to the current composer version adding 1 to the current database migration version */
+			$migration_files = $this->package_migration_manager->get_migrations_between($this->packages[$key]);
 
 			$this->packages[$key]['migrations']['files'] = $migration_files;
 			$this->packages[$key]['migrations']['has_migrations'] = (count($migration_files) > 0);
+			
+			$this->packages[$key]['migrations']['uninstall'] = $this->package_migration_manager->get_migrations_uninstall($this->packages[$key]);
 
 			/* update packages that don't have migrations */
 			if ($this->packages[$key]['migrations']['has_migrations'] == false && $this->packages[$key]['version_check'] == 3) {
@@ -69,17 +69,21 @@ class package_helper {
 			}
 
 			if (isset($package['composer']['orange'])) {
-
 				/*
 				show activate / deactivate
 
 				activate will add to onload and autoload and run all migrations up to the latest as needed
 				deactivate removes from onload and autoload but does NOT run migrations down (uninstall does that)
 				*/
-				if ($package['is_active']) {
+				if ($package['is_active'] == 1) {
 					$this->packages[$key]['buttons']['deactivate'] = true;
 				} else {
 					$this->packages[$key]['buttons']['activate'] = true;
+					
+					/* is this in the database? */
+					if (count($package['database']) > 0) {
+						$this->packages[$key]['buttons']['uninstall'] = true;
+					}
 				}
 
 				/*
@@ -89,20 +93,6 @@ class package_helper {
 				*/
 				if ($package['migrations']['has_migrations'] && $package['is_active']) {
 					$this->packages[$key]['buttons']['upgrade'] = true;
-				}
-
-				/*
-				show uninstall
-
-				This will run all migrations down to 0
-				*/
-				if ($package['is_active'] != '1') {
-					$this->packages[$key]['buttons']['uninstall'] = true;
-				}
-
-				/* is this loaded? if it isn't then they can't unload it */
-				if ($package['database']['is_installed'] != '1') {
-					$this->packages[$key]['buttons']['uninstall'] = false;
 				}
 
 				/* is this package required by anyone? */
@@ -157,7 +147,7 @@ class package_helper {
 		if (is_array($package['composer']['require'])) {
 			/* yes - ok let's see if they are active */
 			foreach ($package['composer']['require'] as $required_package=>$version) {
-				
+
 				if ($package['is_active']) {
 					$this->_tell_package_it_is_needed($required_package,$package['composer']['name']);
 				}

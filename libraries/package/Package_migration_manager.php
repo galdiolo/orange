@@ -1,16 +1,51 @@
 <?php
 
 class package_migration_manager {
+	public function get_migrations_between($package) {
+		$folder = $package['key'];
 
-	public function get_migrations_between($package,$start_ver='0.0.0',$end_ver='999.999.999') {
+		/* start at the database specified version */
+		$start_ver = (!empty($package['database']['migration_version'])) ? $package['database']['migration_version'] : '0.0.0';
+
+		/* end at the package specified version */
+		$end_ver = (!empty($package['composer']['orange']['version'])) ? $package['composer']['orange']['version'] : '999.999.999';
+
+		return $this->get_files($folder,$start_ver,$end_ver);
+	}
+	
+	public function get_migrations_uninstall($package) {
+		$folder = $package['key'];
+		
+		/* back to not installed */
+		$start_ver = '0.0.0';
+
+		/* end at the package specified version */
+		$end_ver = (!empty($package['database']['migration_version'])) ? $package['database']['migration_version'] : '0.0.0';
+
+		$migration_files = $this->get_files($folder,$start_ver,$end_ver);
+		
+		/* flip them for uninstall */
+		$migration_files = array_reverse($migration_files,true);
+
+		return $migration_files;
+	}
+
+	protected function get_files($folder,$start_ver,$end_ver) {
 		$migration_array = [];
-		$migration_folder = ROOTPATH.'/'.trim($package,'/').'/support/migrations';
 
-		$start_ver = ($start_ver) ? $start_ver : '0.0.0';
-		$end_ver = ($end_ver) ? $end_ver : '999.999.999';
+		/* do both version match? if so then we are up to date */
+		if ($start_ver == $end_ver) {
+			return $migration_array;
+		}
+
+		$migration_folder = ROOTPATH.'/'.trim($folder,'/').'/support/migrations';
 
 		/* is it there? */
 		if (is_dir($migration_folder)) {
+			log_message('debug','Migration Folder '.$migration_folder);
+
+			log_message('debug','Migration Between '.$start_ver.' '.$end_ver);
+
 			/* migrations start with v ie. v1.0.0-name_of_migration.php */
 			$migrations = glob($migration_folder.'/v*.php');
 
@@ -22,17 +57,29 @@ class package_migration_manager {
 				list($migration_file_version) = explode('-',str_replace('v','',$filename));
 
 				if ($this->between_version($migration_file_version,$start_ver,$end_ver)) {
+					log_message('debug','Migration File version '.$migration_file_version.' matches');
+
 					$migration_array[] = $migration;
+				} else {
+					log_message('debug','Migration File version '.$migration_file_version.' does not match');
 				}
 			}
+
+			log_message('debug','Migration Found '.count($migration_array));
 		}
 
 		return $migration_array;
 	}
 
-	public function between_version($version,$start_version,$end_version) {
-		if (version_compare($version,$end_version,'<') || version_compare($version,$start_version,'=>')) {
+	public function between_version($version,$start_ver,$end_ver) {
+		if ($version == $end_ver) {
 			return true;
+		}
+
+		if (version_compare($version,$start_ver,'>')) {
+			if (version_compare($version,$end_ver,'<')) {
+				return true;
+			}
 		}
 
 		return false;
@@ -76,42 +123,24 @@ class package_migration_manager {
 		return $bol;
 	}
 
-	public function run_migrations($config,$dir) {
-		log_message('debug', 'run migrations '.$dir.' '.$config['key'].' '.$config['composer_version']);
+	public function run_migrations_up($package) {
+		return $this->run_migrations($package['migrations']['files'],'up');
+	}
 
-		if (empty($config['key'])) {
-			show_error('Key Not Found');
-		}
+	public function run_migrations_down($package) {
+		return $this->run_migrations($package['migrations']['uninstall'],'down');
+	}
 
-		if (empty($config['composer']['orange']['version'])) {
-			show_error('Orange Version Empty');
-		}
-
-		if ($dir != 'up' && $dir != 'down') {
-			show_error('debug', 'migrations direction '.$dir.' not valid.');
-		}
-
-		switch ($dir) {
-			case 'up':
-				/* if it's down then we need a complete set of migrations */
-				$migration_files = $this->get_migrations_between($config['key'],$config['composer_version'],'999.999.999');
-			break;
-			case 'down':
-				/* if it's down then we need a complete set of migrations */
-				$migration_files = $this->get_migrations_between($config['key'],'0.0.0',$config['composer_version']);
-
-				/* ok now run it backwards */
-				$migration_files = array_reverse($migration_files,true);
-			break;
-		}
-
-		log_message('debug','Found '.count($migration_files).' migration files');
+	protected function run_migrations($migration_files,$dir) {
+		log_message('debug', 'run migrations '.$dir);
 
 		$success = true;
 
 		if (is_array($migration_files)) {
 			foreach ($migration_files as $migration_file) {
 				$migration_filename = basename($migration_file,'.php');
+
+				log_message('debug','Running Migration File '.$migration_filename);
 
 				$class_name = str_replace(['.','-'],['','_'],$migration_filename);
 
