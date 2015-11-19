@@ -14,63 +14,47 @@ class Widget {
    * @param string $cache_name
    * @return mixed|void
    */
-	public static function show($command, $cache_time = 0, $cache_name = NULL) {
+	public static function show($command) {
 		// Users should be allowed to customize the cache name
 		// so they can account for user role, logged in status,
 		// or simply be able to easily clear the cache items elsewhere.
 		if (empty($cache_name)) {
-			$cache_name = 'theme_call_' . md5($command . $params);
+			$cache_name = 'widget_' . md5($command);
 		}
 
-		if (!$output = $this->ci->cache->get($cache_name)) {
+		if (!$output = ci()->cache->get($cache_name)) {
+			$command = substr($command,1,-1);
 			$first_space = strpos($command,' ');
-		
-			$class_method = substr($command,0,$first_space);
-			$params = substr($command,$first_space);
-		
-			list($class, $method) = explode(':', $class_method);
+
+			list($class, $method) = explode(':',substr($command,0,$first_space));
+
+			$params = new SimpleXMLElement('<element '.substr($command,$first_space + 1).' />');
+			$params = (array)$params;
 
 			/* add widget to the begining of the class name */
-			$class = 'Widget_'.$class;
-
-			// Since $params is a string, we need to split it into
-			// an array of 'key=value' segments
-			$parts = explode($params);
-
-			$params = array();
-
-			// Prepare our parameter list to send to the callback
-			// by splitting $parts on equal signs.
-			foreach ($parts as $part) {
-				$p = explode('=', $part);
-
-				if (empty($p[0]) || empty($p[1])) {
-					continue;
-				}
-
-				$params[$p[0]] = $p[1];
-			}
+			$classname = 'Widget_'.$class;
 
 			// Let PHP try to autoload it through any available autoloaders
 			// (including Composer and user's custom autoloaders). If we
 			// don't find it, then assume it's a CI library that we can reach.
-			if (class_exists($class)) {
-				$class = new $class();
+			if (class_exists($classname)) {
+				$obj = new $classname();
 			} else {
-				ci()->load->library($class);
-				$class =& ci()->$class;
+				ci()->load->library($classname);
+
+				$obj =& ci()->$classname;
 			}
 
-			if ( ! method_exists($class, $method)) {
-				throw new \RuntimeException("Unable to display the Widget at {$class}::{$method}");
+			if (!method_exists($obj, $method)) {
+				return 'can\'t find '.$class.':'.$method;
 			}
 
 			// Call the class with our parameters
-			$output = $class->{$method}($params);
+			$output = $obj->{$method}($params['@attributes']);
 
 			// Cache it
-			if ((int)$cache_time > 0) {
-				ci()->cache->save($cache_name, $output, (int)$cache_time * 60);
+			if ((int)$params['@attributes']['cache'] > 0) {
+				ci()->cache->save($cache_name, $output, (int)$params['@attributes']['cache']);
 			}
 		}
 
