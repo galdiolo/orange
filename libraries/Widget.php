@@ -6,7 +6,7 @@ class Widget {
    * you to create re-usable, cacheable "widgets" for your views.
    *
    * Example:
-   *     Widgets::show('blog/posts:list', 'limit=5 sort=publish_on dir=desc');
+   *     Widgets::show('blog/posts:list limit=5 sort=publish_on dir=desc');
    *
    * @param string $command
    * @param string $params
@@ -14,7 +14,7 @@ class Widget {
    * @param string $cache_name
    * @return mixed|void
    */
-	public static function show($command, $params = NULL, $cache_time = 0, $cache_name = NULL) {
+	public static function show($command, $cache_time = 0, $cache_name = NULL) {
 		// Users should be allowed to customize the cache name
 		// so they can account for user role, logged in status,
 		// or simply be able to easily clear the cache items elsewhere.
@@ -22,8 +22,13 @@ class Widget {
 			$cache_name = 'theme_call_' . md5($command . $params);
 		}
 
-		if ( ! $output = $this->ci->cache->get($cache_name)) {
-			list($class, $method) = explode(':', $command);
+		if (!$output = $this->ci->cache->get($cache_name)) {
+			$first_space = strpos($command,' ');
+		
+			$class_method = substr($command,0,$first_space);
+			$params = substr($command,$first_space);
+		
+			list($class, $method) = explode(':', $class_method);
 
 			/* add widget to the begining of the class name */
 			$class = 'Widget_'.$class;
