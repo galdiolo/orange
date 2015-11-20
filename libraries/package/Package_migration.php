@@ -154,11 +154,9 @@ class package_migration {
 
 		$asset = trim($asset,'/');
 
-		if (!$package_folder = $this->_find_package($asset)) {
-			ci()->wallet->red('Couldn\'t find package folder "'.$this->internal.'/public/'.$asset.'".','/admin/configure/packages');
+		$type = explode('/',$this->internal,1);
 
-			return false;
-		}
+		$package_folder = ($type == 'package') ? ROOTPATH.'/'.$this->internal.'/public/'.$asset : ROOTPATH.'/vendor/'.$this->internal.'/public/'.$asset;
 
 		$public_folder = ROOTPATH.'/public/'.$asset;
 
@@ -183,12 +181,6 @@ class package_migration {
 		$public_folder = ROOTPATH.'/public/'.$asset;
 
 		return (file_exists($public_folder)) ? unlink($public_folder) : true;
-	}
-
-	protected function _find_package($path) {
-		list($type,$name) = explode('/',$this->package,2);
-
-		return ($type == 'package') ? ROOTPATH.'/'.$this->package.'/public/'.$path : ROOTPATH.'/vendor/'.$this->package.'/public/'.$path;
 	}
 
 	public function query($sql,$database_config='default') {
