@@ -38,13 +38,16 @@ class AdminCliController extends O_CliController {
 	public function symlinkCliAction() {
 	}
 
-	public function remove_menuCliAction() {	
+	public function remove_menuCliAction($internal) {	
+		$this->package_migration->remove_menu($internal);
 	}
 
-	public function remove_accessCliAction() {	
+	public function remove_accessCliAction($internal) {	
+		$this->package_migration->remove_access($internal);
 	}
 
-	public function remove_settingCliAction() {	
+	public function remove_settingCliAction($internal) {	
+		$this->package_migration->remove_setting($internal);
 	}
 
 	public function remove_routeCliAction() {	
