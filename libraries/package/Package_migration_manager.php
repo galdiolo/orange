@@ -149,6 +149,12 @@ class package_migration_manager {
 				if (!class_exists($class_name,false)) {
 					show_error('Error: migration class named "'.$class_name.'" not found in "'.$migration_file.'"');
 				}
+				
+				/* setup some config stuff */
+				list($folder,$filename) = array_slice(explode('/',$migration_file), -5, 2);
+				
+				$config['internal'] = $folder.'/'.$filename;
+				$config['name'] = ucwords($filename);
 
 				$migration = new $class_name($config);
 

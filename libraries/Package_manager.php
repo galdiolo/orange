@@ -1,12 +1,12 @@
 <?php
 /*
 CREATE TABLE `orange_packages` (
-  `full_path` varchar(255) NOT NULL,
-  `migration_version` varchar(16) DEFAULT '0.0.0',
-  `is_active` tinyint(1) unsigned DEFAULT '1',
-  `priority` tinyint(4) NOT NULL DEFAULT '55',
-  PRIMARY KEY (`full_path`),
-  KEY `idx_full_path` (`full_path`) USING HASH
+	`full_path` varchar(255) NOT NULL,
+	`migration_version` varchar(16) DEFAULT '0.0.0',
+	`is_active` tinyint(1) unsigned DEFAULT '1',
+	`priority` tinyint(4) NOT NULL DEFAULT '55',
+	PRIMARY KEY (`full_path`),
+	KEY `idx_full_path` (`full_path`) USING HASH
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 */
 
@@ -156,13 +156,13 @@ class package_manager {
 			/* activate in database and bail */
 			if (!$this->o_packages_model->activate($key,true)) {
 				log_message('debug', 'Activate error record '.$package_name);
-	
+
 				return false;
 			}
-			
-			return true;		
+
+			return true;
 		}
-		
+
 		/* if it's new then we need to go through the complete install */
 
 		/* add it to the database */
@@ -182,7 +182,7 @@ class package_manager {
 
 			return false;
 		}
-		
+
 		/* update autoload to reflect the changes */
 		if (!$this->create_autoload()) {
 			log_message('debug', 'Activate error create autoload '.$package_name);
@@ -190,7 +190,7 @@ class package_manager {
 			return false;
 		}
 
-		/* update onload to reflect the changes */ 
+		/* update onload to reflect the changes */
 		if (!$this->create_onload()) {
 			log_message('debug', 'Activate error create onload '.$package_name);
 
@@ -222,15 +222,15 @@ class package_manager {
 
 			return false;
 		}
-		
+
 		/* update autoload to reflect the changes */
 		if (!$this->create_autoload()) {
 			log_message('debug', 'Deactivate error create autoload '.$package_name);
 
 			return false;
 		}
-		
-		/* update onload to reflect the changes */ 
+
+		/* update onload to reflect the changes */
 		if (!$this->create_onload()) {
 			log_message('debug', 'Deactivate error create onload '.$package_name);
 
@@ -261,14 +261,14 @@ class package_manager {
 
 			return false;
 		}
-		
+
 		/* update the database with the new current version number */
 		if (!$this->o_packages_model->version($key,$package['composer']['orange']['version'])) {
 			log_message('debug', 'Upgrade error write new version '.$package_name);
 
 			return false;
 		}
-		
+
 		/* update the priority if needed */
 		if (!$this->o_packages_model->priority($key,$package['composer']['orange']['priority'])) {
 			log_message('debug', 'Upgrade error write new priority '.$package_name);
@@ -283,7 +283,7 @@ class package_manager {
 			return false;
 		}
 
-		/* update onload to reflect the changes */ 
+		/* update onload to reflect the changes */
 		if (!$this->create_onload()) {
 			log_message('debug', 'Upgrade error create onload '.$package_name);
 
@@ -303,7 +303,7 @@ class package_manager {
 
 			return false;
 		}
-		
+
 		$package_name = $package['composer']['name'];
 
 		log_message('debug', 'Uninstall '.$package_name);
@@ -314,7 +314,7 @@ class package_manager {
 
 			return false;
 		}
-		
+
 		/* remove the entire record from the database */
 		if (!$this->o_packages_model->delete($package['key'])) {
 			log_message('debug', 'Uninstall Delete error '.$package_name);

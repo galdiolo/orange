@@ -11,9 +11,9 @@ class package_migration {
 	protected $access_override = ['Admin Override Update'=>'Override is_editable on record','Admin Override Delete'=>'Override is_deletable on record'];
 
 	public function __construct($config) {
-		$this->config;
-		$this->name = ucwords(basename($config['full_path']));
-		$this->internal = $config['full_path'];
+		$this->config = $config;
+		$this->name = $config['name'];
+		$this->internal = $config['internal'];
 
 		$this->o_access_model = &ci()->o_access_model;
 		$this->o_menubar_model = &ci()->o_menubar_model;
@@ -30,11 +30,11 @@ class package_migration {
 
 	public function add_menu($data=[]) {
 		$package = ($package) ? $package : $this->name;
-		$internal = ($data['internal']) ? $data['internal'] : $this->internal;
+		$internal = (isset($data['internal'])) ? $data['internal'] : $this->internal;
 
-		$defaults = ['url'=>'','text'=>'','parent_id'=>1,'access_id'=>1,'sort'=>0,'class'=>'','color'=>null,'icon'=>null,'package'=>$package,'is_editable'=>1,'is_deletable'=>0,'active'=>1];
+		$defaults = ['target'=>'','internal'=>$internal,'url'=>'','text'=>'','parent_id'=>1,'access_id'=>1,'sort'=>0,'class'=>'','color'=>null,'icon'=>null,'package'=>$package,'is_editable'=>1,'is_deletable'=>0,'active'=>1];
 
-		extract(array_diff_key($defaults,$data) + array_intersect_key($data,$defaults));
+		extract(array_diff_key($defaults,$data) + array_intersect_key($data,$defaults),EXTR_OVERWRITE);
 
 		if ($icon == null) {
 			$icons = ['arrows','arrows-alt','arrow-left','arrow-right','arrow-up','arrow-down','arrows-h','arrows-v'];
@@ -65,6 +65,7 @@ class package_migration {
 			'color'=>$color,
 			'icon'=>$icon,
 			'internal'=>$internal,
+			'target'=>$target,
 		];
 
 		return $this->o_menubar_model->insert($data,true);
@@ -78,9 +79,9 @@ class package_migration {
 
 	public function add_access($data) {
 		$package = ($data['package']) ? $data['package'] : $this->name;
-		$internal = ($data['internal']) ? $data['internal'] : $this->internal;
+		$internal = (isset($data['internal'])) ? $data['internal'] : $this->internal;
 
-		$defaults = ['name'=>'','description'=>'','package'=>$package,'type'=>2,'is_editable'=>0,'is_deletable'=>0];
+		$defaults = ['internal'=>$internal,'name'=>'','description'=>'','package'=>$package,'type'=>2,'is_editable'=>0,'is_deletable'=>0];
 
 		extract(array_diff_key($defaults,$data) + array_intersect_key($data,$defaults));
 
@@ -109,9 +110,9 @@ class package_migration {
 
 	public function add_setting($data) {
 		$package = ($data['package']) ? $data['package'] : $this->name;
-		$internal = ($data['internal']) ? $data['internal'] : $this->internal;
+		$internal = (isset($data['internal'])) ? $data['internal'] : $this->internal;
 
-		$defaults = ['name'=>'','value'=>'','group'=>$package,'help'=>'','type'=>0,'options'=>'','package'=>$package,'is_editable'=>1,'is_deletable'=>0,'enabled'=>1,'managed'=>1];
+		$defaults = ['internal'=>$internal,'name'=>'','value'=>'','group'=>$package,'help'=>'','type'=>0,'options'=>'','package'=>$package,'is_editable'=>1,'is_deletable'=>0,'enabled'=>1,'managed'=>1];
 
 		$merged = array_merge($defaults,$data);
 
@@ -154,13 +155,13 @@ class package_migration {
 		$asset = trim($asset,'/');
 
 		if (!$package_folder = $this->_find_package($asset)) {
-			ci()->wallet->red('Couldn\'t find package folder "'.$this->package.'/public/'.$asset.'".','/admin/configure/packages');
+			ci()->wallet->red('Couldn\'t find package folder "'.$this->internal.'/public/'.$asset.'".','/admin/configure/packages');
 
 			return false;
 		}
 
 		$public_folder = ROOTPATH.'/public/'.$asset;
-		
+
 		/* let's make the public path if it's not there */
 		@mkdir(dirname($public_folder),0777,true);
 
@@ -168,7 +169,7 @@ class package_migration {
 		$this->remove_symlink($asset);
 
 		if (!relative_symlink($package_folder,$public_folder)) {
-			ci()->wallet->red('Couldn\'t create Link "'.$this->package.'::'.$asset.'".','/admin/configure/packages');
+			ci()->wallet->red('Couldn\'t create Link "'.$this->internal.'::'.$asset.'".','/admin/configure/packages');
 
 			return false;
 		}
@@ -178,23 +179,16 @@ class package_migration {
 
 	public function remove_symlink($asset) {
 		$asset = trim($asset,'/');
-		
+
 		$public_folder = ROOTPATH.'/public/'.$asset;
 
 		return (file_exists($public_folder)) ? unlink($public_folder) : true;
 	}
 
 	protected function _find_package($path) {
-		$package = ROOTPATH.'/vendor/'.$this->package.'/public/'.$path;
-		$vendor = ROOTPATH.'/package/'.$this->package.'/public/'.$path;
-		
-		if (is_dir($package)) {
-			return $package;
-		} elseif (is_dir($vendor)) {
-			return $vendor;
-		}
-		
-		return false;
+		list($type,$name) = explode('/',$this->package,2);
+
+		return ($type == 'package') ? ROOTPATH.'/'.$this->package.'/public/'.$path : ROOTPATH.'/vendor/'.$this->package.'/public/'.$path;
 	}
 
 	public function query($sql,$database_config='default') {
