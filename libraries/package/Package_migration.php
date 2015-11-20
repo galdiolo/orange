@@ -37,8 +37,20 @@ class package_migration {
 		return true;
 	}
 
-	public function add_menu_crud() {
+	public function add_menu_crud($singular,$plural,$menubar_text,$parent_menu,$url) {
+		/* read */
+		$id = $this->add_access(['name'=>'Manage '.$plural,'description'=>'Allow viewing of '.$plural.' records']);
+		
+		/* create */
+		$this->add_access(['name'=>'Add '.$singular,'description'=>'Allow creation of '.$plural.' records']);
 
+		/* update */
+		$this->add_access(['name'=>'Edit '.$singular,'description'=>'Allow editing of '.$plural.' records']);
+
+		/* delete */
+		$this->add_access(['name'=>'Delete '.$singular,'description'=>'Allow deletion of '.$plural.' records']);
+
+		$this->add_menu(['url'=>$url,'text'=>$menubar_text,'parent_id'=>$parent_menu,'access_id'=>$id]);
 	}
 
 	public function add_menu($data=[]) {
