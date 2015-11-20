@@ -643,5 +643,11 @@ abstract class Database_model extends MY_Model {
 
 		return true;
 	}
+	
+	public function _drop_table() {
+		ci()->load->dbforge($this->_database,true);
+		
+		return ci()->dbforge->drop_table($this->table);
+	}
 
 } /* end DB Model */

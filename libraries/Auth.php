@@ -73,7 +73,7 @@ class Auth {
 		$profile = new stdClass;
 		
 		/* if this is a cli request we don't need to setup the user profile */
-		if (!$this->ci_input->is_cli_request()) {
+		if (!is_cli()) {
 	
 			/* Does the user have a "saved" user profile? */
 			if ($this->validate_profile($session_data) === true) {
@@ -412,13 +412,15 @@ class Auth {
 
 	/* Refresh the *Current Users* Profile */
 	public function refresh_userdata() {
-		$profile = $this->build_profile(ci()->user->id);
-
-		if ($this->validate_profile($profile) === true) {
-			ci()->user = &$profile;
-			$this->ci_session->set_userdata([$this->session_key => $profile]);
-		} else {
-			$this->error('generic','Fatal: Error refreshing your user profile.');
+		if (!is_cli()) {		
+			$profile = $this->build_profile(ci()->user->id);
+	
+			if ($this->validate_profile($profile) === true) {
+				ci()->user = &$profile;
+				$this->ci_session->set_userdata([$this->session_key => $profile]);
+			} else {
+				$this->error('generic','Fatal: Error refreshing your user profile.');
+			}
 		}
 	}
 

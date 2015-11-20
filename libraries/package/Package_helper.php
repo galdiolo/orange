@@ -25,7 +25,7 @@ class package_helper {
 
 			$this->packages[$key]['migrations']['files'] = $migration_files;
 			$this->packages[$key]['migrations']['has_migrations'] = (count($migration_files) > 0);
-			
+
 			$this->packages[$key]['migrations']['uninstall'] = $this->package_migration_manager->get_migrations_uninstall($this->packages[$key]);
 
 			/* update packages that don't have migrations */
@@ -57,15 +57,17 @@ class package_helper {
 			$this->packages[$key]['buttons']['upgrade'] = false;
 			$this->packages[$key]['buttons']['uninstall'] = false;
 
+			list($folder,$filename) = array_slice(explode('/',trim($key,'/')), -2);
+
 			if ($package['database']['is_active']) {
 				/* orange and active */
-				$this->packages[$key]['www_name'] = htmlentities($package['composer']['name']).' <b class="text-primary">*</b>';
+				$this->packages[$key]['www_name'] = htmlentities($folder.'/'.$filename).' <b class="text-primary">*</b>';
 			} elseif (isset($package['composer']['orange']) && !$package['database']['is_active']) {
 				/* orange but not active */
-				$this->packages[$key]['www_name'] = htmlentities($package['composer']['name']).' <span class="text-muted">*</span>';
+				$this->packages[$key]['www_name'] = htmlentities($folder.'/'.$filename).' <span class="text-muted">*</span>';
 			} else {
 				/* non orange package */
-				$this->packages[$key]['www_name'] = htmlentities($package['composer']['name']);
+				$this->packages[$key]['www_name'] = htmlentities($folder.'/'.$filename);
 			}
 
 			if (isset($package['composer']['orange'])) {
@@ -79,7 +81,7 @@ class package_helper {
 					$this->packages[$key]['buttons']['deactivate'] = true;
 				} else {
 					$this->packages[$key]['buttons']['activate'] = true;
-					
+
 					/* is this in the database? */
 					if (count($package['database']) > 0) {
 						$this->packages[$key]['buttons']['uninstall'] = true;

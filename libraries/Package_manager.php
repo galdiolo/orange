@@ -119,6 +119,7 @@ class package_manager {
 						'key'=>$key,
 						'is_active'=>(($db_config['is_active']) ? true : false),
 						'folder'=>$type_of_package,
+						'name'=>$folder.'/'.$filename,
 					];
 
 					$this->packages[$key] = $extra + ['composer'=>$composer_config,'database'=>$db_config];
@@ -135,7 +136,7 @@ class package_manager {
 		return $this->packages[$package];
 	}
 
-	public function activate($key) {
+	public function activate($key,$force=false) {
 		log_message('debug', 'Package Manager Activate');
 
 		/* need to install this into the database */
@@ -197,10 +198,13 @@ class package_manager {
 			return false;
 		}
 
+		ci()->load->settings_flush();
+		ci()->auth->refresh_userdata();
+
 		return true;
 	}
 
-	public function deactivate($key) {
+	public function deactivate($key,$force=false) {
 		log_message('debug', 'Package Manager Deactivate');
 
 		/* need to install this into the database */
@@ -237,10 +241,13 @@ class package_manager {
 			return false;
 		}
 
+		ci()->load->settings_flush();
+		ci()->auth->refresh_userdata();
+
 		return true;
 	}
 
-	public function migrate($key) {
+	public function migrate($key,$force=false) {
 		log_message('debug', 'Package Manager Upgrade');
 
 		$package = $this->packages[$key];
@@ -290,10 +297,13 @@ class package_manager {
 			return false;
 		}
 
+		ci()->load->settings_flush();
+		ci()->auth->refresh_userdata();
+
 		return true;
 	}
 
-	public function uninstall($key) {
+	public function uninstall($key,$force=false) {
 		log_message('debug', 'Package Manager Uninstall');
 
 		$package = $this->packages[$key];
@@ -333,6 +343,9 @@ class package_manager {
 
 			return false;
 		}
+
+		ci()->load->settings_flush();
+		ci()->auth->refresh_userdata();
 
 		return true;
 	}

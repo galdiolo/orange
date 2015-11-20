@@ -11,6 +11,9 @@ class package_migration {
 	protected $access_override = ['Admin Override Update'=>'Override is_editable on record','Admin Override Delete'=>'Override is_deletable on record'];
 
 	public function __construct($config) {
+		/* models may not be loaded in CLI so load it now */
+		ci()->load->model(['o_menubar_model','o_access_model']);
+
 		$this->config = $config;
 		$this->name = $config['name'];
 		$this->internal = $config['internal'];
@@ -18,6 +21,12 @@ class package_migration {
 		$this->o_access_model = &ci()->o_access_model;
 		$this->o_menubar_model = &ci()->o_menubar_model;
 		$this->o_setting_model = &ci()->o_setting_model;
+	}
+
+	public function cli_output($output) {
+		if (is_cli()) {
+			echo $output.chr(10);
+		}
 	}
 
 	public function up(){
@@ -28,45 +37,57 @@ class package_migration {
 		return true;
 	}
 
+	public function add_menu_crud() {
+
+	}
+
 	public function add_menu($data=[]) {
-		$package = ($package) ? $package : $this->name;
-		$internal = (isset($data['internal'])) ? $data['internal'] : $this->internal;
+		$defaults = [
+			'is_editable'=>1,
+			'is_deletable'=>0,
+			'url'=>'',
+			'text'=>'',
+			'access_id'=>1,
+			'parent_id'=>1,
+			'sort'=>0,
+			'target'=>'',
+			'class'=>'',
+			'active'=>1,
+			'color'=>null,
+			'icon'=>null,
+			'internal'=>$this->internal,
+		];
 
-		$defaults = ['target'=>'','internal'=>$internal,'url'=>'','text'=>'','parent_id'=>1,'access_id'=>1,'sort'=>0,'class'=>'','color'=>null,'icon'=>null,'package'=>$package,'is_editable'=>1,'is_deletable'=>0,'active'=>1];
+		$data = array_diff_key($defaults,$data) + array_intersect_key($data,$defaults);
 
-		extract(array_diff_key($defaults,$data) + array_intersect_key($data,$defaults),EXTR_OVERWRITE);
-
-		if ($icon == null) {
+		/* if they didn't send in a icon randomly pick one */
+		if ($data['icon'] == null) {
 			$icons = ['arrows','arrows-alt','arrow-left','arrow-right','arrow-up','arrow-down','arrows-h','arrows-v'];
 			shuffle($icons);
-			$icon = array_shift($icons);
+			$data['icon'] = end($icons);
 		}
 
-		if ($color == null) {
-			$color = substr(md5($package),1,6);
+		/* if they didn't send in a color randomly pick one */
+		if ($data['color'] == null) {
+			$data['color'] = substr(md5($this->internal),1,6);
 		}
 
-		/* built in menus mapping */
-		if (!is_integer($parent_id)) {
-			$built_in_menus_map = ['0','configure','users','content','packages','reports','help','utilities'];
-			$parent_id = array_search(strtolower($parent_id),$built_in_menus_map);
+		/* parent menu id search */
+		if (!is_integer($data['parent_id'])) {
+			/* ok they need to specify internal:text */
+			list($internal,$text) = explode(':',$parent_id);
+
+			$row = $this->o_menubar_model->get_by(['internal'=>$internal,'text'=>$text]);
+
+			$data['parent_id'] = (isset($row->id)) ? $row->id : 0; /* root level */
 		}
 
-		$data = [
-			'access_id'=>$access_id,
-			'is_editable'=>$is_editable, /* Lock down individual records */
-			'is_deletable'=>$is_deletable, /* Lock down individual records */
-			'url'=>$url,
-			'text'=>$text,
-			'parent_id'=>$parent_id,
-			'sort'=>$sort,
-			'class'=>$class,
-			'active'=>$active,
-			'color'=>$color,
-			'icon'=>$icon,
-			'internal'=>$internal,
-			'target'=>$target,
-		];
+		/* access id search */
+		if (!is_integer($data['access_id'])) {
+			$row = $this->o_access_model->get_by(['key'=>$data['access_id']]);
+
+			$data['access_id'] = (isset($row->id)) ? $row->id : 2; /* everyone logged in */
+		}
 
 		return $this->o_menubar_model->insert($data,true);
 	}
@@ -78,25 +99,18 @@ class package_migration {
 	}
 
 	public function add_access($data) {
-		$package = ($data['package']) ? $data['package'] : $this->name;
-		$internal = (isset($data['internal'])) ? $data['internal'] : $this->internal;
-
-		$defaults = ['internal'=>$internal,'name'=>'','description'=>'','package'=>$package,'type'=>2,'is_editable'=>0,'is_deletable'=>0];
-
-		extract(array_diff_key($defaults,$data) + array_intersect_key($data,$defaults));
-
-		/* if they only sent in the name use that for the description */
-		$description = (!empty($description)) ? $description : $name;
-
-		$data = [
-			'is_editable'=>$is_editable, /* Lock down individual records */
-			'is_deletable'=>$is_deletable, /* Lock down individual records */
-			'name'=>$name,
-			'description'=>$description,
-			'type'=>$type, /* 0 user, 1 system, 2 package */
-			'internal'=>$internal,
-			'group'=>$package,
+		$defaults = [
+			'is_editable'=>0,
+			'is_deletable'=>0,
+			'name'=>'',
+			'group'=>$this->name,
+			/* key is auto filled in */
+			'description'=>$data['name'],
+			'type'=>2,
+			'internal'=>$this->internal,
 		];
+
+		$data = array_diff_key($defaults,$data) + array_intersect_key($data,$defaults);
 
 		/* special insert just for packages */
 		return $this->o_access_model->upsert($data);
@@ -109,28 +123,21 @@ class package_migration {
 	}
 
 	public function add_setting($data) {
-		$package = ($data['package']) ? $data['package'] : $this->name;
-		$internal = (isset($data['internal'])) ? $data['internal'] : $this->internal;
-
-		$defaults = ['internal'=>$internal,'name'=>'','value'=>'','group'=>$package,'help'=>'','type'=>0,'options'=>'','package'=>$package,'is_editable'=>1,'is_deletable'=>0,'enabled'=>1,'managed'=>1];
-
-		$merged = array_merge($defaults,$data);
-
-		extract($merged);
-
-		$data = [
-			'is_editable'=>$is_editable, /* Lock down individual records */
-			'is_deletable'=>$is_deletable, /* Lock down individual records */
-			'name'=>$name,
-			'value'=>$value,
-			'group'=>$group,
-			'enabled'=>$enabled, /* not used at this time */
-			'help'=>$help,
-			'internal'=>$internal,
-			'managed'=>$managed, /* managed setting */
-			'show_as'=>$type, /* 0 textarea, 1 True/False (radios), 2 Radios (json format), 3 text input (option is length) */
-			'options'=>$options,
+		$defaults = [
+			'is_editable'=>1,
+			'is_deletable'=>0,
+			'name'=>'',
+			'value'=>'',
+			'group'=>$this->name,
+			'enabled'=>1,
+			'help'=>'',
+			'internal'=>$this->internal,
+			'managed'=>1,
+			'show_as'=>0, /* 0 Textarea, 1 Boolean T/F, 2 Radios (json), 3 Text Input (option width) */
+			'options'=>'', /* Radio {'name': 'value', 'name2': 'value2'}, text width */ 
 		];
+
+		$data = array_diff_key($defaults,$data) + array_intersect_key($data,$defaults);
 
 		return $this->o_setting_model->upsert($data);
 	}
@@ -154,9 +161,11 @@ class package_migration {
 
 		$asset = trim($asset,'/');
 
-		$type = explode('/',$this->internal,1);
+		if (!$package_folder = $this->_find_package($asset)) {
+			ci()->wallet->red('Couldn\'t find package folder "'.$this->internal.'/public/'.$asset.'".','/admin/configure/packages');
 
-		$package_folder = ($type == 'package') ? ROOTPATH.'/'.$this->internal.'/public/'.$asset : ROOTPATH.'/vendor/'.$this->internal.'/public/'.$asset;
+			return false;
+		}
 
 		$public_folder = ROOTPATH.'/public/'.$asset;
 
@@ -181,6 +190,12 @@ class package_migration {
 		$public_folder = ROOTPATH.'/public/'.$asset;
 
 		return (file_exists($public_folder)) ? unlink($public_folder) : true;
+	}
+
+	protected function _find_package($path) {
+		list($type,$name) = explode('/',$this->internal,2);
+
+		return ($type == 'package') ? ROOTPATH.'/'.$this->internal.'/public/'.$path : ROOTPATH.'/vendor/'.$this->internal.'/public/'.$path;
 	}
 
 	public function query($sql,$database_config='default') {
@@ -217,7 +232,7 @@ class package_migration {
 	}
 
 	public function drop_table($tablename) {
-		return $this->query("DROP TABLE IF EXISTS `".$tablename."`");
+		return $this->query('DROP TABLE IF EXISTS `'.$tablename.'`');
 	}
 
 	public function describe_table($tablename,$database_config='default') {
@@ -233,6 +248,12 @@ class package_migration {
 		}
 
 		return $fields;
+	}
+
+	public function insert($model_name,$data,$validate=true) {
+		$this->load->model($model_name);
+
+		return $this->$model_name->insert($data,$validate);
 	}
 
 } /* end class */

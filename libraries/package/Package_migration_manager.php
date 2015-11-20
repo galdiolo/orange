@@ -1,6 +1,7 @@
 <?php
 
 class package_migration_manager {
+
 	public function get_migrations_between($package) {
 		$folder = $package['key'];
 
@@ -43,7 +44,6 @@ class package_migration_manager {
 		/* is it there? */
 		if (is_dir($migration_folder)) {
 			log_message('debug','Migration Folder '.$migration_folder);
-
 			log_message('debug','Migration Between '.$start_ver.' '.$end_ver);
 
 			/* migrations start with v ie. v1.0.0-name_of_migration.php */
@@ -132,13 +132,21 @@ class package_migration_manager {
 	}
 
 	protected function run_migrations($migration_files,$dir) {
-		log_message('debug', 'run migrations '.$dir);
+		if (is_cli()) {
+			echo 'Run migrations '.$dir.chr(10);
+		}
+
+		log_message('debug', 'Run migrations '.$dir);
 
 		$success = true;
 
 		if (is_array($migration_files)) {
 			foreach ($migration_files as $migration_file) {
 				$migration_filename = basename($migration_file,'.php');
+
+				if (is_cli()) {
+					echo 'Running Migration File '.$migration_filename.chr(10);
+				}
 
 				log_message('debug','Running Migration File '.$migration_filename);
 
@@ -147,6 +155,10 @@ class package_migration_manager {
 				include $migration_file;
 
 				if (!class_exists($class_name,false)) {
+					if (is_cli()) {
+						echo 'Error: migration class named "'.$class_name.'" not found in "'.$migration_file.'"'.chr(10);
+					}
+
 					show_error('Error: migration class named "'.$class_name.'" not found in "'.$migration_file.'"');
 				}
 				
@@ -159,10 +171,18 @@ class package_migration_manager {
 				$migration = new $class_name($config);
 
 				if (method_exists($migration,$dir)) {
+					if (is_cli()) {
+						echo 'migrations running '.$class_name.'::'.$dir.chr(10);
+					}
+				
 					log_message('debug', 'migrations running '.$class_name.'::'.$dir);
 
 					$success = $migration->$dir();
 				} else {
+					if (is_cli()) {
+						echo 'migrations could not find '.$class_name.'::'.$dir.chr(10);
+					}
+
 					show_error('migrations could not find '.$class_name.'::'.$dir);
 				}
 

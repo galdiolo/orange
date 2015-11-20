@@ -88,27 +88,21 @@ class o_access_model extends Database_model {
 
 	/* upsert used by the package install/upgrade */
 	public function upsert($data) {
+		$this->flush_caches();
+
 		/* all keys are lowercase */
 		$key = strtolower($data['group'].'::'.$data['name']);
 
 		if ($this->exists('key',$key)) {
-			/* update */
-			$data['updated_on'] = date('Y-m-d H:i:s');
-			$data['updated_by'] = ci()->user->id;
-
 			$this->_database->where('key',$key)->set($data)->update($this->table);
 		} else {
-			/* insert */
-			$data['created_on'] = date('Y-m-d H:i:s');
-			$data['created_by'] = ci()->user->id;
 			$data['key'] = $key;
-
 			$this->_database->insert($this->table, $data);
 		}
 
-		$record = $this->_database->get_where($this->table,['key'=>$key])->result();
+		$record = $this->get_by(['key'=>$key]);
 
-		return $record[0]->id;
+		return $record->id;
 	}
 
 } /* end class */

@@ -3,6 +3,7 @@
 class packageCliController extends O_CliController {
 	public $map = ['install'=>'installed','uninstall'=>'uninstalled','delete'=>'deleted','upgrade'=>'upgraded'];
 	public $packages = [];
+	public $force = false;
 
 	public function __construct() {
 		parent::__construct();
@@ -170,8 +171,8 @@ class packageCliController extends O_CliController {
 	public function deactivateCliAction() {
 		$record = $this->get_record(func_get_args());
 
-		if (!$record['buttons']['deactivate']) {
-			$this->output('<red>Deactivate not available');
+		if (!$record['buttons']['deactivate'] && $this->force == false) {
+			return $this->output('<red>Deactivate not available');
 		}
 
 		if (!$this->package_manager->deactivate($record['key'])) {
@@ -184,8 +185,8 @@ class packageCliController extends O_CliController {
 	public function activateCliAction($package=null) {
 		$record = $this->get_record(func_get_args());
 
-		if (!$record['buttons']['activate']) {
-			$this->output('<red>Activate not available');
+		if (!$record['buttons']['activate'] && $this->force == false) {
+			return $this->output('<red>Activate not available');
 		}
 
 		if (!$this->package_manager->activate($record['key'])) {
@@ -198,8 +199,8 @@ class packageCliController extends O_CliController {
 	public function migrateCliAction($package=null) {
 		$record = $this->get_record(func_get_args());
 
-		if (!$record['buttons']['upgrade']) {
-			$this->output('<red>Migrate not available');
+		if (!$record['buttons']['upgrade'] && $this->force == false) {
+			return $this->output('<red>Migrate not available');
 		}
 
 		if (!$this->package_manager->upgrade($record['key'])) {
@@ -212,8 +213,8 @@ class packageCliController extends O_CliController {
 	public function uninstallCliAction($package=null) {
 		$record = $this->get_record(func_get_args());
 
-		if (!$record['buttons']['uninstall']) {
-			$this->output('<red>Uninstall not available');
+		if (!$record['buttons']['uninstall'] && $this->force == false) {
+			return $this->output('<red>Uninstall not available');
 		}
 
 		if (!$this->package_manager->uninstall($record['key'])) {
@@ -248,6 +249,12 @@ class packageCliController extends O_CliController {
 
 	/* used above */
 	protected function get_record($input) {
+		if (end($input) == 'force') {
+			/* pop it off */
+			array_pop($input);
+			$this->force = true;
+		}
+	
 		$package_name = implode('/',$input);
 
 		if (!$package_name) {

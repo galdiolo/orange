@@ -46,19 +46,13 @@ class o_setting_model extends Database_model {
 
 	/* special upsert just for packages */
 	public function upsert($data) {
+		$this->flush_caches();
+
 		$result = $this->_database->where(['name'=>$data['name'],'group'=>$data['group']])->get($this->table)->result();
 
 		if (count($result) > 0) {
-			/* update */
-			$data['updated_on'] = date('Y-m-d H:i:s');
-			$data['updated_by'] = ci()->user->id;
-
 			return $this->_database->where('id',$result[0]->id)->set($data)->update($this->table);
 		} else {
-			/* insert */
-			$data['created_on'] = date('Y-m-d H:i:s');
-			$data['created_by'] = ci()->user->id;
-
 			return $this->_database->insert($this->table, $data);
 		}
 	}
