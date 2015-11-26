@@ -41,7 +41,7 @@ class O_AdminController extends APP_GuiController {
 		*/
 
 		/* Therefore the only orange model left to load is the menubar */
-		ci()->load->model('o_menubar_model');
+		$this->load->model('o_menubar_model');
 
 		/* wallet is a extensions to sessions (ie user data) */
 		$this->load->library('wallet');
