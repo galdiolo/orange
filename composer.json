@@ -11,7 +11,7 @@
 	}],
 	"require": {
 		"php": ">=5.5",
-		"fzaninotto/faker": "^1.6@dev"
+		"fzaninotto/faker": "^1.6"
 	},
 	"orange": {
 		"version": "1.0.0",
