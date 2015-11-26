@@ -22,9 +22,9 @@ class O_GuiController extends MY_Controller {
 
 		$this->page
 			/* Where is our theme folder */
-			->theme(setting('page',$this->theme_config.' theme'))
+			->theme(setting('page',$this->theme_config.' theme folder'))
 			/* what is the default theme template */
-			->template(setting('page',$this->theme_config.' theme folder'))
+			->template(setting('page',$this->theme_config.' theme default template'))
 			/* Set our body class for this type of controller */
 			->body_class($this->body_class.' '.$this->theme_config);
 		
