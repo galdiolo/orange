@@ -17,6 +17,9 @@
 *
 */
 class O_PublicController extends APP_GuiController {
+	/* attached to the html body element class */
 	public $body_class = 'public';
+	
+	/* which page config set to use to determine theme and default template */
 	public $theme_config = 'public';
-} /* end MY_PublicController */
+} /* end class */

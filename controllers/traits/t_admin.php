@@ -2,7 +2,7 @@
 
 trait t_admin {
 
-	/* has access test for the Admin controllers */
+	/* has access test for a controller */
 	public function has_access($access,$die=true) {
 		$success = $this->auth->has_access($access);
 
@@ -14,13 +14,14 @@ trait t_admin {
 		return $success;
 	}
 
-	/* make throwing a "access denied" from a admin controller easier */
+	/* make throwing a "access denied" from a controller easier */
 	public function access_denied($url = '') {
 		$this->auth->denied($url);
 	}
 
 	/* get the form data for the model */
 	protected function _get_data($which = null,$model_name=null) {
+		/* what model are we trying to get form data from? */
 		if (is_object($model_name)) {
 			$model = $model_name;
 		} elseif (is_string($model_name)) {

@@ -36,4 +36,4 @@ class O_AjackController extends MY_Controller {
 			show_404();
 		}		
 	}
-} /* end parent ajack controller */
+} /* end class */

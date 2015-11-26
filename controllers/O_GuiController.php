@@ -20,14 +20,14 @@ class O_GuiController extends MY_Controller {
 		/* Doing GUI so, load the Page Library and Orange Library (static methods used mostly for views) */
 		$this->load->library(['Page','O']);
 
-		/* use the orange_default template */
-		$this->page->template(setting('page',$this->theme_config.' theme folder'));
-
-		/* Set our theme folder (package) */
-		$this->page->theme(setting('page',$this->theme_config.' theme'));
+		$this->page
+			/* Where is our theme folder */
+			->theme(setting('page',$this->theme_config.' theme'))
+			/* what is the default theme template */
+			->template(setting('page',$this->theme_config.' theme folder'))
+			/* Set our body class for this type of controller */
+			->body_class($this->body_class.' '.$this->theme_config);
 		
-		/* Set our body class for this type of controller */
-		$this->page->body_class($this->body_class.' '.$this->theme_config);
 	}
 
 } /* end class */

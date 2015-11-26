@@ -19,10 +19,13 @@
 class O_AdminController extends APP_GuiController {
 	use t_admin, t_admin_create, t_admin_update, t_admin_read, t_admin_delete;
 
+	/* attached to the html body element class */
 	public $body_class = 'admin';
+
+	/* which page config set to use to determine theme and default template */
 	public $theme_config = 'admin';
 
-	/* your basic scaffolding */
+	/* your basic admin scaffolding */
 	public $controller_path = null; /* url to this controller */
 	public $controller = ''; /* controller name */
 	public $controller_title = ''; /* used in various places */
@@ -37,7 +40,7 @@ class O_AdminController extends APP_GuiController {
 		/*
 		settings model already loaded,
 		package model only needed by package controller
-		auth library loaded all the user models
+		auth library loads all the user models
 		*/
 
 		/* Therefore the only orange model left to load is the menubar */
@@ -45,7 +48,8 @@ class O_AdminController extends APP_GuiController {
 
 		/* wallet is a extensions to sessions (ie user data) */
 		$this->load->library('wallet');
-
+		
+		/* set these up for the admin methods */
 		$this->page->data([
 			'controller'=>$this->controller,
 			'controller_path'=>$this->controller_path,
@@ -53,8 +57,8 @@ class O_AdminController extends APP_GuiController {
 			'controller_titles'=>$this->controller_titles,
 		]);
 
-		/* test access */
+		/* finally test access */
 		$this->has_access($this->has_access);
 	}
 
-} /* end controller */
+} /* end class */
