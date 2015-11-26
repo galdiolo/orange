@@ -118,11 +118,13 @@ class Page {
 			return $this->theme;
 		}
 
+		/* set theme */
 		$name = ltrim($name,'/');
-
+		
+		/* strip off the theme part */
 		$this->short_name = substr(basename($name),6);
 
-		/* 1 theme at a time so make this our new theme */
+		/* only 1 theme supported at a time so make this our new theme */
 		$this->theme = $name;
 
 		/* add it to the body class */
@@ -148,16 +150,14 @@ class Page {
 
 		$this->ci_load->vars(['theme_path'=>$this->theme_path]);
 
-		$theme_file = $theme_path.'/support/'.$this->short_name.'_theme.php';
+		$theme_file = $theme_path.'/support/theme_onload.php';
 
 		/* does it have a theme init file? */
 		if (file_exists($theme_file)) {
 			include_once $theme_file;
 
-			$function_name = $this->short_name.'_theme_setup';
-
-			if (function_exists($function_name)) {
-				$function_name($this,$this->theme_path);
+			if (function_exists('theme_onload')) {
+				theme_onload($this,$this->theme_path);
 			}
 		}
 
