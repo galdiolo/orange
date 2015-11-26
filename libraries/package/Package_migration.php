@@ -38,9 +38,10 @@ class package_migration {
 	}
 
 	public function add_menu_crud($singular,$plural,$menubar_text,$parent_menu,$url) {
-		/* read */
-		$id = $this->add_access(['name'=>'Manage '.$plural,'description'=>'Allow viewing of '.$plural.' records']);
-		
+		$this->add_menu(['url'=>$url,'text'=>$menubar_text,'parent_id'=>$parent_menu,'access_id'=>$this->add_crud($singular,$plural)]);
+	}
+
+	public function add_crud($singular,$plural) {
 		/* create */
 		$this->add_access(['name'=>'Add '.$singular,'description'=>'Allow creation of '.$plural.' records']);
 
@@ -49,8 +50,9 @@ class package_migration {
 
 		/* delete */
 		$this->add_access(['name'=>'Delete '.$singular,'description'=>'Allow deletion of '.$plural.' records']);
-
-		$this->add_menu(['url'=>$url,'text'=>$menubar_text,'parent_id'=>$parent_menu,'access_id'=>$id]);
+	
+		/* read */
+		return $this->add_access(['name'=>'Manage '.$plural,'description'=>'Allow viewing of '.$plural.' records']);
 	}
 
 	public function add_menu($data=[]) {
@@ -85,17 +87,22 @@ class package_migration {
 		}
 
 		/* parent menu id search */
-		if (!is_integer($data['parent_id'])) {
-			/* ok they need to specify internal:text */
-			list($internal,$text) = explode(':',$parent_id);
-
-			$row = $this->o_menubar_model->get_by(['internal'=>$internal,'text'=>$text]);
+		if (!is_numeric($data['parent_id'])) {
+			if (strpos($data['parent_id'],':') === false) {
+				/* get first record that matches what we are looking for */
+				$row = $this->o_menubar_model->get_by(['text'=>$data['parent_id']]);
+			} else {
+				/* ok they need to specify internal:text */
+				list($internal,$text) = explode(':',$parent_id);
+	
+				$row = $this->o_menubar_model->get_by(['internal'=>$internal,'text'=>$text]);
+			}
 
 			$data['parent_id'] = (isset($row->id)) ? $row->id : 0; /* root level */
 		}
 
 		/* access id search */
-		if (!is_integer($data['access_id'])) {
+		if (!is_numeric($data['access_id'])) {
 			$row = $this->o_access_model->get_by(['key'=>$data['access_id']]);
 
 			$data['access_id'] = (isset($row->id)) ? $row->id : 2; /* everyone logged in */

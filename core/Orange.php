@@ -1,4 +1,13 @@
 <?php
+define('ORANGE_VERSION','1.0.0');
+
+/* our shared controller traits */
+require ORANGEPATH.'/controllers/traits/t_admin.php';
+require ORANGEPATH.'/controllers/traits/t_admin_create.php';
+require ORANGEPATH.'/controllers/traits/t_admin_update.php';
+require ORANGEPATH.'/controllers/traits/t_admin_read.php';
+require ORANGEPATH.'/controllers/traits/t_admin_delete.php';
+
 /**
 * Class registry
 *
