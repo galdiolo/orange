@@ -17,4 +17,6 @@
 *
 */
 class O_PublicController extends APP_GuiController {
+	public $body_class = 'public';
+	public $theme_config = 'public';
 } /* end MY_PublicController */

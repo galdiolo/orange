@@ -19,8 +19,8 @@
 class O_AdminController extends APP_GuiController {
 	use t_admin, t_admin_create, t_admin_update, t_admin_read, t_admin_delete;
 
-	public $theme_folder = '/projectorangebox/theme-orange';
 	public $body_class = 'admin';
+	public $theme_config = 'admin';
 
 	/* your basic scaffolding */
 	public $controller_path = null; /* url to this controller */
@@ -45,9 +45,6 @@ class O_AdminController extends APP_GuiController {
 
 		/* wallet is a extensions to sessions (ie user data) */
 		$this->load->library('wallet');
-
-		/* use the orange_default template */
-		$this->page->template('_templates/orange_default');
 
 		$this->page->data([
 			'controller'=>$this->controller,
