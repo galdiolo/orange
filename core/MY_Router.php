@@ -65,16 +65,6 @@ class MY_Router extends CI_Router {
 			$fixed_folder = '_cli/';
 		}
 
-		/* only a file cache is supported because the normal CI cache isn't even loaded yet */
-		$cache_file = ROOTPATH.'/var/local_file_cache/uri_'.md5(implode('',$segments).$request).'.php';
-
-		/* get it from the cache? */
-		if ($cached = array_cache($cache_file)) {
-			$this->directory = $cached['directory'];
-			$this->package = $cached['package'];
-
-			return $cached['segments'];
-		}
 
 		/*
 		we just need to see if it's there not load it
@@ -107,11 +97,6 @@ class MY_Router extends CI_Router {
 							$this->directory = '../../'.$this->package.'controllers/'.$fixed_folder.$this->directory;
 						}
 						
-						/* if the last seg is a integer it's prob a record so don't cache it */
-						if (substr(end($segments),-6) == 'Action') {
-							array_cache($cache_file,['segments'=>$segments,'directory'=>$this->directory,'package'=>$this->package]);
-						}
-
 						/* return the controller, method and anything else */
 						return $segments;
 					}
