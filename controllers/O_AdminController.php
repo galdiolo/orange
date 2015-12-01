@@ -17,7 +17,7 @@
 *
 */
 class O_AdminController extends APP_GuiController {
-	use t_admin, t_admin_create, t_admin_update, t_admin_read, t_admin_delete;
+	use t_admin, t_admin_create, t_admin_update, t_admin_read, t_admin_delete, t_security;
 
 	/* attached to the html body element class */
 	public $body_class = 'admin';

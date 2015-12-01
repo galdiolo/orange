@@ -2,23 +2,6 @@
 
 trait t_admin {
 
-	/* has access test for a controller */
-	public function has_access($access,$die=true) {
-		$success = $this->auth->has_access($access);
-
-		if ($success === false && $die === true) {
-			$this->access_denied();
-			exit;
-		}
-
-		return $success;
-	}
-
-	/* make throwing a "access denied" from a controller easier */
-	public function access_denied($url = '') {
-		$this->auth->denied($url);
-	}
-
 	/* get the form data for the model */
 	protected function _get_data($which = null,$model_name=null) {
 		/* what model are we trying to get form data from? */
