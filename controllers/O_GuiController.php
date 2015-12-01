@@ -19,15 +19,25 @@ class O_GuiController extends MY_Controller {
 		
 		/* Doing GUI so, load the Page Library and Orange Library (static methods used mostly for views) */
 		$this->load->library(['Page','O']);
+		
+		$theme = setting('page',$this->theme_config.' theme folder','');
+		$template = setting('page',$this->theme_config.' theme default template','');
+		
+		if (empty($theme)) {
+			show_error('Theme folder missing for '.$this->theme_config);
+		}
+		
+		if (empty($template)) {
+			show_error('Theme default template missing for '.$this->theme_config);		
+		}
 
 		$this->page
 			/* Where is our theme folder */
-			->theme(setting('page',$this->theme_config.' theme folder'))
+			->theme($theme)
 			/* what is the default theme template */
-			->template(setting('page',$this->theme_config.' theme default template'))
+			->template($template)
 			/* Set our body class for this type of controller */
 			->body_class($this->body_class.' '.$this->theme_config);
-		
 	}
 
 } /* end class */
