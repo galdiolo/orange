@@ -7,6 +7,7 @@ require ORANGEPATH.'/controllers/traits/t_admin_create.php';
 require ORANGEPATH.'/controllers/traits/t_admin_update.php';
 require ORANGEPATH.'/controllers/traits/t_admin_read.php';
 require ORANGEPATH.'/controllers/traits/t_admin_delete.php';
+require ORANGEPATH.'/controllers/traits/t_security.php';
 
 /**
 * Class registry
