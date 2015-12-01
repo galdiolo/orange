@@ -21,7 +21,7 @@ class MY_Loader extends CI_Loader {
 	public $orange_extended_helpers = ['array','date','directory','file','string'];
 	public $settings = null; /* local per request storage */
 	public $onload_path = ROOTPATH.'/application/config/onload.php';
-	public $cache_file = ROOTPATH.'/var/local_file_cache/settings.php';
+	public $cache_key = 'orange_settings';
 	public $themes = '';
 
 	public $added_paths = [];
@@ -111,7 +111,7 @@ class MY_Loader extends CI_Loader {
 
 			/* set the page request cached settings */
 
-			if (!$this->settings = array_cache($this->cache_file)) {
+			if (!$this->settings = ci()->cache->get($this->cache_key)) {
 				/* setup the empty array and load'em */
 				$this->settings = [];
 
@@ -150,8 +150,9 @@ class MY_Loader extends CI_Loader {
 						$this->settings[$record->group][$record->name] = convert_to_real($record->value);
 					}
 				}
-
-				array_cache($this->cache_file,$this->settings);
+				
+				/* cache for a hour */
+				ci()->cache->save($this->cache_key,$this->settings,3600);
 			}
 		}
 
@@ -167,18 +168,7 @@ class MY_Loader extends CI_Loader {
 	}
 
 	public function settings_flush() {
-		$return = true;
-
-		if (file_exists($this->cache_file)) {
-			$return = unlink($this->cache_file);
-		}
-
-		/* force flush opcached filed if exists */
-		if (function_exists('opcache_invalidate')) {
-			opcache_invalidate($this->cache_file,true);
-		}
-
-		return $return;
+		return ci()->cache->delete($this->cache_key);
 	}
 
 	/**
