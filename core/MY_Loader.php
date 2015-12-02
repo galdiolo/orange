@@ -21,7 +21,7 @@ class MY_Loader extends CI_Loader {
 	public $orange_extended_helpers = ['array','date','directory','file','string'];
 	public $settings = null; /* local per request storage */
 	public $onload_path = ROOTPATH.'/application/config/onload.php';
-	public $cache_file = ROOTPATH.'/application/config/settings.php';
+	public $cache_file = '';
 	public $themes = '';
 
 	public $added_paths = [];
@@ -103,6 +103,9 @@ class MY_Loader extends CI_Loader {
 	*/
 	public function setting($group = null, $name = null, $default = null) {
 		if (!isset($this->settings)) {
+			/* setup cache file */
+			$this->cache_file = ROOTPATH.'/application/config/'.ENVIRONMENT.'/settings.php';
+
 			/* let's make sure the model is loaded */
 			$this->model('o_setting_model');
 
@@ -110,7 +113,6 @@ class MY_Loader extends CI_Loader {
 			$this->driver('cache', ['adapter' => ci()->config->item('cache_default'), 'backup' => ci()->config->item('cache_backup')]);
 
 			/* set the page request cached settings */
-
 			if (!$this->settings = array_cache($this->cache_file)) {
 				/* setup the empty array and load'em */
 				$this->settings = [];

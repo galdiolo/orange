@@ -260,6 +260,12 @@ function console($var,$type='log') {
 /* export as php array for super fast loading */
 function array_cache($filename=null,$data=null) {
 	if (is_array($data) && $filename) {
+		$dir = dirname($filename);
+
+		if (!is_dir($dir)) {
+			mkdir($dir,0777,true);
+		}
+	
 		/* write */
 		atomic_file_put_contents($filename,'<?php return '.var_export($data,true).';');
 	} else {
