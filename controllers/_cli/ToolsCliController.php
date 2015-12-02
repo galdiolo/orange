@@ -1,6 +1,22 @@
 <?php
 
 class toolsCliController extends O_CliController {
+	
+	/* fix symlinks based on config file */
+	public function symlinks() {	
+		/* fix symlinks */
+		$filename = ROOTPATH.'/application/config/symlinks.php';
+
+		if (file_exists($filename)) {
+			$this->load->helper('file');
+	
+			$links = include $filename;
+
+			foreach ($links as $public=>$private) {
+				relative_symlink($private,$public);
+			}
+		}
+	}
 
 	public function siteCliAction($mode=null) {
 		$mode = strtolower($mode);
