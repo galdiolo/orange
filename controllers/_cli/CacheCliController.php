@@ -5,11 +5,8 @@ class cacheCliController extends O_CliController {
 	public function clearCliAction() {
 		$success = $this->cache->clean();
 		
-		$local_files = glob(ROOTPATH.'/var/local_file_cache/*');
-
-		foreach ($local_files as $lf) {
-			@unlink($lf);
-		}
+		/* delete the settings file */
+		@unlink(ROOTPATH.'/application/config/settings.php');
 
 		$this->output(($success == true) ? '<green>Complete' : '<red>Error');
 	}
