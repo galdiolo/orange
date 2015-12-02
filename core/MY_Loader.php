@@ -119,25 +119,29 @@ class MY_Loader extends CI_Loader {
 				$config_files = glob(ROOTPATH.'/application/config/*.php');
 
 				foreach ($config_files as $file) {
-					$config = [];
+					$config = null;
 
 					require $file;
-
-					$this->settings[basename($file,'.php')] = $config;
+					
+					if (is_array($config)) {
+						$this->settings[basename($file,'.php')] = $config;
+					}
 				}
 
 				/* get environment configuration - if it's set */
-				if (CONFIG) {
-					$config_files = glob(ROOTPATH.'/application/config/'.CONFIG.'/*.php');
+				if (ENVIRONMENT) {
+					$config_files = glob(ROOTPATH.'/application/config/'.ENVIRONMENT.'/*.php');
 
 					foreach ($config_files as $file) {
-						$config = [];
+						$config = null;
 
 						require $file;
 
-						$filename = basename($file,'.php');
-
-						$this->settings[$filename] = array_merge_recursive($this->settings[$filename],$config);
+						if (is_array($config)) {
+							$filename = basename($file,'.php');
+	
+							$this->settings[$filename] = array_merge_recursive($this->settings[$filename],$config);
+						}
 					}
 				}
 

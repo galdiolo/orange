@@ -34,8 +34,8 @@ function &load_class($class, $directory = 'libraries', $param = NULL) {
 	if (count($_classes) == 0) {
 		include APPPATH.'config/autoload.php';
 
-		if (file_exists(APPPATH.'config/'.CONFIG.'/autoload.php')) {
-			include APPPATH.'config/'.CONFIG.'/autoload.php';
+		if (file_exists(APPPATH.'config/'.ENVIRONMENT.'/autoload.php')) {
+			include APPPATH.'config/'.ENVIRONMENT.'/autoload.php';
 		}
 
 		/* add packages */
