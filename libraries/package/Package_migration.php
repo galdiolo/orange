@@ -9,10 +9,13 @@ class package_migration {
 	protected $o_setting_model;
 	protected $access_cud = ['Create'=>'Create a new','Update'=>'Update a','Delete'=>'Delete a'];
 	protected $access_override = ['Admin Override Update'=>'Override is_editable on record','Admin Override Delete'=>'Override is_deletable on record'];
+	protected $symlink_config;
 
 	public function __construct($config) {
 		/* models may not be loaded in CLI so load it now */
 		ci()->load->model(['o_menubar_model','o_access_model']);
+
+		$this->symlink_config = ROOTPATH.'/application/config/symlinks.php';
 
 		$this->config = $config;
 		$this->name = $config['name'];
@@ -200,6 +203,12 @@ class package_migration {
 			return false;
 		}
 
+		$config = include $this->symlink_config;
+		
+		$config[str_replace(ROOTPATH,'',$public_folder)] = str_replace(ROOTPATH,'',$package_folder);
+		
+		array_cache($this->symlink_config,$config);
+
 		return true;
 	}
 
@@ -207,6 +216,12 @@ class package_migration {
 		$asset = trim($asset,'/');
 
 		$public_folder = ROOTPATH.'/public/'.$asset;
+
+		$config = include $this->symlink_config;
+		
+		unset($config[str_replace(ROOTPATH,'',$public_folder)]);
+		
+		array_cache($this->symlink_config,$config);
 
 		return (file_exists($public_folder)) ? unlink($public_folder) : true;
 	}
