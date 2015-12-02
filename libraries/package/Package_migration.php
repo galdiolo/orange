@@ -10,6 +10,7 @@ class package_migration {
 	protected $access_cud = ['Create'=>'Create a new','Update'=>'Update a','Delete'=>'Delete a'];
 	protected $access_override = ['Admin Override Update'=>'Override is_editable on record','Admin Override Delete'=>'Override is_deletable on record'];
 	protected $symlink_config;
+	protected $dbforge;
 
 	public function __construct($config) {
 		/* models may not be loaded in CLI so load it now */
@@ -24,6 +25,8 @@ class package_migration {
 		$this->o_access_model = &ci()->o_access_model;
 		$this->o_menubar_model = &ci()->o_menubar_model;
 		$this->o_setting_model = &ci()->o_setting_model;
+		
+		$this->dbforge = &ci()->dbforge;
 	}
 
 	public function cli_output($output) {
@@ -182,8 +185,10 @@ class package_migration {
 		ci()->load->helper('file');
 
 		$asset = trim($asset,'/');
+		
+		$package_folder = $this->_find_package($asset);
 
-		if (!$package_folder = $this->_find_package($asset)) {
+		if (!$package_folder) {
 			ci()->wallet->red('Couldn\'t find package folder "'.$this->internal.'/public/'.$asset.'".','/admin/configure/packages');
 
 			return false;
@@ -192,7 +197,11 @@ class package_migration {
 		$public_folder = ROOTPATH.'/public/'.$asset;
 
 		/* let's make the public path if it's not there */
-		@mkdir(dirname($public_folder),0777,true);
+		$drop_folder = dirname($public_folder);
+		
+		if (!is_dir($drop_folder)) {
+			mkdir($drop_folder,0777,true);
+		}
 
 		/* remove the link/file if it's there */
 		$this->remove_symlink($asset);
@@ -229,7 +238,7 @@ class package_migration {
 	protected function _find_package($path) {
 		list($type,$name) = explode('/',$this->internal,2);
 
-		return ($type == 'package') ? ROOTPATH.'/'.$this->internal.'/public/'.$path : ROOTPATH.'/vendor/'.$this->internal.'/public/'.$path;
+		return ($type == 'packages') ? ROOTPATH.'/'.$this->internal.'/public/'.$path : ROOTPATH.'/vendor/'.$this->internal.'/public/'.$path;
 	}
 
 	public function query($sql,$database_config='default') {
@@ -272,7 +281,7 @@ class package_migration {
 	public function describe_table($tablename,$database_config='default') {
 		$db = ci()->load->database($database_config,true);
 
-		$table_exists = $db->table_exists($table_name);
+		$table_exists = $db->table_exists($tablename);
 
 		if ($table_exists) {
 			$fields = (array)$db->list_fields($tablename);
@@ -282,6 +291,12 @@ class package_migration {
 		}
 
 		return $fields;
+	}
+
+	public function db_has_column($column,$tablename,$database_config='default') {
+		$columns = $this->describe_table($tablename,$database_config);
+		
+		return in_array($column,$columns);
 	}
 
 	public function insert($model_name,$data,$validate=true) {
