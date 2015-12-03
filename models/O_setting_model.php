@@ -56,14 +56,5 @@ class o_setting_model extends Database_model {
 			return $this->_database->insert($this->table, $data);
 		}
 	}
-	
-	/* special deleter since local array cache is faster than anything else out there */
-	public function flush_caches() {
-		log_message('debug', 'Local Array Cache Flush: settings.php');
-
-		unlink(ROOTPATH.'/var/local_file_cache/settings.php');
-
-		return $this;
-	}
 
 } /* end class */

@@ -57,6 +57,10 @@ abstract class Database_model extends MY_Model {
 		}
 	}
 
+	public function get_cache_prefix() {
+		return $this->cache_prefix;
+	}
+
 	/* --------------------------------------------------------------
 	* CRUD INTERFACE
 	* ------------------------------------------------------------ */
