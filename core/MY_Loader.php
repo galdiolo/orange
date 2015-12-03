@@ -102,6 +102,8 @@ class MY_Loader extends CI_Loader {
 	* @return mixed
 	*/
 	public function setting($group = null, $name = null, $default = null) {
+		
+		/* Did we already load the cache? */
 		if (!isset($this->settings)) {
 			/* let's make sure the model is loaded */
 			$this->model('o_setting_model');
@@ -125,7 +127,11 @@ class MY_Loader extends CI_Loader {
 					require $file;
 					
 					if (is_array($config)) {
-						$this->settings[basename($file,'.php')] = $config;
+						$group_key = strtolower(basename($file,'.php'));
+					
+						foreach ($config as $key=>$value) {
+							$this->settings[$group_key][strtolower($key)] = $value;
+						}
 					}
 				}
 
@@ -139,9 +145,11 @@ class MY_Loader extends CI_Loader {
 						require $file;
 
 						if (is_array($config)) {
-							$filename = basename($file,'.php');
+							$group_key = strtolower(basename($file,'.php'));
 	
-							$this->settings[$filename] = array_merge_recursive($this->settings[$filename],$config);
+							foreach ($config as $key=>$value) {
+								$this->settings[$group_key][strtolower($key)] = $value;
+							}
 						}
 					}
 				}
@@ -151,8 +159,9 @@ class MY_Loader extends CI_Loader {
 
 				if (is_array($db_array)) {
 					foreach ($db_array as $record) {
+
 						/* let's make sure a boolean is a boolean and a integer is a integer etc... */
-						$this->settings[$record->group][$record->name] = convert_to_real($record->value);
+						$this->settings[strtolower($record->group)][strtolower($record->name)] = convert_to_real($record->value);
 					}
 				}
 
@@ -162,6 +171,12 @@ class MY_Loader extends CI_Loader {
 
 		$rtn = $default;
 
+		$group = strtolower($group);
+		
+		if ($name !== null) {
+			$name = strtolower($name);
+		}
+		
 		if ($name === null && isset($this->settings[$group])) {
 			$rtn = $this->settings[$group];
 		} elseif (isset($this->settings[$group][$name])) {
