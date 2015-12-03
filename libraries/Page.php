@@ -22,6 +22,9 @@ class Page {
 	protected $link_attributes;
 	protected $encryption_key;
 	protected $short_name; /* name without path and theme_ */
+	protected $assets_added = [];
+	protected $assets_css = [];
+	protected $assets_js = [];
 
 	/* used external libraries - mock these */
 	protected $ci_load;
@@ -268,7 +271,7 @@ class Page {
 	$this->page->css('http://www.example.com/style.css');
 	$link = $this->page->css('http://www.example.com/style.css',true);
 	*/
-	public function css($file = '', $where = '>') {
+	public function css($file='',$where=50) {
 		/* handle it if it's a array */
 		if (is_array($file)) {
 			foreach ($file as $f) {
@@ -278,22 +281,27 @@ class Page {
 			return $this;
 		}
 
-		/* search the theme first then exact location */
-		$file = $this->find_asset($file);
-
 		/* has it already been added? */
-		if (!isset($this->assets[$file]) && !empty($file)) {
-			$html = $this->_ary2element('link', array_merge($this->link_attributes, ['href' => $file]));
-
-			/* if where is actually true then return <link> */
-			if ($where === true) {
-				return $html;
-			}
-
-			$this->assets[$file] = ['ftype' => 'css','where' => $where,'file' => $file,'html' => $html];
+		if ($this->assets_added[$file] || empty($file)) {
+			return $this;
 		}
 
+		/* tag added */
+		$this->assets_added[$file] = true;
+		
+		/* add to array */
+		$this->assets_css[$where][] = ['html'=>$this->link_html($file),'file'=>$file];
+
 		return $this;
+	}
+
+	public function link_html($file) {
+		return $this->_ary2element('link', array_merge($this->link_attributes, ['href' => $file]));
+	}
+
+	/* place inside <style> */
+	public function style($style, $where = '>') {
+		return $this->_data_core('page_style',$style,$where);
 	}
 
 	/*
@@ -303,7 +311,7 @@ class Page {
 	$this->page->js(['/assets/site.js','/assets/site2.js'],'<');
 	$script = $this->page->js('/assets/sites.js',true);
 	*/
-	public function js($file = '', $where = '>') {
+	public function js($file='',$where=50) {
 		/* handle it if it's a array */
 		if (is_array($file)) {
 			foreach ($file as $f) {
@@ -313,21 +321,21 @@ class Page {
 			return $this;
 		}
 
-		/* search the theme first then exact location */
-		$file = $this->find_asset($file);
-
-		if (!isset($this->assets[$file]) && !empty($file)) {
-			$html = $this->_ary2element('script', array_merge($this->script_attributes, ['src' => $file]), '');
-
-			/* if where is actually true then return <script> */
-			if ($where === true) {
-				return $html;
-			}
-
-			$this->assets[$file] = ['ftype' => 'js','where' => $where,'file' => $file,'html' => $html];
+		/* has it already been added? */
+		if ($this->assets_added[$file] || empty($file)) {
+			return $this;
 		}
 
+		/* tag added */
+		$this->assets_added[$file] = true;
+
+		$this->assets_js[$where][] = ['html'=>$this->script_html($file),'file'=>$file];
+
 		return $this;
+	}
+
+	public function script_html($file) {
+		return $this->_ary2element('script', array_merge($this->script_attributes, ['src' => $file]), '');
 	}
 
 	public function js_var($key, $value = null) {
@@ -340,19 +348,10 @@ class Page {
 			return $this;
 		}
 
-		/* raw */
-		if ($value === true) {
-			$this->javascript_variables[md5($key)] = $key;
-		} else {
-			$this->javascript_variables[$key] = 'var '.$key.'="'.str_replace('"', '\"', $value).'";';
-		}
+		/* if value is true then insert the key verbatim else insert it as a string */
+		$this->javascript_variables[md5($key)] = ($value === true) ? $key : $this->javascript_variables[md5($key)] = 'var '.$key.'="'.str_replace('"', '\"', $value).'";';
 
 		return $this;
-	}
-
-	/* place inside <style> */
-	public function style($style, $where = '>') {
-		return $this->_data_core('page_style',$style,$where);
 	}
 
 	/* place inside <script> */
@@ -429,44 +428,85 @@ class Page {
 		/* fast and loose */
 		$this->ci_load->vars(['javascript_variables' => implode('', $this->javascript_variables)]);
 
-		/* add assets */
-		foreach ($this->assets as $record) {
-			$this->_data_core('page_'.$record['ftype'], $record['html'], $record['where']);
+		if (!setting('page','combined css')) {
+			$this->prepare_css();
+		} else {
+			$this->prepare_css_combined();
+		}
+		
+		if (!setting('page','combined js')) {
+			$this->prepare_js();
+		} else {
+			$this->prepare_js_combined();
 		}
 
-		/*
-		$combined_css = false;
-		$combined_js = false;
+		return $this;
+	}
 
-		foreach ($this->assets as $record) {
-			if (substr($record['file'],0,2) != '//') {
-				switch ($record['ftype']) {
-					case 'js':
-						$combined_js .= file_get_contents($record['path']);
-					break;
-					case 'css':
-						$combined_css .= file_get_contents($record['path']);
-					break;
+	public function prepare_css() {
+		ksort($this->assets_css);
+
+		/* add assets */
+		foreach ($this->assets_css as $html_records) {
+			foreach ($html_records as $html_record) {
+				$this->_data_core('page_css', $html_record['html'],'>');
+			}
+		}
+	}
+	
+	public function prepare_css_combined() {
+		$combined = '';
+	
+		ksort($this->assets_css);
+
+		/* add assets */
+		foreach ($this->assets_css as $html_records) {
+			foreach ($html_records as $html_record) {
+				if (substr($html_record['file'],0,2) != '//') {
+					$combined .= file_get_contents(ROOTPATH.'/public/'.$html_record['file']);
+				} else {
+					$this->_data_core('page_css', $html_record['html'],'>');
 				}
-			} else {
-				$this->_data_core('page_'.$record['ftype'], $record['html'], $record['where']);
 			}
 		}
 
-		if ($combined_css !== false) {
-			$file = '/min/'.md5($combined_css).'.css';
-			file_put_contents(ROOTPATH.'/public'.$file,$combined_css);
-			$this->_data_core('page_css','<link href="'.$file.'" rel="stylesheet" type="text/css">', $record['where']);
+		$file = '/min/'.md5($combined).'.css';
+		file_put_contents(ROOTPATH.'/public'.$file,$combined);
+
+		$this->_data_core('page_css',$this->link_html($file),'>');
+	}
+	
+	public function prepare_js() {
+		ksort($this->assets_js);
+
+		/* add assets */
+		foreach ($this->assets_js as $html_records) {
+			foreach ($html_records as $html_record) {
+				$this->_data_core('page_js', $html_record['html'],'>');
+			}
+		}
+	}
+
+	public function prepare_js_combined() {
+		$combined = '';
+	
+		ksort($this->assets_js);
+
+		/* add assets */
+		foreach ($this->assets_js as $html_records) {
+			foreach ($html_records as $html_record) {
+				if (substr($html_record['file'],0,2) != '//') {
+					$combined .= file_get_contents(ROOTPATH.'/public/'.$html_record['file']);
+				} else {
+					$this->_data_core('page_js', $html_record['html'],'>');
+				}
+			}
 		}
 
-		if ($combined_js !== false) {
-			$file = '/min/'.md5($combined_js).'.js';
-			file_put_contents(ROOTPATH.'/public'.$file,$combined_js);
-			$this->_data_core('page_js','<script src="'.$file.'"></script>','>');
-		}
-		*/
+		$file = '/min/'.md5($combined).'.js';
+		file_put_contents(ROOTPATH.'/public'.$file,$combined);
 
-		return $this;
+		$this->_data_core('page_js',$this->script_html($file),'>');
 	}
 
 	/* final output - fires a event */
@@ -528,17 +568,6 @@ class Page {
 		$output = trim($output);
 
 		return ($wrapper === false) ? $output.'/>' : $output.'>'.$wrapper.'</'.$element.'>';
-	}
-
-	protected function find_asset($www_path) {
-		/* search:
-		*
-		* /public/{current_theme}/*
-		* /public/*
-		*
-		*/
-
-		return (file_exists(ROOTPATH.'/public'.$this->theme_path.$www_path)) ? $this->theme_path.$www_path : $www_path;
 	}
 
 } /* end class */
