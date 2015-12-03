@@ -23,7 +23,7 @@ class o_setting_model extends Database_model {
 		'is_deletable'   => ['field' => 'is_deletable','label' => 'Deletable','rules' => 'if_empty[0]|one_of[0,1]|filter_int[1]|max_length[1]'],
 		'name'           => ['field' => 'name','label' => 'Name','rules' => 'required|max_length[64]|filter_input[64]|trim'],
 		'value'          => ['field' => 'value','label' => 'Value','rules' => 'max_length[16384]|filter_textarea[16384]'],
-		'group'          => ['field' => 'group','label' => 'Group','rules' => 'required|strtolower|max_length[64]|filter_input[64]'],
+		'group'          => ['field' => 'group','label' => 'Group','rules' => 'required|max_length[64]|filter_input[64]'],
 		'enabled'        => ['field' => 'enabled','label' => 'Enabled','rules' => 'if_empty[1]|one_of[0,1]|filter_int[1]|max_length[1]|less_than[2]'],
 		'help'           => ['field' => 'help','label' => 'Help','rules' => 'max_length[255]|filter_input[255]'],
 		'internal'       => ['field' => 'internal','label' => 'Internal','rules' => 'max_length[64]|filter_input[64]'],
