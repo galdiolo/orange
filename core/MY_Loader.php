@@ -21,7 +21,7 @@ class MY_Loader extends CI_Loader {
 	public $orange_extended_helpers = ['array','date','directory','file','string'];
 	public $settings = null; /* local per request storage */
 	public $onload_path = ROOTPATH.'/application/config/onload.php';
-	public $cache_file = '';
+	public $cache = 'settings.cache';
 	public $themes = '';
 
 	public $added_paths = [];
@@ -103,9 +103,6 @@ class MY_Loader extends CI_Loader {
 	*/
 	public function setting($group = null, $name = null, $default = null) {
 		if (!isset($this->settings)) {
-			/* setup cache file */
-			$this->cache_file = ROOTPATH.'/application/config/'.ENVIRONMENT.'/settings.php';
-
 			/* let's make sure the model is loaded */
 			$this->model('o_setting_model');
 
@@ -113,7 +110,7 @@ class MY_Loader extends CI_Loader {
 			$this->driver('cache', ['adapter' => ci()->config->item('cache_default'), 'backup' => ci()->config->item('cache_backup')]);
 
 			/* set the page request cached settings */
-			if (!$this->settings = array_cache($this->cache_file)) {
+			if (!$this->settings = ci()->cache->get($this->cache)) {
 				/* setup the empty array and load'em */
 				$this->settings = [];
 
@@ -157,7 +154,7 @@ class MY_Loader extends CI_Loader {
 					}
 				}
 
-				array_cache($this->cache_file,$this->settings);
+				ci()->cache->save($this->cache,$this->settings,86400); /* 1 day */
 			}
 		}
 
@@ -173,18 +170,7 @@ class MY_Loader extends CI_Loader {
 	}
 
 	public function settings_flush() {
-		$return = true;
-
-		if (file_exists($this->cache_file)) {
-			$return = unlink($this->cache_file);
-		}
-
-		/* force flush opcached filed if exists */
-		if (function_exists('opcache_invalidate')) {
-			opcache_invalidate($this->cache_file,true);
-		}
-
-		return $return;
+		return ci()->cache->delete($this->cache);
 	}
 
 	/**
