@@ -351,7 +351,8 @@ class Validate {
 
 				/* is it a attached (closure) validation function? */
 				if (isset($this->attached['validate_'.$rule])) {
-					$this->success = $this->attached['validate_'.$rule]($this->_field_data,$field,$param);
+					/* field data, current field, current field param, validation object */
+					$this->success = $this->attached['validate_'.$rule]($this->_field_data,$field,$param,$this);
 
 				/* is this method attach to me? */
 				} elseif (method_exists($this, $rule)) {

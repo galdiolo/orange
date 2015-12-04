@@ -53,7 +53,8 @@ class o_user_model extends Database_model {
 		/* attach a custom validation function onto validate library */
 		$this->load->library('validate');
 
-		$this->validate->attach('password', function ($validate_obj, $field) {
+		$this->validate->attach('password', function ($field_data, $field, $param, $validate_obj) {
+			/* field data, current field, current field param, validation object */
 			$validate_obj->set_message('password', 'Your password is not in the correct format.');
 
 			return (bool) preg_match(setting('auth','Password regex'), $field);
@@ -83,10 +84,10 @@ class o_user_model extends Database_model {
 
 			'username' => function($faker) { return $faker->name(); },
 			'email' => function($faker) { return $faker->safeEmail(); },
-			
+
 			'password' => function($faker,$data) { return $faker->password; },
 			'confirm_password' => function($faker,$data) { return $data['password']; },
-			
+
 			'role_id' => 2,
 			'is_active' => function($faker) { return mt_rand(0,1); },
 		];
@@ -114,7 +115,7 @@ class o_user_model extends Database_model {
 
 	public function delete($id=null) {
 		$this->update($id,['is_active'=>0],true);
-		
+
 		/* soft delete */
 		return parent::delete($id);
 	}
@@ -138,8 +139,13 @@ class o_user_model extends Database_model {
 		if ($data !== FALSE) {
 			/* unset this if it's set */
 			unset($data['confirm_password']);
-
-			$data['password'] = $this->hash_password($data['password']);
+			
+			if ($data['@@password is hashed@@'] !== true) {
+				$data['password'] = $this->hash_password($data['password']);
+			}
+			
+			/* insert - password already hased */
+			unset($data['@@password is hashed@@']);
 
 			$this->_database->insert($this->table, $data);
 
