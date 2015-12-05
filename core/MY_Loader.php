@@ -348,13 +348,10 @@ class MY_Loader extends CI_Loader {
 			}
 		}
 
+		/* opcache flushed by atomic function if needed */
 		atomic_file_put_contents($this->onload_path,$combined);
-
-		/* force flush opcached filed if exists */
-		if (function_exists('opcache_invalidate')) {
-			opcache_invalidate($this->onload_path,true);
-		}
-
+		
+		/* chainable */
 		return $this;
 	}
 
