@@ -397,7 +397,8 @@ class package_manager {
 		}
 
 		$content = str_replace($matches[0][0],$package_text,$current_content);
-
+		
+		/* opcache flushed if needed by atomic function */
 		return atomic_file_put_contents($this->autoload,$content);
 	}
 
