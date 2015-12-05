@@ -26,6 +26,14 @@ trait validate_filter {
 		return TRUE;
 	}
 
+	public function filter_slug(&$inp, $field) {
+		ci()->load->helper('url');
+		
+		$inp = url_title(ci()->input->post_get($field),'_',true);
+		
+		return TRUE;
+	}
+
 	public function filter_except(&$inp, $except = '') {
 		$inp = preg_replace("/[^".preg_quote($except, "/")."]/", '', $inp);
 
