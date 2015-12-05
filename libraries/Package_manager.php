@@ -198,8 +198,7 @@ class package_manager {
 			return false;
 		}
 
-		ci()->load->settings_flush();
-		ci()->auth->refresh_userdata();
+		$this->flush();
 
 		return true;
 	}
@@ -241,8 +240,7 @@ class package_manager {
 			return false;
 		}
 
-		ci()->load->settings_flush();
-		ci()->auth->refresh_userdata();
+		$this->flush();
 
 		return true;
 	}
@@ -297,8 +295,7 @@ class package_manager {
 			return false;
 		}
 
-		ci()->load->settings_flush();
-		ci()->auth->refresh_userdata();
+		$this->flush();
 
 		return true;
 	}
@@ -344,10 +341,26 @@ class package_manager {
 			return false;
 		}
 
-		ci()->load->settings_flush();
-		ci()->auth->refresh_userdata();
+		$this->flush();
 
 		return true;
+	}
+
+	public function flush($all=false) {
+		usleep(2500);
+		ci()->cache->clean();
+		usleep(2500);
+		ci()->load->settings_flush();
+		usleep(2500);
+		ci()->auth->refresh_userdata();
+		usleep(2500);
+		
+		if ($all) {
+			$this->create_onload();
+			usleep(2500);
+			$this->create_autoload();
+			usleep(2500);
+		}
 	}
 
 	/* wrapper for loader function */
