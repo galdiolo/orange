@@ -61,7 +61,7 @@ class package_helper {
 
 			if ($package['database']['is_active']) {
 				/* orange and active */
-				$this->packages[$key]['www_name'] = htmlentities($folder.'/'.$filename).' <b class="text-primary">*</b>';
+				$this->packages[$key]['www_name'] = htmlentities($folder.'/'.$filename).' <b class="text-theme">*</b>';
 			} elseif (isset($package['composer']['orange']) && !$package['database']['is_active']) {
 				/* orange but not active */
 				$this->packages[$key]['www_name'] = htmlentities($folder.'/'.$filename).' <span class="text-muted">*</span>';

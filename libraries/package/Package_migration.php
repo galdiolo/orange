@@ -244,7 +244,7 @@ class package_migration {
 	public function query($sql,$database_config='default') {
 		$success = false;
 
-		if (!empty($sql)) {
+		if (!empty(trim($sql))) {
 			$db = ci()->load->database($database_config,true);
 
 			$success = $db->query($sql);
